@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace OptSprite
@@ -8,6 +7,8 @@ namespace OptSprite
     [CanEditMultipleObjects]
     public class OptSpriteInspector : UnitySpriteInspector
     {
+        private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
+
         private Material _previewMeshLineMaterial;
 
         public override void OnInspectorGUI()
@@ -34,53 +35,58 @@ namespace OptSprite
             base.OnPreviewGUI(rect, background);
 
             Sprite sprite = target as Sprite;
-            DrawSpriteWireframe(rect, sprite);
+
+            if (sprite != null)
+            {
+                DrawSpriteWireframe(rect, sprite);
+            }
         }
 
         private void DrawSpriteWireframe(Rect rect, Sprite sprite)
         {
-            float fittingScale = Mathf.Min(rect.width / sprite.rect.width, rect.height / sprite.rect.height);
-            Rect position = new Rect(rect.x, rect.y, sprite.rect.width * fittingScale,
-                sprite.rect.height * fittingScale)
+            float spriteMinScale = Mathf.Min(rect.width / sprite.rect.width, rect.height / sprite.rect.height);
+            float previewPixelsPerUnit = sprite.pixelsPerUnit * spriteMinScale;
+            Vector2 previewPivot = sprite.pivot * spriteMinScale;
+            Vector2 previewSize = sprite.rect.size * spriteMinScale;
+            Vector2 previewPosition = rect.center - previewSize * 0.5f;
+            Vector2[] previewVertices = sprite.vertices;
+            ushort[] previewTriangles = sprite.triangles;
+
+            for (int i = 0; i < previewVertices.Length; i++)
             {
-                center = rect.center
-            };
-
-            ushort[] triangles = sprite.triangles;
-            Vector2[] vertices = sprite.vertices;
-            float spriteScale = sprite.rect.height / position.height;
-
-            Vector2 pivot = new Vector3(position.x, position.y, 0f);
-            //Vector2 spritePivotScaled = sprite.pivot / spriteScale;
-            float spritePixelsPerUnitScaled = sprite.pixelsPerUnit / spriteScale;
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                Vector2 vertex = vertices[i] * spritePixelsPerUnitScaled;// + spritePivotScaled;
-                vertex.y = vertex.y - position.height;
-                vertices[i] = vertex;
+                Vector2 vertex = previewVertices[i] * previewPixelsPerUnit + previewPivot;
+                vertex.y = (vertex.y - previewSize.y) * -1.0f;
+                previewVertices[i] = vertex;
             }
 
             _previewMeshLineMaterial.SetPass(0);
-            DrawMesh(pivot, triangles, vertices, false);
-            DrawMesh(pivot, triangles, vertices, true);
+            DrawMesh(previewPosition, previewVertices, previewTriangles, false);
+            DrawMesh(previewPosition, previewVertices, previewTriangles, true);
         }
 
-        private void DrawMesh(Vector2 pivot, ushort[] triangles, Vector2[] vertices, bool isWireframe)
+        private void DrawMesh(Vector2 pos, Vector2[] vertices, ushort[] triangles, bool isWireframe)
         {
-            GL.wireframe = isWireframe;
+            if (isWireframe)
+            {
+                GL.wireframe = true;
+            }
+
             GL.PushMatrix();
-            GL.MultMatrix(Matrix4x4.TRS(pivot, Quaternion.identity, new Vector3(1f, -1f, 1f)));
+            GL.MultMatrix(Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one));
             GL.Begin(GL.TRIANGLES);
 
-            for (int i = 0; i < triangles.Length; i++)
+            foreach (ushort tri in triangles)
             {
-                GL.Vertex3(vertices[triangles[i]].x, vertices[triangles[i]].y, 0f);
+                GL.Vertex3(vertices[tri].x, vertices[tri].y, 0f);
             }
 
             GL.End();
             GL.PopMatrix();
-            GL.wireframe = !isWireframe;
+
+            if (isWireframe)
+            {
+                GL.wireframe = false;
+            }
         }
 
         private void CreateMeshLineMaterial()
@@ -92,7 +98,7 @@ namespace OptSprite
             texture.Apply();
 
             _previewMeshLineMaterial = new Material(Shader.Find("Unlit/Transparent"));
-            _previewMeshLineMaterial.SetTexture(Shader.PropertyToID("_MainTex"), texture);
+            _previewMeshLineMaterial.SetTexture(_mainTex, texture);
             _previewMeshLineMaterial.hideFlags = HideFlags.HideAndDontSave;
         }
 

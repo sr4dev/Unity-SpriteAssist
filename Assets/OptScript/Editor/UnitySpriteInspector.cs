@@ -11,6 +11,7 @@ namespace OptSprite
     {
         private static Type _spriteInspectorType = typeof(Editor).Assembly.GetType("UnityEditor.SpriteInspector", true);
         private static PropertyInfo _referenceTargetIndexPropertyInfo = typeof(Editor).GetProperty("referenceTargetIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+        
         private Editor _baseEditor;
 
         public override void OnInspectorGUI()
@@ -20,13 +21,13 @@ namespace OptSprite
 
         public override bool HasPreviewGUI()
         {
-            UpdateTargetIndex();
+            UpdateTargetIndexForPreview();
             return _baseEditor.HasPreviewGUI();
         }
 
         public override void OnPreviewGUI(Rect rect, GUIStyle background)
         {
-            UpdateTargetIndex();
+            UpdateTargetIndexForPreview();
             _baseEditor.OnPreviewGUI(rect, background);
         }
 
@@ -65,9 +66,8 @@ namespace OptSprite
             }
         }
 
-        private void UpdateTargetIndex()
+        private void UpdateTargetIndexForPreview()
         {
-            //update referenceTargetIndex for [CanEditMultipleObjects] preview
             int index = (int)_referenceTargetIndexPropertyInfo.GetValue(this, null);
             _referenceTargetIndexPropertyInfo.SetValue(_baseEditor, index, null);
         }
