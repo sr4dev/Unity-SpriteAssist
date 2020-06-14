@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace OptSprite
@@ -7,20 +8,21 @@ namespace OptSprite
     [CanEditMultipleObjects]
     public class OptSpriteInspector : UnitySpriteInspector
     {
+        private const string WIRE_FRAME_SHADER_NAME = "Unlit/Transparent";
+        private static readonly Color _wireFrameColor = new Color(0.0f, 0.0f, 1.0f, 0.3f);
         private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
 
         private Material _previewMeshLineMaterial;
-
-        public override void OnInspectorGUI()
-        {
-            base.OnInspectorGUI();
-        }
+        private OptSpriteData _data;
+        private bool _isChanged;
 
         protected override void OnEnable()
         {
             base.OnEnable();
 
             CreateMeshLineMaterial();
+            Undo.undoRedoPerformed -= UndoReimport;
+            Undo.undoRedoPerformed += UndoReimport;
         }
 
         protected override void OnDisable()
@@ -28,6 +30,93 @@ namespace OptSprite
             base.OnDisable();
 
             DestroyMeshLineMaterial();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            string assetPath = AssetDatabase.GetAssetPath(target);
+            TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
+            textureImporter.ReadTextureSettings(textureImporterSettings);
+            bool isTightMesh = textureImporterSettings.spriteMeshType == SpriteMeshType.Tight;
+            bool isSingleSprite = textureImporterSettings.spriteMode == 1;
+
+            if (isTightMesh == false || isSingleSprite == false)
+            {
+                string message = "OptSprite\n";
+                if (isTightMesh)
+                {
+                    message += "Mesh Type is not Tight Mesh. ";
+                }
+
+                if (isSingleSprite)
+                {
+                    message += "Sprite Mode is not Single.";
+                }
+
+                EditorGUILayout.HelpBox(message, MessageType.Warning);
+
+                base.OnInspectorGUI();
+                return;
+            }
+
+            if (_data == null)
+            {
+                _data = OptSpriteData.GetData(textureImporter.userData);
+            }
+
+            //GUIStyle guiStyle = new GUIStyle(EditorStyles.helpBox);
+            //guiStyle.padding = new RectOffset(10, 10, 10, 10);
+            //EditorGUILayout.BeginVertical();
+            EditorGUILayout.HelpBox("OptSprite Enabled", MessageType.None);
+
+            bool oldEnabled = GUI.enabled;
+
+            EditorGUI.BeginChangeCheck();
+            _data.overriden = EditorGUILayout.ToggleLeft("Override Mesh", _data.overriden);
+            GUI.enabled = _data.overriden;
+            _data.detail = EditorGUILayout.Slider("Detail", _data.detail, 0.001f, 1f);
+            _data.alphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _data.alphaTolerance, 0, 254);
+            //_data.vertexMergeDistance = (byte)EditorGUILayout.Slider("Merge Distance", _data.vertexMergeDistance, 0, 30);
+            _data.detectHoles = EditorGUILayout.Toggle("Detect Holes", _data.detectHoles);
+            _isChanged |= EditorGUI.EndChangeCheck();
+
+            GUI.enabled = _isChanged;
+
+            if (GUILayout.Button("Revert"))
+            {
+                _isChanged = false;
+                _data = null;
+            }
+
+            if (GUILayout.Button("Apply"))
+            {
+                AssetImporter[] assetImporters = targets
+                    .Select(t => AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)))
+                    .Where(ai => ai != null)
+                    .ToArray();
+
+                Undo.RegisterCompleteObjectUndo(assetImporters, "OptSprite Texture");
+
+                foreach (var currentAssetImporter in assetImporters)
+                {
+                    currentAssetImporter.userData = JsonUtility.ToJson(_data);
+
+                    EditorUtility.SetDirty(currentAssetImporter);
+                    AssetDatabase.WriteImportSettingsIfDirty(currentAssetImporter.assetPath);
+                    AssetDatabase.ImportAsset(currentAssetImporter.assetPath,
+                        ImportAssetOptions.ForceUpdate |
+                        ImportAssetOptions.DontDownloadFromCacheServer);
+                }
+
+                _isChanged = false;
+                _data = null;
+            }
+
+            GUI.enabled = oldEnabled;
+
+            //EditorGUILayout.EndVertical();
+            base.OnInspectorGUI();
         }
 
         public override void OnPreviewGUI(Rect rect, GUIStyle background)
@@ -38,66 +127,62 @@ namespace OptSprite
 
             if (sprite != null)
             {
-                DrawSpriteWireframe(rect, sprite);
+                DrawSpriteWireframe(rect, sprite, _data);
             }
         }
 
-        private void DrawSpriteWireframe(Rect rect, Sprite sprite)
+        private void UndoReimport()
         {
-            float spriteMinScale = Mathf.Min(rect.width / sprite.rect.width, rect.height / sprite.rect.height);
-            float previewPixelsPerUnit = sprite.pixelsPerUnit * spriteMinScale;
-            Vector2 previewPivot = sprite.pivot * spriteMinScale;
-            Vector2 previewSize = sprite.rect.size * spriteMinScale;
-            Vector2 previewPosition = rect.center - previewSize * 0.5f;
-            Vector2[] previewVertices = sprite.vertices;
-            ushort[] previewTriangles = sprite.triangles;
+            _data = null;
 
-            for (int i = 0; i < previewVertices.Length; i++)
+            foreach (var t in targets)
             {
-                Vector2 vertex = previewVertices[i] * previewPixelsPerUnit + previewPivot;
-                vertex.y = (vertex.y - previewSize.y) * -1.0f;
-                previewVertices[i] = vertex;
+                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t),
+                    ImportAssetOptions.ForceUpdate |
+                    ImportAssetOptions.DontDownloadFromCacheServer);
             }
+        }
+
+        private void DrawSpriteWireframe(Rect rect, Sprite sprite, OptSpriteData data)
+        {
+            Rect sRect = sprite.rect;
+            float spriteMinScale = SpriteUtil.GetMinRectScale(rect, sRect);
+            Vector2 previewPosition = rect.center - (sRect.size * spriteMinScale * 0.5f);
+            SpriteUtil.GetMeshData(sprite, data, out var previewVertices, out var previewTriangles);
+            SpriteUtil.GetScaledVertices(previewVertices, sprite.pixelsPerUnit, sprite.pivot, sprite.rect.size, spriteMinScale, true, false);
 
             _previewMeshLineMaterial.SetPass(0);
             DrawMesh(previewPosition, previewVertices, previewTriangles, false);
             DrawMesh(previewPosition, previewVertices, previewTriangles, true);
+            Debug.Log($"vert {previewVertices.Length}, tri {previewTriangles.Length}");
         }
 
         private void DrawMesh(Vector2 pos, Vector2[] vertices, ushort[] triangles, bool isWireframe)
         {
-            if (isWireframe)
-            {
-                GL.wireframe = true;
-            }
-
+            GL.wireframe = isWireframe;
             GL.PushMatrix();
-            GL.MultMatrix(Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one));
+            GL.MultMatrix(Matrix4x4.Translate(pos));
             GL.Begin(GL.TRIANGLES);
 
-            foreach (ushort tri in triangles)
+            foreach (ushort t in triangles)
             {
-                GL.Vertex3(vertices[tri].x, vertices[tri].y, 0f);
+                GL.Vertex3(vertices[t].x, vertices[t].y, 0f);
             }
 
             GL.End();
             GL.PopMatrix();
-
-            if (isWireframe)
-            {
-                GL.wireframe = false;
-            }
+            GL.wireframe = false;
         }
 
         private void CreateMeshLineMaterial()
         {
             DestroyMeshLineMaterial();
 
-            Texture2D texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-            texture.SetPixel(0, 0, new Color(0.0f, 0.0f, 1.0f, 0.3f));
+            Texture2D texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, _wireFrameColor);
             texture.Apply();
 
-            _previewMeshLineMaterial = new Material(Shader.Find("Unlit/Transparent"));
+            _previewMeshLineMaterial = new Material(Shader.Find(WIRE_FRAME_SHADER_NAME));
             _previewMeshLineMaterial.SetTexture(_mainTex, texture);
             _previewMeshLineMaterial.hideFlags = HideFlags.HideAndDontSave;
         }

@@ -9,8 +9,8 @@ namespace OptSprite
     [CanEditMultipleObjects]
     public class UnitySpriteInspector : Editor
     {
-        private static Type _spriteInspectorType = typeof(Editor).Assembly.GetType("UnityEditor.SpriteInspector", true);
-        private static PropertyInfo _referenceTargetIndexPropertyInfo = typeof(Editor).GetProperty("referenceTargetIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly Type _spriteInspectorType = typeof(Editor).Assembly.GetType("UnityEditor.SpriteInspector", true);
+        private static readonly PropertyInfo _referenceTargetIndexPropertyInfo = typeof(Editor).GetProperty("referenceTargetIndex", BindingFlags.NonPublic | BindingFlags.Instance);
         
         private Editor _baseEditor;
 
