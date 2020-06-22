@@ -1,0 +1,62 @@
+﻿using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
+
+namespace OptSprite
+{
+    public class SpriteImportData
+    {
+        public readonly Sprite sprite;
+        public readonly string assetPath;
+        public readonly TextureImporter textureImporter;
+        public readonly TextureImporterSettings textureImporterSettings;
+        public readonly AssetImporter.SourceAssetIdentifier sourceAssetIdentifier;
+
+        public bool IsTightMesh { get { return textureImporterSettings.spriteMeshType == SpriteMeshType.Tight; } }
+
+        public bool HasMeshPrefab { get { return MeshPrefab != null; } }
+
+        public Object MeshPrefab { get; private set; }
+
+        public SpriteImportData(Sprite sprite, string assetPath)
+        {
+            this.sprite = sprite;
+            this.assetPath = assetPath;
+
+            textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
+            textureImporterSettings = new TextureImporterSettings();
+            textureImporter.ReadTextureSettings(textureImporterSettings);
+            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
+
+            MeshPrefab = FindExternalObject();
+        }
+        
+        private Object FindExternalObject()
+        {
+            Dictionary<AssetImporter.SourceAssetIdentifier, Object> map = textureImporter.GetExternalObjectMap();
+            return map.ContainsKey(sourceAssetIdentifier) ? map[sourceAssetIdentifier] : null;
+        }
+
+        public void SetPrefabAsExternalObject(GameObject prefab)
+        {
+            if (MeshPrefab != null)
+                AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
+            textureImporter.RemoveRemap(sourceAssetIdentifier);
+            textureImporter.AddRemap(sourceAssetIdentifier, prefab);
+            textureImporter.SaveAndReimport();
+
+            MeshPrefab = FindExternalObject();
+        }
+
+        public void RemoveExternalPrefab()
+        {
+            if (MeshPrefab != null)
+                AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
+            textureImporter.RemoveRemap(sourceAssetIdentifier);
+            textureImporter.SaveAndReimport();
+
+            MeshPrefab = null;
+        }
+    }
+}
