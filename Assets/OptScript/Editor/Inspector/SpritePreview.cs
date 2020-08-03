@@ -37,16 +37,16 @@ namespace OptSprite
             switch (mode)
             {
                 case SpriteConfigData.Mode.TransparentMesh:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, false, false));
+                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.Transparent));
                     break;
                 
                 case SpriteConfigData.Mode.OpaqueMesh:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, true));
+                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.Opaque));
                     break;
                
                 case SpriteConfigData.Mode.Complex:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, false, true));
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, true));
+                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.SeparatedTransparent));
+                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.Opaque));
                     break;
             }
         }

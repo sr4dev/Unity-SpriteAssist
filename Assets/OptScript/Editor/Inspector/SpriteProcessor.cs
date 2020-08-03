@@ -59,7 +59,7 @@ namespace OptSprite
                         using (new EditorGUI.IndentLevelScope())
                         {
                             _configData.detail = EditorGUILayout.Slider("Detail", _configData.detail, 0.001f, 1f);
-                            _configData.alphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.alphaTolerance, 0, 254);
+                            _configData.alphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.alphaTolerance, 1, 255);
                             _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                             EditorGUILayout.Space();
                         }
@@ -70,7 +70,7 @@ namespace OptSprite
                         EditorGUILayout.LabelField("Opaque Mesh");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
+                            _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 1, 255);
                             _configData.vertexMergeDistance = (byte)EditorGUILayout.Slider("Merge Distance", _configData.vertexMergeDistance, 0, 30);
                             EditorGUILayout.Space();
                         }
@@ -194,13 +194,14 @@ namespace OptSprite
                             {
                                 //TODO
                                 tMesh = (Mesh)asset;
-                                SpriteUtil.UpdateMesh(_sprite, _configData, ref tMesh, false, true);
+                                MeshRenderType type = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
+                                SpriteUtil.UpdateMesh(_sprite, _configData, ref tMesh, type);
                             }
                             else if (asset.name == "Opaque")
                             {
                                 //TODO
                                 oMesh = (Mesh)asset;
-                                SpriteUtil.UpdateMesh(_sprite, _configData, ref oMesh, true, false);
+                                SpriteUtil.UpdateMesh(_sprite, _configData, ref oMesh, MeshRenderType.Opaque);
                             }
                         }
 

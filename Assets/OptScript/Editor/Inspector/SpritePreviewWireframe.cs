@@ -11,13 +11,12 @@ namespace OptSprite
         private const string SHADER_NAME = "Unlit/Transparent";
         private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
         private Material _material;
-        private bool _isOpaque;
-        private bool _isComplex;
         private Vector2[] _vertices;
         private Vector2[] _scaledVertices;
         private ushort[] _triangles;
+        private MeshRenderType _meshRenderType;
 
-        public SpritePreviewWireframe(Color color, bool isOpaque = false, bool isComplex = false)
+        public SpritePreviewWireframe(Color color, MeshRenderType meshRenderType = MeshRenderType.Transparent)
         {
             Texture2D texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, color);
@@ -27,13 +26,12 @@ namespace OptSprite
             _material.SetTexture(_mainTex, texture);
             _material.hideFlags = HideFlags.HideAndDontSave;
 
-            _isOpaque = isOpaque;
-            _isComplex = isComplex;
+            _meshRenderType = meshRenderType;
         }
 
         public void UpdateAndResize(Rect rect, Sprite sprite, SpriteConfigData data)
         {
-            SpriteUtil.GetMeshData(sprite, data, out _vertices, out _triangles, _isOpaque, _isComplex);
+            SpriteUtil.GetMeshData(sprite, data, out _vertices, out _triangles, _meshRenderType);
 
             Resize(rect, sprite);
         }

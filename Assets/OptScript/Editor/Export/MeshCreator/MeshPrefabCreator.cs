@@ -20,11 +20,11 @@ namespace OptSprite
                     return new ComplexMeshPrefabCreator();
 
                 default:
-                    return null;
+                    return new DefaultMeshPrefabCreator();
             }
         }
 
-        protected GameObject CreateAndSavePrefab(Sprite sprite, bool hasSubObject)
+        public static GameObject CreateAndSavePrefab(Sprite sprite, bool hasSubObject)
         {
             string name = sprite.texture.name;
             GameObject instance = new GameObject(name);
@@ -43,8 +43,7 @@ namespace OptSprite
             return prefab;
         }
 
-
-        protected void AddComponentsAssets(Sprite sprite, SpriteConfigData data, GameObject prefab, string renderType, string shaderName, bool isOpaque, bool isComplex)
+        public static void AddComponentsAssets(Sprite sprite, SpriteConfigData data, GameObject prefab, string renderType, string shaderName, MeshRenderType meshRenderType)
         {
             //add components
             MeshFilter meshFilter = prefab.AddComponent<MeshFilter>();
@@ -55,7 +54,7 @@ namespace OptSprite
             {
                 name = renderType,
             };
-            SpriteUtil.UpdateMesh(sprite, data, ref mesh, isOpaque, isComplex);
+            SpriteUtil.UpdateMesh(sprite, data, ref mesh, meshRenderType);
             meshFilter.mesh = mesh;
 
             //creat new material

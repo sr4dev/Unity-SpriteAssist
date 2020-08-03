@@ -28,13 +28,13 @@ namespace OptSprite
         [Range(0, 10)]
         public float detail = DETAIL;
 
-        [Range(0, 254)]
+        [Range(1, 255)]
         public byte alphaTolerance = ALPHA_TOLERANCE;
 
         [Range(0, 30)]
         public byte vertexMergeDistance = VERTEX_MERGE_DISTANCE;
 
-        [Range(0, 254)]
+        [Range(1, 255)]
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
 
 

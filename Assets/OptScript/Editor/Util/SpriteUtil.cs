@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections;
+﻿using LibTessDotNet;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace OptSprite
 {
+    public enum MeshRenderType
+    {
+        Transparent,
+        Opaque,
+        SeparatedTransparent
+    }
+
     static class SpriteUtil
     {
         private static readonly MethodInfo _generateOutlineMethodInfo = typeof(UnityEditor.Sprites.SpriteUtility).GetMethod("GenerateOutlineFromSprite", BindingFlags.NonPublic | BindingFlags.Static);
@@ -45,7 +49,7 @@ namespace OptSprite
             }
         }
 
-        public static void GetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, bool isOpaque, bool isComplex)
+        public static void GetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
         {
             if (data == null || !data.overriden)
             {
@@ -54,13 +58,28 @@ namespace OptSprite
                 return;
             }
 
-            
-            List<OutlineData> outlineDataList = new List<OutlineData>();
-            Vector2[][] paths;
-            if (isOpaque == false)
+            Vector2[][] paths = GenerateOutline(sprite, data, meshRenderType);
+            CreateMeshData(paths, out vertices, out triangles);
+
+            if (vertices.Length >= ushort.MaxValue)
             {
-                if (isComplex)
-                {
+                Debug.LogErrorFormat($"Too many veretics! Sprite {sprite.name} has {vertices.Length} vertices.");
+                vertices = sprite.vertices;
+                triangles = sprite.triangles;
+            }
+        }
+
+        private static Vector2[][] GenerateOutline(Sprite sprite, SpriteConfigData data, MeshRenderType meshRenderType)
+        {
+            switch (meshRenderType)
+            {
+                case MeshRenderType.Transparent:
+                    return GenerateTransparentOutline(sprite, data.detail, data.alphaTolerance, data.detectHoles);
+                    
+                case MeshRenderType.Opaque:
+                    return GenerateOpaqueOutline(sprite, data.opaqueAlphaTolerance, data.vertexMergeDistance);
+                    
+                case MeshRenderType.SeparatedTransparent:
                     //test
                     var tPixels = sprite.texture.GetPixels32();
                     var transparent = new Texture2D((int)sprite.rect.width, (int)sprite.rect.height);
@@ -78,60 +97,10 @@ namespace OptSprite
                     var normalizedPivot = new Vector2(sprite.pivot.x / sprite.rect.width, sprite.pivot.y / sprite.rect.height);
                     var newSprite = Sprite.Create(transparent, sprite.rect, normalizedPivot, sprite.pixelsPerUnit, 1, SpriteMeshType.Tight);
 
-                    paths = GenerateTransparentOutline(newSprite, data.detail, data.alphaTolerance, data.detectHoles);
-                } else
-                {
-                    paths  = GenerateTransparentOutline(sprite, data.detail, data.alphaTolerance, data.detectHoles);
-                }
-            }
-            else
-            {
-                paths = GenerateOpaqueOutline(sprite, data.opaqueAlphaTolerance, data.vertexMergeDistance);
-            }
-            
-            //TODO
-            foreach (Vector2[] path in paths)
-            {
-                foreach (OutlineData outlineData in outlineDataList)
-                {
-                    if (PolyContainsPoly(outlineData.outside, path))
-                    {
-                        foreach (Vector2[] hole in outlineData.holes)
-                        {
-                            if (PolyContainsPoly(hole, path))
-                            {
-                                goto outlineDataNext;
-                            }
-                        }
-
-                        outlineData.holes.Add(path);
-                        goto result;
-                    }
-
-                outlineDataNext:
-                    continue;
-                }
-
-                outlineDataList.Add(new OutlineData(path));
-
-            result:
-                continue;
+                    return GenerateTransparentOutline(newSprite, data.detail, data.alphaTolerance, data.detectHoles);
             }
 
-            CreateMeshData(outlineDataList, out var v, out var t);
-
-            if (v.Count >= ushort.MaxValue)
-            {
-                Debug.LogErrorFormat($"Too many veretics! Sprite {sprite.name} has {v.Count} vertices.");
-                vertices = sprite.vertices;
-                triangles = sprite.triangles;
-            }
-            else
-            {
-                t.Reverse();
-                vertices = v.ToArray();
-                triangles = t.ToArray();
-            }
+            return null;
         }
 
         private static Vector2[][] GenerateTransparentOutline(Sprite sprite, float detail, byte alphaTolerance, bool detectHoles)
@@ -160,104 +129,29 @@ namespace OptSprite
             return newPaths;
         }
 
-        private static void CreateMeshData(List<OutlineData> outlineDataList, out List<Vector2> vertices, out List<ushort> triangles)
+        private static void CreateMeshData(Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)
         {
-            vertices = new List<Vector2>();
-            triangles = new List<ushort>();
+            Tess tess = new Tess();
 
-            foreach (OutlineData outlineData in outlineDataList)
+            foreach (Vector2[] path in paths)
             {
-                outlineData.CreateMeshData(out var v, out var t, (ushort)vertices.Count);
-                vertices.AddRange(v);
-                triangles.AddRange(t);
-            }
-        }
+                ContourVertex[] contour = new ContourVertex[path.Length];
 
-        private static bool PolyContainsPoly(Vector2[] polyPoints, Vector2[] polyPoints2)
-        {
-            for (int i = 0; i < polyPoints2.Length; i++)
-            {
-                if (PolyContainsPoint(polyPoints, polyPoints2[i]) == false)
+                for (var i = 0; i < contour.Length; i++)
                 {
-                    return false;
+                    contour[i].Position = new Vec3(path[i].x, path[i].y, 0);
                 }
+
+                tess.AddContour(contour, ContourOrientation.CounterClockwise);
             }
 
-            return true;
+            tess.Tessellate(WindingRule.EvenOdd, ElementType.Polygons, 3);
+
+            vertices = tess.Vertices.Select(v => new Vector2(v.Position.X, v.Position.Y)).ToArray();
+            triangles = tess.Elements.Select(e => (ushort)e).ToArray();
         }
 
-        private static bool PolyContainsPoint(Vector2[] polyPoints, Vector2 p)
-        {
-            int j = polyPoints.Length - 1;
-            bool inside = false;
-            
-            for (int i = 0; i < polyPoints.Length; j = i++)
-            {
-                Vector2 pi = polyPoints[i];
-                Vector2 pj = polyPoints[j];
-                if (((pi.y <= p.y && p.y < pj.y) || (pj.y <= p.y && p.y < pi.y)) &&
-                    (p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y) + pi.x))
-                    inside = !inside;
-            }
 
-            return inside;
-        }
-
-        public static void SeparateTextureForDebug(Sprite sprite, byte alphaTolerance)
-        {
-            var tPixels = sprite.texture.GetPixels32();
-            var oPixels = tPixels.ToArray();
-            var width = (int)sprite.rect.width;
-            var height = (int)sprite.rect.height;
-            var transparent = new Texture2D(width, height);
-            var opaque = new Texture2D(width, height);
-
-            for (int i = 0; i < tPixels.Length; i++)
-            {
-                if (tPixels[i].a >= alphaTolerance)
-                {
-                    tPixels[i].a = 0;
-                }
-                else
-                {
-                    oPixels[i].a = 0;
-                }
-            }
-
-            ReduceNoise(ref tPixels, width, height);
-            ReduceNoise(ref tPixels, width, height);
-            ReduceNoise(ref tPixels, width, height);
-
-
-            transparent.SetPixels32(tPixels);
-            transparent.Apply();
-
-            opaque.SetPixels32(oPixels);
-            opaque.Apply();
-
-            //var tSprite = Sprite.Create(transparent, sprite.rect, sprite.pivot);
-            //var oSprite = Sprite.Create(opaque, sprite.rect, sprite.pivot);
-
-            //AssetDatabase.CreateAsset(transparent, "Assets/tSprite.asset");
-            //AssetDatabase.CreateAsset(opaque, "Assets/oSprite.asset");
-
-            Test(transparent, sprite.name + "_trans");
-            Test(opaque, sprite.name + "_opaque");
-
-            AssetDatabase.Refresh();
-        }
-
-        public static void Test(Texture2D texture, string fileName)
-        {
-            //then Save To Disk as PNG
-            byte[] bytes = texture.EncodeToPNG();
-            var dirPath = Application.dataPath + "/";
-            if (!Directory.Exists(dirPath))
-            {
-                Directory.CreateDirectory(dirPath);
-            }
-            File.WriteAllBytes(dirPath + fileName + ".png", bytes);
-        }
 
         private static void ReduceNoise(ref Color32[] tPixels, int height, int width)
         {
@@ -297,9 +191,9 @@ namespace OptSprite
             return new Color();
         }
 
-        public static void GetUV(Sprite sprite, Vector2[] vertices, out Vector2[] uv)
+        public static Vector2[] GetVerticeBasedUV(Sprite sprite, Vector2[] vertices)
         {
-            uv = new Vector2[vertices.Length];
+            var uv = new Vector2[vertices.Length];
 
             for (var i = 0; i < uv.Length; i++)
             {
@@ -307,22 +201,14 @@ namespace OptSprite
                 uv[i].x /= sprite.texture.width;
                 uv[i].y /= sprite.texture.height;
             }
+
+            return uv;
         }
 
-        public static Mesh CreateMesh(Sprite sprite, SpriteConfigData data, string meshName)
+        public static void UpdateMesh(Sprite sprite, SpriteConfigData data, ref Mesh mesh, MeshRenderType meshRenderType)
         {
-            Mesh mesh = new Mesh
-            {
-                name = meshName
-            };
-            SpriteUtil.UpdateMesh(sprite, data, ref mesh, false, false);
-            return mesh;
-        }
-
-        public static void UpdateMesh(Sprite sprite, SpriteConfigData data, ref Mesh mesh, bool isOpaque, bool isComplex)
-        {
-            GetMeshData(sprite, data, out var v, out var t, isOpaque, isComplex);
-            GetUV(sprite, v, out Vector2[] uv);
+            GetMeshData(sprite, data, out var v, out var t, meshRenderType);
+            Vector2[] uv = GetVerticeBasedUV(sprite, v);
 
             mesh.Clear();
             mesh.SetVertices(Array.ConvertAll(v, i => (Vector3)i).ToList());
