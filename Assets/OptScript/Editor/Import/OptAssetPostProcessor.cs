@@ -18,7 +18,7 @@ namespace OptSprite
                 return;
             }
 
-            MeshPrefabCreator creator = MeshPrefabCreator.GetInstnace(configData.mode);
+            MeshCreator creator = MeshCreator.GetInstnace(configData.mode);
 
             foreach (var sprite in sprites)
             {

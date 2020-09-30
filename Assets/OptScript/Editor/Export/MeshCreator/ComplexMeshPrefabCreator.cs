@@ -2,7 +2,7 @@
 
 namespace OptSprite
 {
-    public class DefaultMeshPrefabCreator : MeshPrefabCreator
+    public class DefaultMeshCreator : MeshCreator
     {
         public override void OverrideGeometry(Sprite sprite, SpriteConfigData configData)
         {
@@ -12,12 +12,12 @@ namespace OptSprite
         public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
         {
             GameObject prefab = CreateAndSavePrefab(sprite, false);
-            AddComponentsAssets(sprite, data, prefab, "Transparent", "Unlit/Transparent", MeshRenderType.Transparent);
+            AddComponentsAssets(sprite, data, prefab, RENDER_TYPE_TRANSPARENT, RENDER_SHADER_TRANSPARENT, MeshRenderType.Transparent);
             return prefab;
         }
     }
 
-    public class TransparentMeshPrefabCreator : MeshPrefabCreator
+    public class TransparentMeshCreator : MeshCreator
     {
         public override void OverrideGeometry(Sprite sprite, SpriteConfigData configData)
         {
@@ -29,12 +29,12 @@ namespace OptSprite
         public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
         {
             GameObject prefab = CreateAndSavePrefab(sprite, false);
-            AddComponentsAssets(sprite, data, prefab, "Transparent", "Unlit/Transparent", MeshRenderType.Transparent);
+            AddComponentsAssets(sprite, data, prefab, RENDER_TYPE_TRANSPARENT, RENDER_SHADER_TRANSPARENT, MeshRenderType.Transparent);
             return prefab;
         }
     }
 
-    public class OpaqueMeshPrefabCreator : MeshPrefabCreator
+    public class OpaqueMeshCreator : MeshCreator
     {
         public override void OverrideGeometry(Sprite sprite, SpriteConfigData configData)
         {
@@ -46,12 +46,12 @@ namespace OptSprite
         public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
         {
             GameObject prefab = CreateAndSavePrefab(sprite, false);
-            AddComponentsAssets(sprite, data, prefab, "Opaque", "Unlit/Texture", MeshRenderType.Opaque);
+            AddComponentsAssets(sprite, data, prefab, RENDER_TYPE_OPAQUE, RENDER_SHADER_OPAQUE, MeshRenderType.Opaque);
             return prefab;
         }
     }
 
-    public class ComplexMeshPrefabCreator : MeshPrefabCreator
+    public class ComplexMeshCreator : MeshCreator
     {
         public override void OverrideGeometry(Sprite sprite, SpriteConfigData configData)
         {
@@ -62,8 +62,8 @@ namespace OptSprite
         {
             GameObject root = CreateAndSavePrefab(sprite, true);
             GameObject sub = root.transform.GetChild(0).gameObject;
-            AddComponentsAssets(sprite, data, root, "Transparent", "Unlit/Transparent", MeshRenderType.SeparatedTransparent);
-            AddComponentsAssets(sprite, data, sub, "Opaque", "Unlit/Texture", MeshRenderType.Opaque);
+            AddComponentsAssets(sprite, data, root, RENDER_TYPE_TRANSPARENT, RENDER_SHADER_TRANSPARENT, MeshRenderType.SeparatedTransparent);
+            AddComponentsAssets(sprite, data, sub, RENDER_TYPE_OPAQUE, RENDER_SHADER_OPAQUE, MeshRenderType.Opaque);
             return root;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibTessDotNet;
+using System;
 using UnityEngine;
 
 namespace OptSprite
@@ -8,7 +9,7 @@ namespace OptSprite
     {
         private const float DETAIL = 0.3f;
         private const byte ALPHA_TOLERANCE = 10;
-        private const byte VERTEX_MERGE_DISTANCE = 3;
+        private const float EDGE_SMOOTHING = 1f;
         private const bool DETECT_HOLES = true;
 
         [Flags]
@@ -22,26 +23,29 @@ namespace OptSprite
         public bool overriden;
 
         public Mode mode = Mode.TransparentMesh;
-
-        public bool hasMeshPrefab;
+        public WindingRule windingRule = WindingRule.EvenOdd;
 
         [Range(0, 10)]
-        public float detail = DETAIL;
+        public float transparentDetail = DETAIL;
 
         [Range(1, 255)]
-        public byte alphaTolerance = ALPHA_TOLERANCE;
+        public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
 
-        [Range(0, 30)]
-        public byte vertexMergeDistance = VERTEX_MERGE_DISTANCE;
+        [Range(0, 1)]
+        public float transparentEdgeSmoothing = EDGE_SMOOTHING;
 
-        [Range(1, 255)]
+        [Range(0, 10)]
+        public float opaqueDetail = DETAIL;
+
+        [Range(0, 255)]
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
-
+        
+        [Range(0, 1)]
+        public float opaqueEdgeSmoothing = EDGE_SMOOTHING;
 
         public bool detectHoles = DETECT_HOLES;
 
         public string meshPrefabGuid;
-
 
         public static SpriteConfigData GetData(string jsonData)
         {
