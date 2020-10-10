@@ -1,4 +1,5 @@
 ﻿using LibTessDotNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -17,14 +18,12 @@ namespace OptSprite
         private bool _isDataChanged = false;
         private bool _needPreviewUpdate = true;
 
-        private string _infoText = "TEST";
-
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
             _importData = new SpriteImportData(sprite, assetPath);
             _configData = SpriteConfigData.GetData(_importData.textureImporter.userData);
-            _meshCreator = MeshCreator.GetInstnace(_configData.mode);
-            _preview = new SpritePreview(_configData.mode);
+            _meshCreator = MeshCreator.GetInstnace(_configData);
+            _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
 
             Undo.undoRedoPerformed -= UndoReimport;
             Undo.undoRedoPerformed += UndoReimport;
@@ -34,7 +33,7 @@ namespace OptSprite
         {
             using (var checkDataChange = new EditorGUI.ChangeCheckScope())
             {
-                _configData.overriden = EditorGUILayout.ToggleLeft("Enable OptSprite", _configData.overriden);
+                _configData.overriden = EditorGUILayout.ToggleLeft("Enable SpriteAssist", _configData.overriden);
                 EditorGUILayout.Space();
 
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -49,13 +48,13 @@ namespace OptSprite
                         using (var checkModeChange = new EditorGUI.ChangeCheckScope())
                         {
                             _configData.mode = (SpriteConfigData.Mode)EditorGUILayout.EnumPopup("Mode", _configData.mode);
-                            _configData.windingRule = (WindingRule)EditorGUILayout.EnumPopup("Winding Rule", _configData.windingRule);
+                            //_configData.windingRule = (WindingRule)EditorGUILayout.EnumPopup("Winding Rule", _configData.windingRule);//TODO
                             EditorGUILayout.Space();
 
                             if (checkModeChange.changed)
                             {
-                                _meshCreator = MeshCreator.GetInstnace(_configData.mode);
-                                _preview.ChangeMode(_configData.mode);
+                                _meshCreator = MeshCreator.GetInstnace(_configData);
+                                _preview.SetWireframes(_meshCreator.GetMeshWireframes());
                             }
                         }
 
@@ -66,7 +65,6 @@ namespace OptSprite
                             {
                                 _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
                                 _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 1, 255);
-                                _configData.transparentEdgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.transparentEdgeSmoothing, 0f, 1f);
                                 _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 EditorGUILayout.Space();
                             }
@@ -79,7 +77,6 @@ namespace OptSprite
                             {
                                 _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
                                 _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 1, 255);
-                                _configData.opaqueEdgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.opaqueEdgeSmoothing, 0f, 1f);
                                 using (new EditorGUI.DisabledScope(true))
                                 {
                                     //force true
@@ -88,6 +85,9 @@ namespace OptSprite
                                 EditorGUILayout.Space();
                             }
                         }
+
+                        _configData.edgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.edgeSmoothing, 0f, 1f);
+                        EditorGUILayout.Space();
                     }
 
                     if (_configData != null && _configData.overriden && _configData.mode == SpriteConfigData.Mode.Complex)
@@ -163,7 +163,6 @@ namespace OptSprite
                     EditorGUILayout.HelpBox("Mesh Type is not Tight Mesh. Change texture setting.", MessageType.Warning);
                 }
 
-                EditorGUILayout.LabelField("Transparent Mesh", _infoText, new GUILayoutOption[0]);
                 EditorGUILayout.Space();
             }
         }
@@ -201,7 +200,7 @@ namespace OptSprite
             foreach (KeyValuePair<AssetImporter, Object> kvp in dictionary)
             {
                 AssetImporter importer = kvp.Key;
-                Sprite _sprite = kvp.Value as Sprite;
+                Sprite sprite = kvp.Value as Sprite;
                 Object[] allAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(_importData.MeshPrefab));
 
                 foreach (Object asset in allAssets)
@@ -215,12 +214,14 @@ namespace OptSprite
                     {
                         if (asset.name == MeshCreator.RENDER_TYPE_TRANSPARENT)
                         {
-                            MeshRenderType type = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
-                            SpriteUtil.UpdateMesh(_sprite, _configData, ref mesh, type);
+                            MeshRenderType meshRenderType = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
+                            sprite.GetMeshData(_configData, out var v, out var t, meshRenderType);
+                            sprite.UpdateMesh(ref mesh, v, t);
                         }
                         else if (asset.name == MeshCreator.RENDER_TYPE_OPAQUE)
                         {
-                            SpriteUtil.UpdateMesh(_sprite, _configData, ref mesh, MeshRenderType.Opaque);
+                            sprite.GetMeshData(_configData, out var v, out var t, MeshRenderType.Opaque);
+                            sprite.UpdateMesh(ref mesh, v, t);
                         }
                     }
 
@@ -229,12 +230,12 @@ namespace OptSprite
                         if (asset.name == MeshCreator.RENDER_TYPE_TRANSPARENT)
                         {
                             mat.shader = Shader.Find(MeshCreator.RENDER_SHADER_TRANSPARENT);
-                            mat.SetTexture("_MainTex", _sprite.texture);
+                            mat.SetTexture("_MainTex", sprite.texture);
                         }
                         else if (asset.name == MeshCreator.RENDER_TYPE_OPAQUE)
                         {
                             mat.shader = Shader.Find(MeshCreator.RENDER_SHADER_OPAQUE);
-                            mat.SetTexture("_MainTex", _sprite.texture);
+                            mat.SetTexture("_MainTex", sprite.texture);
                         }
                     }
                 }

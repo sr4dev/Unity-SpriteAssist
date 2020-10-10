@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace OptSprite
@@ -7,13 +9,12 @@ namespace OptSprite
     {
         private List<SpritePreviewWireframe> _wireframes;
         private Rect _rect;
+        private string _infoText;
         private Sprite _sprite;
 
-        public SpritePreview(SpriteConfigData.Mode mode)
+        public SpritePreview(List<SpritePreviewWireframe> wireframes)
         {
-            _wireframes = new List<SpritePreviewWireframe>();
-
-            ChangeMode(mode);
+            _wireframes = wireframes;
         }
 
         public void Show(Rect rect, Sprite sprite, SpriteConfigData configData, bool needPreviewUpdate)
@@ -30,25 +31,11 @@ namespace OptSprite
             Draw();
         }
 
-        public void ChangeMode(SpriteConfigData.Mode mode)
+        public void SetWireframes(List<SpritePreviewWireframe> wireframes)
         {
             Dispose();
 
-            switch (mode)
-            {
-                case SpriteConfigData.Mode.TransparentMesh:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.Transparent));
-                    break;
-                
-                case SpriteConfigData.Mode.OpaqueMesh:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.Opaque));
-                    break;
-               
-                case SpriteConfigData.Mode.Complex:
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.SeparatedTransparent));
-                    _wireframes.Add(new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.Opaque));
-                    break;
-            }
+            _wireframes = wireframes;
         }
 
         public void Dispose()
@@ -65,10 +52,12 @@ namespace OptSprite
         {
             _rect = rect;
             _sprite = sprite;
+            _infoText = "";
 
             foreach (var wireframe in _wireframes)
             {
                 wireframe.UpdateAndResize(_rect, _sprite, data);
+                _infoText += wireframe.GetInfo(_sprite) + "\n";
             }
         }
 
@@ -88,7 +77,9 @@ namespace OptSprite
             {
                 wireframe.Draw(_rect, _sprite);
             }
-        }
 
+            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, richText = true, fontStyle = FontStyle.Bold };
+            EditorGUI.DropShadowLabel(_rect, _infoText, style);
+        }
     }
 }

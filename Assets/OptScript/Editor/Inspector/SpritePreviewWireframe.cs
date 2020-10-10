@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using UnityEngine;
 
 namespace OptSprite
@@ -14,9 +15,9 @@ namespace OptSprite
         private Vector2[] _vertices;
         private Vector2[] _scaledVertices;
         private ushort[] _triangles;
-        private MeshRenderType _meshRenderType;
+        private readonly MeshRenderType _meshRenderType;
 
-        public SpritePreviewWireframe(Color color, MeshRenderType meshRenderType = MeshRenderType.Transparent)
+        public SpritePreviewWireframe(Color color, MeshRenderType meshRenderType)
         {
             Texture2D texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, color);
@@ -31,21 +32,22 @@ namespace OptSprite
 
         public void UpdateAndResize(Rect rect, Sprite sprite, SpriteConfigData data)
         {
-            SpriteUtil.GetMeshData(sprite, data, out _vertices, out _triangles, _meshRenderType);
+            sprite.GetMeshData(data, out _vertices, out _triangles, _meshRenderType);
 
             Resize(rect, sprite);
         }
 
         public void Resize(Rect rect, Sprite sprite)
         {
-            float spriteMinScale = SpriteUtil.GetMinRectScale(rect, sprite.rect);
-            _scaledVertices = _vertices.ToArray();
-            SpriteUtil.GetScaledVertices(_scaledVertices, sprite.pixelsPerUnit, sprite.pivot, sprite.rect.size, spriteMinScale, true, false);
+            float spriteMinScale = GetMinRectScale(rect, sprite.rect);
+            Vector2[] vertices = _vertices.ToArray();
+            sprite.SetSpriteScaleToVertices(vertices, spriteMinScale, true, false);
+            _scaledVertices = vertices;
         }
 
         public void Draw(Rect rect, Sprite sprite)
         {
-            float spriteMinScale = SpriteUtil.GetMinRectScale(rect, sprite.rect);
+            float spriteMinScale = GetMinRectScale(rect, sprite.rect);
             Vector2 position = rect.center - (sprite.rect.size * spriteMinScale * 0.5f);
 
             _material.SetPass(0);
@@ -58,12 +60,30 @@ namespace OptSprite
         {
             if (_material != null)
             {
-                Object.DestroyImmediate(_material.mainTexture);
-                Object.DestroyImmediate(_material);
+                UnityEngine.Object.DestroyImmediate(_material.mainTexture);
+                UnityEngine.Object.DestroyImmediate(_material);
             }
         }
 
-        private void GLDraw(Vector2 pos, Vector2[] vertices, ushort[] triangles, bool isWireframe)
+        public string GetInfo(Sprite sprite)
+        {
+            string icon = "//";
+            switch (_meshRenderType)
+            {
+                case MeshRenderType.Transparent:
+                case MeshRenderType.SeparatedTransparent:
+                    icon = "<color=blue>" + icon + "</color>";
+                    break;
+                
+                case MeshRenderType.Opaque:
+                    icon = "<color=red>" + icon + "</color>";
+                    break;
+            }
+
+            return icon + " " + sprite.GetMeshAreaInfo(_vertices, _triangles);
+        }
+
+        private static void GLDraw(Vector2 pos, Vector2[] vertices, ushort[] triangles, bool isWireframe)
         {
             GL.wireframe = isWireframe;
             GL.PushMatrix();
@@ -78,6 +98,11 @@ namespace OptSprite
             GL.End();
             GL.PopMatrix();
             GL.wireframe = false;
+        }
+
+        private static float GetMinRectScale(Rect rect, Rect sRect)
+        {
+            return Mathf.Min(rect.width / sRect.width, rect.height / sRect.height);
         }
 
     }

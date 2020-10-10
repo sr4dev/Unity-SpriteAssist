@@ -31,9 +31,6 @@ namespace OptSprite
         [Range(1, 255)]
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
 
-        [Range(0, 1)]
-        public float transparentEdgeSmoothing = EDGE_SMOOTHING;
-
         [Range(0, 10)]
         public float opaqueDetail = DETAIL;
 
@@ -41,7 +38,7 @@ namespace OptSprite
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
         
         [Range(0, 1)]
-        public float opaqueEdgeSmoothing = EDGE_SMOOTHING;
+        public float edgeSmoothing = EDGE_SMOOTHING;
 
         public bool detectHoles = DETECT_HOLES;
 

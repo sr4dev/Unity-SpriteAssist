@@ -5,7 +5,7 @@ namespace OptSprite
 {
     [CustomEditor(typeof(Sprite))]
     [CanEditMultipleObjects]
-    public class CustomSpriteInspector : UnityInternalEditor<Sprite>
+    public class SpriteInspector : UnityInternalEditor<Sprite>
     {
         private SpriteProcessor _spriteProcessor;
 

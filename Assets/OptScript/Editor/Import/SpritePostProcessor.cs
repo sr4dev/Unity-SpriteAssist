@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace OptSprite
 {
-    public class OptAssetPostProcessor : AssetPostprocessor
+    public class SpritePostProcessor : AssetPostprocessor
     {
         private void OnPostprocessSprites(Texture2D texture, Sprite[] sprites)
         {
@@ -12,13 +12,12 @@ namespace OptSprite
             textureImporter.ReadTextureSettings(textureImporterSettings);
             SpriteConfigData configData = SpriteConfigData.GetData(textureImporter.userData);
 
-            if (textureImporterSettings.spriteMeshType != SpriteMeshType.Tight ||
-                configData == null || !configData.overriden)
+            if (textureImporterSettings.spriteMeshType != SpriteMeshType.Tight || !configData.overriden)
             {
                 return;
             }
 
-            MeshCreator creator = MeshCreator.GetInstnace(configData.mode);
+            MeshCreator creator = MeshCreator.GetInstnace(configData);
 
             foreach (var sprite in sprites)
             {
