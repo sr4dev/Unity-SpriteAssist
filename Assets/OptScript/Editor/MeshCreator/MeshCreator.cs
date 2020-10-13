@@ -11,9 +11,9 @@ namespace OptSprite
         public const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         public const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
 
-        private static MeshCreator _defaultCreator = new DefaultMeshCreator();
+        private static readonly MeshCreator _defaultCreator = new DefaultMeshCreator();
 
-        private static Dictionary<SpriteConfigData.Mode, MeshCreator> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreator>()
+        private static readonly IReadOnlyDictionary<SpriteConfigData.Mode, MeshCreator> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreator>()
         {
             { SpriteConfigData.Mode.TransparentMesh, new TransparentMeshCreator() },
             { SpriteConfigData.Mode.OpaqueMesh, new OpaqueMeshCreator() },

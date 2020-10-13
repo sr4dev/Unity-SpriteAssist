@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace OptSprite
 {
-    public class SpritePreviewWireframe
+    public class SpritePreviewWireframe : IDisposable
     {
         public static readonly Color transparentColor = new Color(0.0f, 0.0f, 1.0f, 0.3f);
         public static readonly Color opaqueColor = new Color(1.0f, 0.0f, 0.0f, 0.3f);
@@ -74,7 +74,7 @@ namespace OptSprite
                 case MeshRenderType.SeparatedTransparent:
                     icon = "<color=blue>" + icon + "</color>";
                     break;
-                
+
                 case MeshRenderType.Opaque:
                     icon = "<color=red>" + icon + "</color>";
                     break;

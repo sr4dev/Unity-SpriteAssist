@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -60,13 +59,13 @@ namespace OptSprite
             area = Mathf.Abs(area);
 
             float meshAreaRatio = area / (sprite.rect.width * sprite.rect.height) * 100;
-            return $"Verts: {vertices.Length}  Tris: {triangles.Length}  Overdraw: {meshAreaRatio.ToString("F2")}%";
+            return $"Verts: {vertices.Length}  Tris: {triangles.Length}  Overdraw: {meshAreaRatio:F2}%";
         }
 
         private static bool TryGetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
         {
-            vertices = null;
-            triangles = null;
+            vertices = Array.Empty<Vector2>();
+            triangles = Array.Empty<ushort>();
 
             if (data == null || !data.overriden)
             {
@@ -98,7 +97,7 @@ namespace OptSprite
             }
 
             mesh.Clear();
-            mesh.SetVertices(Array.ConvertAll(v, i => (Vector3)i).ToList());
+            mesh.SetVertices(Array.ConvertAll(v, i => (Vector3)i));
             mesh.SetUVs(0, uv);
             mesh.SetTriangles(Array.ConvertAll(t, i => (int)i), 0);
         }

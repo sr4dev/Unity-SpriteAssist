@@ -28,7 +28,7 @@ namespace OptSprite
                     return GenerateSeparatedTransparent(sprite, data);
 
                 default:
-                    return new Vector2[0][];
+                    return Array.Empty<Vector2[]>();
             }
         }
 
