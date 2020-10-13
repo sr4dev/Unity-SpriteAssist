@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace OptSprite
 {
-    public class SpritePreview
+    public class SpritePreview : IDisposable
     {
         private List<SpritePreviewWireframe> _wireframes;
         private Rect _rect;
