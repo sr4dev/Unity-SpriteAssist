@@ -1,5 +1,4 @@
-﻿using LibTessDotNet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -8,12 +7,13 @@ using Object = UnityEngine.Object;
 
 namespace OptSprite
 {
-    public class SpriteProcessor
+    public class SpriteProcessor : IDisposable
     {
-        private SpriteImportData _importData;
+        private readonly SpriteImportData _importData;
+        private readonly SpritePreview _preview;
+
         private SpriteConfigData _configData;
         private MeshCreator _meshCreator;
-        private SpritePreview _preview;
 
         private bool _isDataChanged = false;
         private bool _needPreviewUpdate = true;
@@ -25,7 +25,6 @@ namespace OptSprite
             _meshCreator = MeshCreator.GetInstnace(_configData);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
 
-            Undo.undoRedoPerformed -= UndoReimport;
             Undo.undoRedoPerformed += UndoReimport;
         }
 
@@ -184,6 +183,8 @@ namespace OptSprite
         public void Dispose()
         {
             _preview.Dispose();
+
+            Undo.undoRedoPerformed -= UndoReimport;
         }
 
         private void Clear()
@@ -195,7 +196,7 @@ namespace OptSprite
         {
             Dictionary<AssetImporter, Object> dictionary = targets.ToDictionary(t => AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)));
 
-            Undo.RegisterCompleteObjectUndo(dictionary.Values.ToArray(), "OptSprite Texture");
+            Undo.RegisterCompleteObjectUndo(targets, "OptSprite Texture");
 
             foreach (KeyValuePair<AssetImporter, Object> kvp in dictionary)
             {
