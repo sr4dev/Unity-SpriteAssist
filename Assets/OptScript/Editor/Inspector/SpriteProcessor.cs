@@ -12,24 +12,31 @@ namespace OptSprite
         private readonly SpriteImportData _importData;
         private readonly SpritePreview _preview;
 
+        private string _originalUserData;
         private SpriteConfigData _configData;
         private MeshCreator _meshCreator;
 
         private bool _isDataChanged = false;
-        private bool _needPreviewUpdate = true;
+        private Object _target;
+        private Object[] _targets;
 
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
             _importData = new SpriteImportData(sprite, assetPath);
-            _configData = SpriteConfigData.GetData(_importData.textureImporter.userData);
+            _originalUserData = _importData.textureImporter.userData;
+            _configData = SpriteConfigData.GetData(_originalUserData);
             _meshCreator = MeshCreator.GetInstnace(_configData);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
+
 
             Undo.undoRedoPerformed += UndoReimport;
         }
 
         public void OnInspectorGUI(Object target, Object[] targets)
         {
+            _target = target;
+            _targets = targets;
+
             using (var checkDataChange = new EditorGUI.ChangeCheckScope())
             {
                 _configData.overriden = EditorGUILayout.ToggleLeft("Enable SpriteAssist", _configData.overriden);
@@ -63,7 +70,7 @@ namespace OptSprite
                             using (new EditorGUI.IndentLevelScope())
                             {
                                 _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
-                                _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 1, 255);
+                                _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
                                 _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 EditorGUILayout.Space();
                             }
@@ -75,7 +82,7 @@ namespace OptSprite
                             using (new EditorGUI.IndentLevelScope())
                             {
                                 _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
-                                _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 1, 255);
+                                _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
                                 using (new EditorGUI.DisabledScope(true))
                                 {
                                     //force true
@@ -95,7 +102,6 @@ namespace OptSprite
                             EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.", MessageType.Info);
                     }
 
-                    _needPreviewUpdate |= checkDataChange.changed;
                     _isDataChanged |= checkDataChange.changed;
                 }
 
@@ -113,7 +119,7 @@ namespace OptSprite
                         string buttonText = _importData.HasMeshPrefab ? "Remove" : "Create";
                         if (GUILayout.Button(buttonText, GUILayout.Width(60)))
                         {
-                            Apply(targets);
+                            Apply();
 
                             if (_importData.HasMeshPrefab)
                             {
@@ -148,12 +154,12 @@ namespace OptSprite
 
                     if (GUILayout.Button("Revert", GUILayout.Width(50)))
                     {
-                        Clear();
+                        Revert();
                     }
 
                     if (GUILayout.Button("Apply", GUILayout.Width(50)))
                     {
-                        Apply(targets);
+                        Apply();
                     }
                 }
 
@@ -163,6 +169,13 @@ namespace OptSprite
                 }
 
                 EditorGUILayout.Space();
+
+                if (checkDataChange.changed)
+                {
+                    Undo.RegisterCompleteObjectUndo(_importData.textureImporter, "OptSprite Texture");
+
+                    _importData.textureImporter.userData = JsonUtility.ToJson(_configData);
+                }
             }
         }
 
@@ -176,27 +189,55 @@ namespace OptSprite
 
             //for mulriple preview
             Sprite sprite = (Sprite)target;
-            _preview.Show(rect, sprite, _configData, _needPreviewUpdate);
-            _needPreviewUpdate = false;
+            bool hasMultipleTargets = _targets.Length > 1;
+            _preview.Show(rect, sprite, _configData, hasMultipleTargets);
         }
 
         public void Dispose()
         {
             _preview.Dispose();
-
             Undo.undoRedoPerformed -= UndoReimport;
+
+            if (_isDataChanged)
+            {
+                int result = EditorUtility.DisplayDialogComplex("Unapplied import settings", $"Unapplied import settings for '{_importData.assetPath}'", "Apply", "Cancel", "Revert");
+
+                switch (result)
+                {
+                    //Apply
+                    case 0:
+                        Apply();
+                        break;
+
+                    //Cancel
+                    case 1:
+                        Selection.objects = _targets;
+                        break;
+
+                    //Revert
+                    case 2:
+                        Revert();
+                        break;
+                }
+            }
         }
 
-        private void Clear()
+        private void Revert()
         {
+            _configData = SpriteConfigData.GetData(_originalUserData);
+            _meshCreator = MeshCreator.GetInstnace(_configData);
+            _preview.SetWireframes(_meshCreator.GetMeshWireframes());
+            _importData.textureImporter.userData = _originalUserData;
             _isDataChanged = false;
         }
 
-        private void Apply(Object[] targets)
+        private void Apply()
         {
-            Dictionary<AssetImporter, Object> dictionary = targets.ToDictionary(t => AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)));
+            Undo.RegisterCompleteObjectUndo(_targets, "OptSprite Texture");
 
-            Undo.RegisterCompleteObjectUndo(targets, "OptSprite Texture");
+            _originalUserData = JsonUtility.ToJson(_configData);
+
+            Dictionary<AssetImporter, Object> dictionary = _targets.ToDictionary(t => AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)));
 
             foreach (KeyValuePair<AssetImporter, Object> kvp in dictionary)
             {
@@ -241,7 +282,7 @@ namespace OptSprite
                     }
                 }
 
-                importer.userData = JsonUtility.ToJson(_configData);
+                importer.userData = _originalUserData;
 
                 EditorUtility.SetDirty(importer);
                 AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath);
@@ -250,20 +291,20 @@ namespace OptSprite
                     ImportAssetOptions.DontDownloadFromCacheServer);
             }
 
-            Clear();
+            _isDataChanged = false;
         }
-
 
         private void UndoReimport()
         {
-            _configData = null;
+            _configData = SpriteConfigData.GetData(_importData.textureImporter.userData);
+            _isDataChanged = true;
 
-            //foreach (var t in targets)
-            //{
-            //    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t),
-            //        ImportAssetOptions.ForceUpdate |
-            //        ImportAssetOptions.DontDownloadFromCacheServer);
-            //}
+            foreach (var t in _targets)
+            {
+                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t),
+                    ImportAssetOptions.ForceUpdate |
+                    ImportAssetOptions.DontDownloadFromCacheServer);
+            }
         }
     }
 }

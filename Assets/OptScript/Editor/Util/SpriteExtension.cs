@@ -59,7 +59,7 @@ namespace OptSprite
             area = Mathf.Abs(area);
 
             float meshAreaRatio = area / (sprite.rect.width * sprite.rect.height) * 100;
-            return $"Verts: {vertices.Length}  Tris: {triangles.Length}  Overdraw: {meshAreaRatio:F2}%";
+            return $"Verts: {vertices.Length}  Tris: {triangles.Length}  Fillrate: {meshAreaRatio:F2}%";
         }
 
         private static bool TryGetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
