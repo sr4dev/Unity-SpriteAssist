@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public class SpriteProcessor : IDisposable
     {
@@ -172,7 +172,7 @@ namespace OptSprite
 
                 if (checkDataChange.changed)
                 {
-                    Undo.RegisterCompleteObjectUndo(_importData.textureImporter, "OptSprite Texture");
+                    Undo.RegisterCompleteObjectUndo(_importData.textureImporter, "SpriteAssist Texture");
 
                     _importData.textureImporter.userData = JsonUtility.ToJson(_configData);
                 }
@@ -233,7 +233,7 @@ namespace OptSprite
 
         private void Apply()
         {
-            Undo.RegisterCompleteObjectUndo(_targets, "OptSprite Texture");
+            Undo.RegisterCompleteObjectUndo(_targets, "SpriteAssist Texture");
 
             _originalUserData = JsonUtility.ToJson(_configData);
 
