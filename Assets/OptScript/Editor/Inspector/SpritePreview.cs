@@ -17,18 +17,10 @@ namespace OptSprite
             _wireframes = wireframes;
         }
 
-        public void Show(Rect rect, Sprite sprite, SpriteConfigData configData, bool needPreviewUpdate)
+        public void Show(Rect rect, Sprite sprite, SpriteConfigData configData, bool hasMultipleTargets)
         {
-            if (needPreviewUpdate)
-            {
-                UpdateAndResize(rect, sprite, configData);
-            }
-            else if (_rect != rect)
-            {
-                Resize(rect);
-            }
-
-            Draw();
+            UpdateAndResize(rect, sprite, configData);
+            Draw(hasMultipleTargets);
         }
 
         public void SetWireframes(List<SpritePreviewWireframe> wireframes)
@@ -71,15 +63,18 @@ namespace OptSprite
             }
         }
 
-        private void Draw()
+        private void Draw(bool hasMultipleTargets)
         {
             foreach (var wireframe in _wireframes)
             {
                 wireframe.Draw(_rect, _sprite);
             }
 
-            var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, richText = true, fontStyle = FontStyle.Bold };
-            EditorGUI.DropShadowLabel(_rect, _infoText, style);
+            if (!hasMultipleTargets)
+            {
+                var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, richText = true, fontStyle = FontStyle.Bold };
+                EditorGUI.DropShadowLabel(_rect, _infoText, style);
+            }
         }
     }
 }

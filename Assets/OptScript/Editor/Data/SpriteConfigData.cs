@@ -25,19 +25,14 @@ namespace OptSprite
         public Mode mode = Mode.TransparentMesh;
         public WindingRule windingRule = WindingRule.EvenOdd;
 
-        [Range(0, 10)]
         public float transparentDetail = DETAIL;
 
-        [Range(1, 255)]
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
 
-        [Range(0, 10)]
         public float opaqueDetail = DETAIL;
 
-        [Range(0, 255)]
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
         
-        [Range(0, 1)]
         public float edgeSmoothing = EDGE_SMOOTHING;
 
         public bool detectHoles = DETECT_HOLES;
