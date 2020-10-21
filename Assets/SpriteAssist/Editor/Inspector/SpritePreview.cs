@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public class SpritePreview : IDisposable
     {

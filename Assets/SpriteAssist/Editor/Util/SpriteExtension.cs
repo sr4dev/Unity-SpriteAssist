@@ -3,7 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public static class SpriteExtension
     {
