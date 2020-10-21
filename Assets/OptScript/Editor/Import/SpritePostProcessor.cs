@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {

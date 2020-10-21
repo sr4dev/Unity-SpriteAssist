@@ -1,4 +1,4 @@
-﻿namespace OptSprite
+﻿namespace SpriteAssist
 {
     public enum MeshRenderType
     {

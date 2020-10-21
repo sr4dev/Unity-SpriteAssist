@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     [Serializable]
     public class SpriteConfigData

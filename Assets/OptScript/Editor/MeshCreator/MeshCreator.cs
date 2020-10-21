@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public abstract class MeshCreator
     {

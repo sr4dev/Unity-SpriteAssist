@@ -5,9 +5,8 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
-
     public static class OutlineUtil
     {
         private static readonly MethodInfo _generateOutlineMethodInfo = typeof(UnityEditor.Sprites.SpriteUtility).GetMethod("GenerateOutlineFromSprite", BindingFlags.NonPublic | BindingFlags.Static);
