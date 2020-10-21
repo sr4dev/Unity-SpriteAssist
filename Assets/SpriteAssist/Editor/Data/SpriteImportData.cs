@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     public class SpriteImportData
     {

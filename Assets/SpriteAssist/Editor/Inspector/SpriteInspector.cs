@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace OptSprite
+namespace SpriteAssist
 {
     [CustomEditor(typeof(Sprite))]
     [CanEditMultipleObjects]
