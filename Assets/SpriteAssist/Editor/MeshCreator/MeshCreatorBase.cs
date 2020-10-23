@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    public abstract class MeshCreator
+    public abstract class MeshCreatorBase
     {
         public const string RENDER_TYPE_TRANSPARENT = "Transparent";
         public const string RENDER_TYPE_OPAQUE = "Opaque";
@@ -11,16 +11,16 @@ namespace SpriteAssist
         public const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         public const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
 
-        private static readonly MeshCreator _defaultCreator = new DefaultMeshCreator();
+        private static readonly MeshCreatorBase _defaultCreator = new DefaultMeshCreator();
 
-        private static readonly IReadOnlyDictionary<SpriteConfigData.Mode, MeshCreator> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreator>()
+        private static readonly IReadOnlyDictionary<SpriteConfigData.Mode, MeshCreatorBase> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreatorBase>()
         {
             { SpriteConfigData.Mode.TransparentMesh, new TransparentMeshCreator() },
             { SpriteConfigData.Mode.OpaqueMesh, new OpaqueMeshCreator() },
             { SpriteConfigData.Mode.Complex, new ComplexMeshCreator() }
         };
 
-        public static MeshCreator GetInstnace(SpriteConfigData configData)
+        public static MeshCreatorBase GetInstnace(SpriteConfigData configData)
         {
             return configData.overriden ? _creator[configData.mode] : _defaultCreator;
         }

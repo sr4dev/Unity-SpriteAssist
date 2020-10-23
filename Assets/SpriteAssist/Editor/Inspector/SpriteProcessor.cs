@@ -14,7 +14,7 @@ namespace SpriteAssist
 
         private string _originalUserData;
         private SpriteConfigData _configData;
-        private MeshCreator _meshCreator;
+        private MeshCreatorBase _meshCreator;
 
         private bool _isDataChanged = false;
         private Object _target;
@@ -25,9 +25,8 @@ namespace SpriteAssist
             _importData = new SpriteImportData(sprite, assetPath);
             _originalUserData = _importData.textureImporter.userData;
             _configData = SpriteConfigData.GetData(_originalUserData);
-            _meshCreator = MeshCreator.GetInstnace(_configData);
+            _meshCreator = MeshCreatorBase.GetInstnace(_configData);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
-
 
             Undo.undoRedoPerformed += UndoReimport;
         }
@@ -59,7 +58,7 @@ namespace SpriteAssist
 
                             if (checkModeChange.changed)
                             {
-                                _meshCreator = MeshCreator.GetInstnace(_configData);
+                                _meshCreator = MeshCreatorBase.GetInstnace(_configData);
                                 _preview.SetWireframes(_meshCreator.GetMeshWireframes());
                             }
                         }
@@ -109,13 +108,12 @@ namespace SpriteAssist
                 {
                     using (new EditorGUILayout.VerticalScope("box"))
                     {
-                        EditorGUILayout.LabelField("Advanced");
+                        EditorGUILayout.LabelField("Mesh Prefab");
                     }
 
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        EditorGUILayout.ObjectField("Mesh Prefab", _importData.MeshPrefab, typeof(GameObject), false);
-
+                        EditorGUILayout.ObjectField("Prefab", _importData.MeshPrefab, typeof(GameObject), false);
                         string buttonText = _importData.HasMeshPrefab ? "Remove" : "Create";
                         if (GUILayout.Button(buttonText, GUILayout.Width(60)))
                         {
@@ -130,6 +128,22 @@ namespace SpriteAssist
                                 var prefab = _meshCreator.CreateExternalObject(_importData.sprite, _configData);
                                 _importData.SetPrefabAsExternalObject(prefab);
                             }
+                        }
+                    }
+
+                    if (!_importData.HasMeshPrefab)
+                    {
+                        _configData.transparentShader = (Shader)EditorGUILayout.ObjectField("Default Tranparent Shader", _configData.transparentShader, typeof(Shader), false);
+                        _configData.opaqueShader = (Shader)EditorGUILayout.ObjectField("Default Opaque Shader", _configData.opaqueShader, typeof(Shader), false);
+
+                        if (_configData.transparentShader == null)
+                        {
+                            _configData.transparentShader = Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
+                        }
+
+                        if (_configData.opaqueShader == null)
+                        {
+                            _configData.opaqueShader = Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
                         }
                     }
 
@@ -225,7 +239,7 @@ namespace SpriteAssist
         private void Revert()
         {
             _configData = SpriteConfigData.GetData(_originalUserData);
-            _meshCreator = MeshCreator.GetInstnace(_configData);
+            _meshCreator = MeshCreatorBase.GetInstnace(_configData);
             _preview.SetWireframes(_meshCreator.GetMeshWireframes());
             _importData.textureImporter.userData = _originalUserData;
             _isDataChanged = false;
@@ -254,32 +268,32 @@ namespace SpriteAssist
 
                     if (asset is Mesh mesh)
                     {
-                        if (asset.name == MeshCreator.RENDER_TYPE_TRANSPARENT)
+                        if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
                         {
                             MeshRenderType meshRenderType = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
                             sprite.GetMeshData(_configData, out var v, out var t, meshRenderType);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
-                        else if (asset.name == MeshCreator.RENDER_TYPE_OPAQUE)
+                        else if (asset.name == MeshCreatorBase.RENDER_TYPE_OPAQUE)
                         {
                             sprite.GetMeshData(_configData, out var v, out var t, MeshRenderType.Opaque);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                     }
 
-                    if (asset is Material mat)
-                    {
-                        if (asset.name == MeshCreator.RENDER_TYPE_TRANSPARENT)
-                        {
-                            mat.shader = Shader.Find(MeshCreator.RENDER_SHADER_TRANSPARENT);
-                            mat.SetTexture("_MainTex", sprite.texture);
-                        }
-                        else if (asset.name == MeshCreator.RENDER_TYPE_OPAQUE)
-                        {
-                            mat.shader = Shader.Find(MeshCreator.RENDER_SHADER_OPAQUE);
-                            mat.SetTexture("_MainTex", sprite.texture);
-                        }
-                    }
+                    //if (asset is Material mat)
+                    //{
+                    //    if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
+                    //    {
+                    //        mat.shader = Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
+                    //        mat.SetTexture("_MainTex", sprite.texture);
+                    //    }
+                    //    else if (asset.name == MeshCreatorBase.RENDER_TYPE_OPAQUE)
+                    //    {
+                    //        mat.shader = Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
+                    //        mat.SetTexture("_MainTex", sprite.texture);
+                    //    }
+                    //}
                 }
 
                 importer.userData = _originalUserData;

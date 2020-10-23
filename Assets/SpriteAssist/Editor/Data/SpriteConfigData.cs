@@ -37,7 +37,8 @@ namespace SpriteAssist
 
         public bool detectHoles = DETECT_HOLES;
 
-        public string meshPrefabGuid;
+        public Shader transparentShader;
+        public Shader opaqueShader;
 
         public static SpriteConfigData GetData(string jsonData)
         {
