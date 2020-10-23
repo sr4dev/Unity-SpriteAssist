@@ -214,24 +214,13 @@ namespace SpriteAssist
 
             if (_isDataChanged)
             {
-                int result = EditorUtility.DisplayDialogComplex("Unapplied import settings", $"Unapplied import settings for '{_importData.assetPath}'", "Apply", "Cancel", "Revert");
-
-                switch (result)
+                if (EditorUtility.DisplayDialog("Unapplied import settings", $"Unapplied import settings for '{_importData.assetPath}'", "Apply", "Revert"))
                 {
-                    //Apply
-                    case 0:
-                        Apply();
-                        break;
-
-                    //Cancel
-                    case 1:
-                        Selection.objects = _targets;
-                        break;
-
-                    //Revert
-                    case 2:
-                        Revert();
-                        break;
+                    Apply();
+                }
+                else
+                {
+                    Revert();
                 }
             }
         }
@@ -261,12 +250,7 @@ namespace SpriteAssist
 
                 foreach (Object asset in allAssets)
                 {
-                    if (!AssetDatabase.IsSubAsset(asset))
-                    {
-                        continue;
-                    }
-
-                    if (asset is Mesh mesh)
+                    if (AssetDatabase.IsSubAsset(asset) && asset is Mesh mesh)
                     {
                         if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
                         {
@@ -280,20 +264,6 @@ namespace SpriteAssist
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                     }
-
-                    //if (asset is Material mat)
-                    //{
-                    //    if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
-                    //    {
-                    //        mat.shader = Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
-                    //        mat.SetTexture("_MainTex", sprite.texture);
-                    //    }
-                    //    else if (asset.name == MeshCreatorBase.RENDER_TYPE_OPAQUE)
-                    //    {
-                    //        mat.shader = Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
-                    //        mat.SetTexture("_MainTex", sprite.texture);
-                    //    }
-                    //}
                 }
 
                 importer.userData = _originalUserData;
