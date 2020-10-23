@@ -59,7 +59,7 @@ namespace SpriteAssist
             area = Mathf.Abs(area);
 
             float meshAreaRatio = area / (sprite.rect.width * sprite.rect.height) * 100;
-            return $"Verts: {vertices.Length}  Tris: {triangles.Length}  Fillrate: {meshAreaRatio:F2}%";
+            return $"{vertices.Length} verts, {triangles.Length} tris, {meshAreaRatio:F2}% fillrate";
         }
 
         private static bool TryGetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
