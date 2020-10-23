@@ -121,7 +121,7 @@ namespace SpriteAssist
             return prefab;
         }
 
-        public static void AddComponentsAssets(this Sprite sprite, Vector2[] v, ushort[] t, GameObject prefab, string renderType, string shaderName)
+        public static void AddComponentsAssets(this Sprite sprite, Vector2[] v, ushort[] t, GameObject prefab, string renderType, Shader shader)
         {
             //add components
             MeshFilter meshFilter = prefab.AddComponent<MeshFilter>();
@@ -137,7 +137,7 @@ namespace SpriteAssist
             meshFilter.mesh = mesh;
 
             //creat new material
-            Material material = new Material(Shader.Find(shaderName))
+            Material material = new Material(shader)
             {
                 name = renderType,
                 mainTexture = sprite.texture

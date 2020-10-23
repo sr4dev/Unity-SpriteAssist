@@ -17,7 +17,7 @@ namespace SpriteAssist
                 return;
             }
 
-            MeshCreator creator = MeshCreator.GetInstnace(configData);
+            MeshCreatorBase creator = MeshCreatorBase.GetInstnace(configData);
 
             foreach (var sprite in sprites)
             {
