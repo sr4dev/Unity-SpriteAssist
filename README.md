@@ -1,4 +1,5 @@
 # Unity-SpriteAssist
+![image](https://user-images.githubusercontent.com/9159336/97450592-40448600-1976-11eb-9cee-c4a47dc665b0.png)
 
 ## About
 Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇가지 편리한 확장 기능을 제공합니다.
@@ -22,6 +23,7 @@ Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇�
 - Apply 버튼을 눌러 적용합니다.
 
 ### Mode
+![image](https://user-images.githubusercontent.com/9159336/97450951-9ca7a580-1976-11eb-86f7-4e18775dd9b0.png)
 - **Transparent Mesh**: 기본값. 일반적인 메쉬 생성.
 - **Opaque Mesh**: 불투명한 영역만으로 이루어진 메쉬를 생성.
 - **Complex**: 투명 영역은 Transparent Mesh로, 불투명 영역은 Opaque Mesh로 생성.
@@ -29,12 +31,14 @@ Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇�
   - 이 모드는 Sprite의 메쉬에는 영향을 주지 않습니다.
   
 ### Parameter
+![image](https://user-images.githubusercontent.com/9159336/97451357-04f68700-1977-11eb-9445-77eac8a9efe3.png)
 - **Detail**: 값이 높을수록 더 정밀하고 촘촘하게 정점을 배치합니다.
 - **Alpha Tolerance**: 값이 높을수록 투명 영역이 작아집니다. 
 - **Detect Holes**: 구멍이 난 형태의 메쉬를 허용합니다.
 - **Edge Smoothing**: 값이 높을수록 많은 수의 정점을 사용하여 곡선을 부드럽게 처리합니다.
 
 ### Mesh Prefab
+![image](https://user-images.githubusercontent.com/9159336/97451557-32433500-1977-11eb-8b57-32b6f15e04e6.png)
 - **Prefab**: Sprite와 연결된 Prefab입니다. 파라미터가 수정될 경우 연결된 Prefab에도 자동으로 반영됩니다.
 - **Create/Remove**: Prefab을 생성하여 Sprite와 연결합니다 / 연결을 끊고 Prefab을 삭제합니다.
 - **Default Transparent Shader**: Prefab 생성시 사용할 투명 영역에 대한 Shader입니다.
@@ -48,7 +52,7 @@ Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇�
 Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReference/AssetImporter-userData.html)
 
 ## License
-MIT
+MIT License
 
 ## Links
 * Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet)
