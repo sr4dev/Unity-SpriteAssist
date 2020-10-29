@@ -4,7 +4,8 @@
 ## About
 Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇가지 편리한 확장 기능을 제공합니다.
 
-이 확장 기능은 Unity 2019.4에서 개발되었습니다.
+## System Requirements
+Unity 2019.4 혹은 그 이상의 버전
 
 ## Features
 - **Preview**: 현재 선택된 Sprite가 어떤 형태의 메쉬를 지니는지 확인할 수 있습니다.
