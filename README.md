@@ -36,6 +36,7 @@ Unity-SpriteAssist는 Unity 프로젝트의 Sprite 메쉬 생성에 관한 몇�
 - **Alpha Tolerance**: 값이 높을수록 투명 영역이 작아집니다. 
 - **Detect Holes**: 구멍이 난 형태의 메쉬를 허용합니다.
 - **Edge Smoothing**: 값이 높을수록 많은 수의 정점을 사용하여 곡선을 부드럽게 처리합니다.
+- **Non-zero Winding**: 메쉬 생성시 Winding Rule로서 **Non-zero**를 적용합니다. 이를 통해 하나의 Sprite에서 다수의 메쉬가 겹쳐진 경우 좀 더 올바른 형태의 메쉬가 형성되도록 합니다. 단 Complex 모드에서 이 옵션을 사용할 경우 올바르지 못한 결과를 얻게 될 수도 있습니다. 
 
 ### Mesh Prefab
 ![image](https://user-images.githubusercontent.com/9159336/97451557-32433500-1977-11eb-8b57-32b6f15e04e6.png)
