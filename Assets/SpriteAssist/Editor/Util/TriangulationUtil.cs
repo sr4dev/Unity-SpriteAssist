@@ -7,7 +7,7 @@ namespace SpriteAssist
 {
     public class TriangulationUtil
     {
-        public static void Triangulate(Vector2[][] paths, float edgeSmoothing, WindingRule windingRule, out Vector2[] vertices, out ushort[] triangles)
+        public static void Triangulate(Vector2[][] paths, float edgeSmoothing, bool nonzero, out Vector2[] vertices, out ushort[] triangles)
         {
             Tess tess = new Tess();
 
@@ -33,6 +33,7 @@ namespace SpriteAssist
                 tess.AddContour(contour, ContourOrientation.CounterClockwise);
             }
 
+            WindingRule windingRule = nonzero ? WindingRule.NonZero : WindingRule.EvenOdd;
             tess.Tessellate(windingRule);
             vertices = tess.Vertices.Select(v => new Vector2(v.Position.X, v.Position.Y)).ToArray();
             triangles = tess.Elements.Select(t => (ushort)t).ToArray();

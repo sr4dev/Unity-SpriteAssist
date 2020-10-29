@@ -59,7 +59,7 @@ namespace SpriteAssist
             area = Mathf.Abs(area);
 
             float meshAreaRatio = area / (sprite.rect.width * sprite.rect.height) * 100;
-            return $"{vertices.Length} verts, {triangles.Length} tris, {meshAreaRatio:F2}% fillrate";
+            return $"{vertices.Length} verts, {triangles.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
         private static bool TryGetMeshData(Sprite sprite, SpriteConfigData data, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
@@ -73,7 +73,7 @@ namespace SpriteAssist
             }
 
             Vector2[][] paths = OutlineUtil.GenerateOutline(sprite, data, meshRenderType);
-            TriangulationUtil.Triangulate(paths, data.edgeSmoothing, data.windingRule, out vertices, out triangles);
+            TriangulationUtil.Triangulate(paths, data.edgeSmoothing, data.useNonZero, out vertices, out triangles);
 
             //validate
             if (vertices.Length >= ushort.MaxValue)
