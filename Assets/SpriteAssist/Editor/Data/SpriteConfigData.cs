@@ -21,21 +21,15 @@ namespace SpriteAssist
         }
 
         public bool overriden;
-
         public Mode mode = Mode.TransparentMesh;
-        public WindingRule windingRule = WindingRule.EvenOdd;
 
         public float transparentDetail = DETAIL;
-
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
-
         public float opaqueDetail = DETAIL;
-
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
-        
-        public float edgeSmoothing = EDGE_SMOOTHING;
-
         public bool detectHoles = DETECT_HOLES;
+        public float edgeSmoothing = EDGE_SMOOTHING;
+        public bool useNonZero = false;
 
         public Shader transparentShader;
         public Shader opaqueShader;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibTessDotNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -53,7 +54,6 @@ namespace SpriteAssist
                         using (var checkModeChange = new EditorGUI.ChangeCheckScope())
                         {
                             _configData.mode = (SpriteConfigData.Mode)EditorGUILayout.EnumPopup("Mode", _configData.mode);
-                            //_configData.windingRule = (WindingRule)EditorGUILayout.EnumPopup("Winding Rule", _configData.windingRule);//TODO
                             EditorGUILayout.Space();
 
                             if (checkModeChange.changed)
@@ -92,6 +92,7 @@ namespace SpriteAssist
                         }
 
                         _configData.edgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.edgeSmoothing, 0f, 1f);
+                        _configData.useNonZero = EditorGUILayout.Toggle("Non-zero Winding", _configData.useNonZero);
                         EditorGUILayout.Space();
                     }
 
