@@ -75,8 +75,8 @@ Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more
 Unity 2019.4 or later versions
 
 ## Features
-- **Preview**: Support preview about selected Sprite's mesh.
-- **Mode**: Provide sevral Sprite의 메쉬 생성 방식을 다양하게 조절할 수 있습니다.
+- **Preview**: Supports preview about selected Sprite's mesh.
+- **Mode**: Offers a variety of options for creating sprite meshes.
 - **Mesh Prefab**: Sprite를 Prefab화 시킴으로서 SpriteRenderer가 아닌 MeshRenderer를 사용할 수 있게 해줍니다.
 
 ## Installation
