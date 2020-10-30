@@ -63,7 +63,7 @@ Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReferenc
 ## License
 MIT License
 
-## Libarary
+## Library
 * Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet)
 * Polygon Clipping: [Clipper v6.4.2](http://www.angusj.com/delphi/clipper.php)
 
