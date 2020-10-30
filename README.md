@@ -1,5 +1,5 @@
 # Unity-SpriteAssist
-![image](https://user-images.githubusercontent.com/9159336/97450592-40448600-1976-11eb-9cee-c4a47dc665b0.png)
+![image](README.gif)
 
 ## About
 Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conviniently.
