@@ -39,7 +39,8 @@ Clone or download this repository and copy `Assets/SpriteAssist` folder to your 
 - **Detect Holes**: Detect holes from outline.
 - **Edge Smoothing**: Smoothing sharp edges.
 - **Non-zero Winding**: Use Non-zero winding rule. Default Winding rule is even-odd.
-  - Even-odd(left), Non-zero(right)
+
+Even-odd(left), Non-zero(right)
 
 ![image](https://user-images.githubusercontent.com/9159336/97708967-f043fb80-1afc-11eb-954d-c6660cad6da6.png)
  
