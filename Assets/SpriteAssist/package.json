@@ -1,0 +1,11 @@
+{
+  "name": "com.sr4dev.unity-spriteassist",
+  "displayName": "Unity-SpriteAssist",
+  "version": "0.5.2",
+  "unity": "2019.4",
+  "description": "Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conviniently.",
+  "author": {
+    "name": "sr4dev",
+    "url": "https://github.com/sr4dev/Unity-SpriteAssist"
+  }
+}
