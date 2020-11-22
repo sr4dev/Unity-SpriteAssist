@@ -13,9 +13,13 @@ Unity 2019.4 or later versions
 - **Convert Sprite to MeshRenderer Prefab**
 
 ## Installation
+### Unity Package Manager
+You can add `https://github.com/sr4dev/Unity-SpriteAssist.git?path=Assets/SpriteAssist` to Package Manager.
+![image](https://user-images.githubusercontent.com/9159336/99905771-42e89000-2d16-11eb-91a0-24ecf4af6afd.png)
+
+### Manual installation
 Clone or download this repository and copy `Assets/SpriteAssist` folder to your Unity project.
 
-(UnityPackage, Unity Package Manager is not supported yet)
 
 ## How to use
 - Select a Sprite asset in the Project window.
