@@ -1,4 +1,5 @@
 ﻿using LibTessDotNet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -35,8 +36,8 @@ namespace SpriteAssist
 
             WindingRule windingRule = nonzero ? WindingRule.NonZero : WindingRule.EvenOdd;
             tess.Tessellate(windingRule);
-            vertices = tess.Vertices.Select(v => new Vector2(v.Position.X, v.Position.Y)).ToArray();
-            triangles = tess.Elements.Select(t => (ushort)t).ToArray();
+            vertices = (tess.Vertices ?? Array.Empty<ContourVertex>()).Select(v => new Vector2(v.Position.X, v.Position.Y)).ToArray();
+            triangles = (tess.Elements ?? Array.Empty<int>()).Select(t => (ushort)t).ToArray();
         }
     }
 }
