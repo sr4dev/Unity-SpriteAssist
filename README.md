@@ -52,7 +52,7 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 
 ### Mesh Prefab
 ![image](https://user-images.githubusercontent.com/9159336/97451557-32433500-1977-11eb-8b57-32b6f15e04e6.png)
-- **Prefab**: Linked Prefab width Sprite.
+- **Prefab**: Linked Prefab with Sprite.
 - **Create/Remove**: Create or remove a Prefab.
 - **Default Transparent Shader**
 - **Default Opaque Shader**
