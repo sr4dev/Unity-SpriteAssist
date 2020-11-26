@@ -29,7 +29,7 @@ Clone or download this repository and copy `Assets/SpriteAssist` folder to your 
 ### Mode
 ![image](https://user-images.githubusercontent.com/9159336/97450951-9ca7a580-1976-11eb-86f7-4e18775dd9b0.png)
 - **Transparent Mesh**: Default Mode. Allow alpha pixel.
-- **Opaque Mesh**: Disallow alpha pixel. You can use the mesh for oapque shader.
+- **Opaque Mesh**: Disallow alpha pixel. You can use the mesh for opaque shader.
 - **Complex**: Separate area by alpha.
   - Alpha pixel is converted to Transparent Mesh area.
   - Non-alpha pixel is converted to Opaque Mesh area.
