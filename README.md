@@ -2,7 +2,7 @@
 ![image](README.gif)
 
 ## About
-Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conviniently.
+Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conveniently.
 
 ## System Requirements
 Unity 2019.4 or later versions
