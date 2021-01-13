@@ -96,9 +96,17 @@ namespace SpriteAssist
                 uv[i].y /= sprite.texture.height;
             }
 
+            Vector3[] normals = new Vector3[v.Length];
+
+            for (var i = 0; i < normals.Length; i++)
+            {
+                normals[i] = Vector3.back;
+            }
+
             mesh.Clear();
             mesh.SetVertices(Array.ConvertAll(v, i => (Vector3)i));
             mesh.SetUVs(0, uv);
+            mesh.SetNormals(normals);
             mesh.SetTriangles(Array.ConvertAll(t, i => (int)i), 0);
         }
 
