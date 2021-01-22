@@ -256,12 +256,12 @@ namespace SpriteAssist
                         if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
                         {
                             MeshRenderType meshRenderType = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
-                            sprite.GetMeshData(_configData, out var v, out var t, meshRenderType);
+                            sprite.GetVertexAndTriangle(_configData, out var v, out var t, meshRenderType);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                         else if (asset.name == MeshCreatorBase.RENDER_TYPE_OPAQUE)
                         {
-                            sprite.GetMeshData(_configData, out var v, out var t, MeshRenderType.Opaque);
+                            sprite.GetVertexAndTriangle(_configData, out var v, out var t, MeshRenderType.Opaque);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                     }
