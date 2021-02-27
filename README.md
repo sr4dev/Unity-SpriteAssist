@@ -1,6 +1,8 @@
 # Unity-SpriteAssist
 ![image](README.gif)
 
+![image](thickness.gif)
+
 ## About
 Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conveniently.
 
