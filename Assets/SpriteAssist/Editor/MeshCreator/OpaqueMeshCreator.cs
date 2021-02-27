@@ -7,7 +7,7 @@ namespace SpriteAssist
     {
         public override void OverrideGeometry(Sprite sprite, SpriteConfigData data)
         {
-            sprite.GetVertexAndTriangle(data, out var vertices, out var triangles, MeshRenderType.Opaque);
+            sprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
             sprite.SetSpriteScaleToVertices(vertices, 1, false, false);
             sprite.OverrideGeometry(vertices, triangles);
         }
@@ -15,7 +15,7 @@ namespace SpriteAssist
         public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
         {
             GameObject prefab = sprite.CreateEmptyMeshPrefab(false);
-            sprite.GetVertexAndTriangle(data, out var vertices, out var triangles, MeshRenderType.Opaque);
+            sprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
             sprite.AddComponentsAssets(vertices, triangles, prefab, RENDER_TYPE_OPAQUE, data.opaqueShader);
             return prefab;
         }

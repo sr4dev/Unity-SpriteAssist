@@ -148,6 +148,14 @@ namespace SpriteAssist
                         }
                     }
 
+                    EditorGUI.BeginChangeCheck();
+                    _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
+                    _configData.thickness = Mathf.Max(0, _configData.thickness);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        _isDataChanged |= true;
+                    }
+
                     EditorGUILayout.Space();
 
                     if (_configData != null && _configData.overriden && _configData.mode == SpriteConfigData.Mode.Complex)
@@ -158,7 +166,6 @@ namespace SpriteAssist
                                 EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
                         }
                     }
-
                 }
 
                 EditorGUILayout.Space();
@@ -256,12 +263,12 @@ namespace SpriteAssist
                         if (asset.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT)
                         {
                             MeshRenderType meshRenderType = _configData.mode == SpriteConfigData.Mode.Complex ? MeshRenderType.SeparatedTransparent : MeshRenderType.Transparent;
-                            sprite.GetVertexAndTriangle(_configData, out var v, out var t, meshRenderType);
+                            sprite.GetVertexAndTriangle3D(_configData, out var v, out var t, meshRenderType);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                         else if (asset.name == MeshCreatorBase.RENDER_TYPE_OPAQUE)
                         {
-                            sprite.GetVertexAndTriangle(_configData, out var v, out var t, MeshRenderType.Opaque);
+                            sprite.GetVertexAndTriangle3D(_configData, out var v, out var t, MeshRenderType.Opaque);
                             sprite.UpdateMesh(ref mesh, v, t);
                         }
                     }
