@@ -32,7 +32,7 @@ namespace SpriteAssist
 
         public void UpdateAndResize(Rect rect, Sprite sprite, SpriteConfigData data)
         {
-            sprite.GetVertexAndTriangle(data, out _vertices, out _triangles, _meshRenderType);
+            sprite.GetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType);
 
             Resize(rect, sprite);
         }

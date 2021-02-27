@@ -33,7 +33,7 @@ namespace SpriteAssist
 
         public Shader transparentShader;
         public Shader opaqueShader;
-        public float depth;
+        public float thickness;
 
         public static SpriteConfigData GetData(string jsonData)
         {
