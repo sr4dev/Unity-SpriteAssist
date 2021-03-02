@@ -16,8 +16,8 @@ namespace SpriteAssist
             GameObject sub = root.transform.GetChild(0).gameObject;
             sprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
             sprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
-            sprite.AddComponentsAssets(transparentVertices, transparentTriangles, root, RENDER_TYPE_TRANSPARENT, data.transparentShader);
-            sprite.AddComponentsAssets(opaqueVertices, opaqueTriangles, sub, RENDER_TYPE_OPAQUE, data.opaqueShader);
+            sprite.AddComponentsAssets(transparentVertices, transparentTriangles, root, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
+            sprite.AddComponentsAssets(opaqueVertices, opaqueTriangles, sub, RENDER_TYPE_OPAQUE, data.opaqueShaderName);
             return root;
         }
 
