@@ -134,18 +134,12 @@ namespace SpriteAssist
 
                     if (!_importData.HasMeshPrefab)
                     {
-                        _configData.transparentShader = (Shader)EditorGUILayout.ObjectField("Default Tranparent Shader", _configData.transparentShader, typeof(Shader), false);
-                        _configData.opaqueShader = (Shader)EditorGUILayout.ObjectField("Default Opaque Shader", _configData.opaqueShader, typeof(Shader), false);
-
-                        if (_configData.transparentShader == null)
-                        {
-                            _configData.transparentShader = Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
-                        }
-
-                        if (_configData.opaqueShader == null)
-                        {
-                            _configData.opaqueShader = Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
-                        }
+                        Shader transparentShader = Shader.Find(_configData.transparentShaderName) ?? Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
+                        Shader opaqueShader = Shader.Find(_configData.opaqueShaderName) ?? Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
+                        transparentShader = (Shader)EditorGUILayout.ObjectField("Default Tranparent Shader", transparentShader, typeof(Shader), false);
+                        opaqueShader = (Shader)EditorGUILayout.ObjectField("Default Opaque Shader", opaqueShader, typeof(Shader), false);
+                        _configData.transparentShaderName = transparentShader?.name;
+                        _configData.opaqueShaderName = opaqueShader?.name;
                     }
 
                     EditorGUI.BeginChangeCheck();
