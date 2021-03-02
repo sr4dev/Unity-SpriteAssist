@@ -31,8 +31,8 @@ namespace SpriteAssist
         public float edgeSmoothing = EDGE_SMOOTHING;
         public bool useNonZero = false;
 
-        public Shader transparentShader;
-        public Shader opaqueShader;
+        public string transparentShaderName;
+        public string opaqueShaderName;
         public float thickness;
 
         public static SpriteConfigData GetData(string jsonData)

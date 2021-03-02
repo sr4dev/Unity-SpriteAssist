@@ -16,7 +16,7 @@ namespace SpriteAssist
             GameObject prefab = sprite.CreateEmptyMeshPrefab(false);
             Vector3[] vertices3D = Array.ConvertAll(sprite.vertices, i => new Vector3(i.x, i.y, 0));
             int[] triangles3D = Array.ConvertAll(sprite.triangles, i => (int)i);
-            sprite.AddComponentsAssets(vertices3D, triangles3D, prefab, RENDER_TYPE_TRANSPARENT, data.transparentShader);
+            sprite.AddComponentsAssets(vertices3D, triangles3D, prefab, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
             return prefab;
         }
 
