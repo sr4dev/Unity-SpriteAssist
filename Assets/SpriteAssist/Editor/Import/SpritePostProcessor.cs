@@ -12,7 +12,7 @@ namespace SpriteAssist
             textureImporter.ReadTextureSettings(textureImporterSettings);
             SpriteConfigData configData = SpriteConfigData.GetData(textureImporter.userData);
 
-            if (textureImporterSettings.spriteMeshType != SpriteMeshType.Tight || !configData.overriden)
+            if (textureImporterSettings.spriteMeshType != SpriteMeshType.Tight || !configData.IsOverriden)
             {
                 return;
             }
