@@ -85,7 +85,7 @@ namespace SpriteAssist
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
 
-            if (configData == null || !configData.overriden)
+            if (configData == null || !configData.IsOverriden)
             {
                 return false;
             }

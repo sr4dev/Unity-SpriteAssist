@@ -15,13 +15,13 @@ namespace SpriteAssist
         [Flags]
         public enum Mode
         {
+            UnityDefault = 0,
             TransparentMesh = 1 << 0,
             OpaqueMesh = 1 << 1,
             Complex = TransparentMesh | OpaqueMesh
         }
-
-        public bool overriden;
-        public Mode mode = Mode.TransparentMesh;
+        
+        public Mode mode = Mode.UnityDefault;
 
         public float transparentDetail = DETAIL;
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
@@ -35,6 +35,8 @@ namespace SpriteAssist
         public string opaqueShaderName;
         public float thickness;
 
+        public bool IsOverriden => mode != Mode.UnityDefault;
+        
         public static SpriteConfigData GetData(string jsonData)
         {
             SpriteConfigData data = null;

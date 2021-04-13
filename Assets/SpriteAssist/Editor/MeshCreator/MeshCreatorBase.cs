@@ -22,7 +22,7 @@ namespace SpriteAssist
 
         public static MeshCreatorBase GetInstnace(SpriteConfigData configData)
         {
-            return configData.overriden ? _creator[configData.mode] : _defaultCreator;
+            return configData.IsOverriden ? _creator[configData.mode] : _defaultCreator;
         }
 
         public abstract void OverrideGeometry(Sprite sprite, SpriteConfigData configData);

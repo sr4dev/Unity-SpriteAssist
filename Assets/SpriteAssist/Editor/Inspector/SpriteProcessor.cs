@@ -39,9 +39,18 @@ namespace SpriteAssist
 
             using (var checkDataChange = new EditorGUI.ChangeCheckScope())
             {
-                _configData.overriden = EditorGUILayout.ToggleLeft("Enable SpriteAssist", _configData.overriden);
-                EditorGUILayout.Space();
+                using (var checkModeChange = new EditorGUI.ChangeCheckScope())
+                {
+                    _configData.mode = (SpriteConfigData.Mode)EditorGUILayout.EnumPopup("SpriteAssist Mode", _configData.mode);
+                    EditorGUILayout.Space();
 
+                    if (checkModeChange.changed)
+                    {
+                        _meshCreator = MeshCreatorBase.GetInstnace(_configData);
+                        _preview.SetWireframes(_meshCreator.GetMeshWireframes());
+                    }
+                }
+                
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     using (new EditorGUILayout.VerticalScope("box"))
@@ -49,57 +58,54 @@ namespace SpriteAssist
                         EditorGUILayout.LabelField("Mesh Settings");
                     }
 
-                    using (new EditorGUI.DisabledScope(!_configData.overriden))
+                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh))
                     {
-                        using (var checkModeChange = new EditorGUI.ChangeCheckScope())
+                        EditorGUILayout.LabelField("Transparent Mesh");
+                        using (new EditorGUI.IndentLevelScope())
                         {
-                            _configData.mode = (SpriteConfigData.Mode)EditorGUILayout.EnumPopup("Mode", _configData.mode);
+                            _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
+                            _configData.transparentAlphaTolerance = (byte) EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
+                            _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                             EditorGUILayout.Space();
-
-                            if (checkModeChange.changed)
-                            {
-                                _meshCreator = MeshCreatorBase.GetInstnace(_configData);
-                                _preview.SetWireframes(_meshCreator.GetMeshWireframes());
-                            }
                         }
+                    }
 
-                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh))
+                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
+                    {
+                        EditorGUILayout.LabelField("Opaque Mesh");
+                        using (new EditorGUI.IndentLevelScope())
                         {
-                            EditorGUILayout.LabelField("Transparent Mesh");
-                            using (new EditorGUI.IndentLevelScope())
+                            _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
+                            _configData.opaqueAlphaTolerance = (byte) EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
+                            using (new EditorGUI.DisabledScope(true))
                             {
-                                _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
-                                _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
-                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
-                                EditorGUILayout.Space();
+                                //force true
+                                EditorGUILayout.Toggle("Detect Holes (forced)", true);
                             }
-                        }
 
-                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
-                        {
-                            EditorGUILayout.LabelField("Opaque Mesh");
-                            using (new EditorGUI.IndentLevelScope())
-                            {
-                                _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
-                                _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
-                                using (new EditorGUI.DisabledScope(true))
-                                {
-                                    //force true
-                                    EditorGUILayout.Toggle("Detect Holes (forced)", true);
-                                }
-                                EditorGUILayout.Space();
-                            }
+                            EditorGUILayout.Space();
                         }
+                    }
 
+                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh) || _configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
+                    {
                         _configData.edgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.edgeSmoothing, 0f, 1f);
                         _configData.useNonZero = EditorGUILayout.Toggle("Non-zero Winding", _configData.useNonZero);
                         EditorGUILayout.Space();
                     }
 
-                    if (_configData != null && _configData.overriden && _configData.mode == SpriteConfigData.Mode.Complex)
+                    if (_configData.mode == SpriteConfigData.Mode.UnityDefault)
                     {
-                        using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
-                            EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.", MessageType.Info);
+                        using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 5, 0, 5)}))
+                            EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
+                    }
+
+                    if (_configData.mode == SpriteConfigData.Mode.Complex)
+                    {
+                        using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 5, 0, 5)}))
+                            EditorGUILayout.HelpBox(
+                                "Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.",
+                                MessageType.Info);
                     }
 
                     _isDataChanged |= checkDataChange.changed;
@@ -136,7 +142,7 @@ namespace SpriteAssist
                     {
                         Shader transparentShader = Shader.Find(_configData.transparentShaderName) ?? Shader.Find(MeshCreatorBase.RENDER_SHADER_TRANSPARENT);
                         Shader opaqueShader = Shader.Find(_configData.opaqueShaderName) ?? Shader.Find(MeshCreatorBase.RENDER_SHADER_OPAQUE);
-                        transparentShader = (Shader)EditorGUILayout.ObjectField("Default Tranparent Shader", transparentShader, typeof(Shader), false);
+                        transparentShader = (Shader)EditorGUILayout.ObjectField("Default Transparent Shader", transparentShader, typeof(Shader), false);
                         opaqueShader = (Shader)EditorGUILayout.ObjectField("Default Opaque Shader", opaqueShader, typeof(Shader), false);
                         _configData.transparentShaderName = transparentShader?.name;
                         _configData.opaqueShaderName = opaqueShader?.name;
@@ -152,7 +158,7 @@ namespace SpriteAssist
 
                     EditorGUILayout.Space();
 
-                    if (_configData != null && _configData.overriden && _configData.mode == SpriteConfigData.Mode.Complex)
+                    if (_configData != null && _configData.IsOverriden && _configData.mode == SpriteConfigData.Mode.Complex)
                     {
                         if (_importData.MeshPrefab == null)
                         {
@@ -272,9 +278,7 @@ namespace SpriteAssist
 
                 EditorUtility.SetDirty(importer);
                 AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath);
-                AssetDatabase.ImportAsset(importer.assetPath,
-                    ImportAssetOptions.ForceUpdate |
-                    ImportAssetOptions.DontDownloadFromCacheServer);
+                AssetDatabase.ImportAsset(importer.assetPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
             }
 
             _isDataChanged = false;
@@ -287,9 +291,7 @@ namespace SpriteAssist
 
             foreach (var t in _targets)
             {
-                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t),
-                    ImportAssetOptions.ForceUpdate |
-                    ImportAssetOptions.DontDownloadFromCacheServer);
+                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t), ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
             }
         }
     }
