@@ -4,9 +4,6 @@ namespace SpriteAssist
 {
     public static class ShaderUtil
     {
-        public const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
-        public const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
-
         public static Shader FindShader(string name, string fallback)
         {
             Shader shader = null;
@@ -26,12 +23,12 @@ namespace SpriteAssist
 
         public static Shader FindOpaqueShader(string name)
         {
-            return FindShader(name, RENDER_SHADER_OPAQUE);
+            return FindShader(name, SpriteAssistSettings.Settings.defaultOpaqueShaderName);
         }
 
         public static Shader FindTransparentShader(string name)
         {
-            return FindShader(name, RENDER_SHADER_TRANSPARENT);
+            return FindShader(name, SpriteAssistSettings.Settings.defaultTransparentShaderName);
         }
     }
 }
