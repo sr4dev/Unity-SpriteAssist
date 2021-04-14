@@ -37,6 +37,13 @@ namespace SpriteAssist
             _target = target;
             _targets = targets;
 
+            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PrefixLabel("Source Texture");
+                EditorGUILayout.ObjectField(_importData.sprite.texture, typeof(Texture2D), false);
+            }
+
             using (var checkDataChange = new EditorGUI.ChangeCheckScope())
             {
                 using (var checkModeChange = new EditorGUI.ChangeCheckScope())
@@ -103,9 +110,7 @@ namespace SpriteAssist
                     if (_configData.mode == SpriteConfigData.Mode.Complex)
                     {
                         using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 5, 0, 5)}))
-                            EditorGUILayout.HelpBox(
-                                "Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.",
-                                MessageType.Info);
+                            EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
                     }
 
                     _isDataChanged |= checkDataChange.changed;
