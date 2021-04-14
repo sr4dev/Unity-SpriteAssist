@@ -8,9 +8,6 @@ namespace SpriteAssist
         public const string RENDER_TYPE_TRANSPARENT = "Transparent";
         public const string RENDER_TYPE_OPAQUE = "Opaque";
 
-        public const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
-        public const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
-
         private static readonly MeshCreatorBase _defaultCreator = new DefaultMeshCreator();
 
         private static readonly IReadOnlyDictionary<SpriteConfigData.Mode, MeshCreatorBase> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreatorBase>()
