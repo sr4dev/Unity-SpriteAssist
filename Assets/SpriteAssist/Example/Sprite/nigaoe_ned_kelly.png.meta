@@ -116,6 +116,6 @@ TextureImporter:
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
-  userData: '{"overriden":true,"mode":1,"windingRule":0,"transparentDetail":0.38999998569488528,"transparentAlphaTolerance":20,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"edgeSmoothing":1.0,"detectHoles":true,"transparentShader":{"instanceID":286},"opaqueShader":{"instanceID":290}}'
+  userData: '{"mode":0,"transparentDetail":0.5220000147819519,"transparentAlphaTolerance":20,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"detectHoles":true,"edgeSmoothing":1.0,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0}'
   assetBundleName: 
   assetBundleVariant: 
