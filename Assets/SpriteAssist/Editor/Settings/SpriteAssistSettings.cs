@@ -6,15 +6,19 @@ namespace SpriteAssist
 {
     public class SpriteAssistSettings : ScriptableObject
     {
-        public const string SETTINGS_DIRECTORY = "Assets/Editor/";
-        public const string SETTINGS_PATH = SETTINGS_DIRECTORY + nameof(SpriteAssistSettings) + ".asset";
+        private const string SETTINGS_DIRECTORY = "Assets/Editor/";
+        private const string SETTINGS_PATH = SETTINGS_DIRECTORY + nameof(SpriteAssistSettings) + ".asset";
 
-        public const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
-        public const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
-
+        private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
+        private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
+        private const int THUMBNAIL_COUNT = 10;
+        
         public string defaultTransparentShaderName;
         public string defaultOpaqueShaderName;
-
+        public int defaultThickness;
+        
+        public int maxThumbnailPreviewCount;
+        
         private static SpriteAssistSettings _setting;
 
         public static SpriteAssistSettings Settings
@@ -43,6 +47,7 @@ namespace SpriteAssist
                 settings = CreateInstance<SpriteAssistSettings>();
                 settings.defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
                 settings.defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
+                settings.maxThumbnailPreviewCount = THUMBNAIL_COUNT;
                 AssetDatabase.CreateAsset(settings, SETTINGS_PATH);
                 AssetDatabase.SaveAssets();
             }

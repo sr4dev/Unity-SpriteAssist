@@ -147,8 +147,8 @@ namespace SpriteAssist
                     {
                         Shader transparentShader = ShaderUtil.FindTransparentShader(_configData.transparentShaderName);
                         Shader opaqueShader = ShaderUtil.FindOpaqueShader(_configData.opaqueShaderName);
-                        transparentShader = (Shader)EditorGUILayout.ObjectField("Default Transparent Shader", transparentShader, typeof(Shader), false);
-                        opaqueShader = (Shader)EditorGUILayout.ObjectField("Default Opaque Shader", opaqueShader, typeof(Shader), false);
+                        transparentShader = (Shader)EditorGUILayout.ObjectField("Transparent Shader", transparentShader, typeof(Shader), false);
+                        opaqueShader = (Shader)EditorGUILayout.ObjectField("Opaque Shader", opaqueShader, typeof(Shader), false);
                         _configData.transparentShaderName = transparentShader?.name;
                         _configData.opaqueShaderName = opaqueShader?.name;
                     }
