@@ -44,8 +44,10 @@ namespace SpriteAssist
             //original preview
             base.OnPreviewGUI(rect, background);
 
-            _spriteProcessor?.OnPreviewGUI(rect, target);
-
+            if (Selection.objects.Length <= SpriteAssistSettings.Settings.maxThumbnailPreviewCount)
+            {
+                _spriteProcessor?.OnPreviewGUI(rect, target);
+            }
         }
     }
 }
