@@ -14,9 +14,14 @@ namespace SpriteAssist
                 guiHandler = (_) =>
                 {
                     SerializedObject settings = SpriteAssistSettings.GetSerializedSettings();
-                    EditorGUILayout.LabelField("Default Shader Name", EditorStyles.boldLabel);
-                    EditorGUILayout.PropertyField(settings.FindProperty("defaultTransparentShaderName"), new GUIContent("Transparent"));
-                    EditorGUILayout.PropertyField(settings.FindProperty("defaultOpaqueShaderName"), new GUIContent("Opaque"));
+                    EditorGUILayout.Space();
+                    EditorGUILayout.LabelField("Mesh Prefab", EditorStyles.boldLabel);
+                    EditorGUILayout.PropertyField(settings.FindProperty("defaultTransparentShaderName"), new GUIContent("Transparent Shader"));
+                    EditorGUILayout.PropertyField(settings.FindProperty("defaultOpaqueShaderName"), new GUIContent("Opaque Shader"));
+                    EditorGUILayout.Space();
+                    EditorGUILayout.LabelField("Preview thumbnail", EditorStyles.boldLabel);
+                    EditorGUILayout.PropertyField(settings.FindProperty("maxThumbnailPreviewCount"), new GUIContent("Max count"));
+                    
                     settings.ApplyModifiedProperties();
                 },
                 keywords = new[] { "Sprite", "Assist", "SpriteAssist", "Shader" },
