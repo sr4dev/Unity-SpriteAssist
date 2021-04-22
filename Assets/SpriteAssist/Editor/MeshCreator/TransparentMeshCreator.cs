@@ -5,18 +5,18 @@ namespace SpriteAssist
 {
     public class TransparentMeshCreator : MeshCreatorBase
     {
-        public override void OverrideGeometry(Sprite sprite, SpriteConfigData data)
+        public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             sprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
-            sprite.SetSpriteScaleToVertices(vertices, 1, false, false);
+            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo);
             sprite.OverrideGeometry(vertices, triangles);
         }
 
-        public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
+        public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
         {
-            GameObject prefab = sprite.CreateEmptyMeshPrefab(false);
+            GameObject prefab = PrefabUtil.UpdateMeshPrefab(textureInfo, false, oldPrefabPath);
             sprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
-            sprite.AddComponentsAssets(vertices, triangles, prefab, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
+            PrefabUtil.AddComponentsAssets(prefab, vertices, triangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
             return prefab;
         }
 

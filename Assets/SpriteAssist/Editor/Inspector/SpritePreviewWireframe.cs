@@ -30,25 +30,18 @@ namespace SpriteAssist
             _meshRenderType = meshRenderType;
         }
 
-        public void UpdateAndResize(Rect rect, Sprite sprite, SpriteConfigData data)
+        public void UpdateAndResize(Rect rect, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             sprite.GetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType);
-
-            Resize(rect, sprite);
-        }
-
-        public void Resize(Rect rect, Sprite sprite)
-        {
-            float spriteMinScale = GetMinRectScale(rect, sprite.rect);
             Vector2[] vertices = _vertices.ToArray();
-            sprite.SetSpriteScaleToVertices(vertices, spriteMinScale, true, false);
-            _scaledVertices = vertices;
+            float spriteMinScale = GetMinRectScale(rect, textureInfo.rect);
+            _scaledVertices = MeshUtil.GetScaledVertices(vertices, textureInfo, spriteMinScale, true);
         }
-
-        public void Draw(Rect rect, Sprite sprite)
+        
+        public void Draw(Rect rect, TextureInfo textureInfo)
         {
-            float spriteMinScale = GetMinRectScale(rect, sprite.rect);
-            Vector2 position = rect.center - (sprite.rect.size * spriteMinScale * 0.5f);
+            float spriteMinScale = GetMinRectScale(rect, textureInfo.rect);
+            Vector2 position = rect.center - (textureInfo.rect.size * spriteMinScale * 0.5f);
 
             _material.SetPass(0);
 
@@ -65,7 +58,7 @@ namespace SpriteAssist
             }
         }
 
-        public string GetInfo(Sprite sprite)
+        public string GetInfo(TextureInfo textureInfo)
         {
             string icon = "//";
             switch (_meshRenderType)
@@ -79,8 +72,8 @@ namespace SpriteAssist
                     icon = "<color=red>" + icon + "</color>";
                     break;
             }
-
-            return icon + " " + sprite.GetMeshAreaInfo(_vertices, _triangles);
+            
+            return icon + " " + MeshUtil.GetAreaInfo(_vertices, _triangles, textureInfo);
         }
 
         private static void GLDraw(Vector2 pos, Vector2[] vertices, ushort[] triangles, bool isWireframe)

@@ -21,7 +21,8 @@ namespace SpriteAssist
 
             foreach (var sprite in sprites)
             {
-                creator.OverrideGeometry(sprite, configData);
+                TextureInfo textureInfo = new TextureInfo(assetPath, sprite);
+                creator.OverrideGeometry(sprite, textureInfo, configData);
             }
         }
     }
