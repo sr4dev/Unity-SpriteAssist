@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultTransparentShaderName: Unlit/Transparent
   defaultOpaqueShaderName: Unlit/Texture
+  defaultThickness: 0
+  maxThumbnailPreviewCount: 10
