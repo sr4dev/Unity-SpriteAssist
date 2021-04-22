@@ -17,7 +17,8 @@ namespace SpriteAssist
 
         public bool HasMeshPrefab { get { return MeshPrefab != null; } }
 
-        public Object MeshPrefab { get; private set; }
+        public GameObject MeshPrefab { get { return FindExternalObject() as GameObject; }
+        }
 
         public SpriteImportData(Sprite sprite, string assetPath)
         {
@@ -28,8 +29,6 @@ namespace SpriteAssist
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
             sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
-
-            MeshPrefab = FindExternalObject();
         }
         
         private Object FindExternalObject()
@@ -42,11 +41,14 @@ namespace SpriteAssist
         {
             if (MeshPrefab != null)
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
+            RemapExternalObject(prefab);
+        }
+
+        public void RemapExternalObject(GameObject prefab)
+        {
             textureImporter.RemoveRemap(sourceAssetIdentifier);
             textureImporter.AddRemap(sourceAssetIdentifier, prefab);
             textureImporter.SaveAndReimport();
-
-            MeshPrefab = FindExternalObject();
         }
 
         public void RemoveExternalPrefab()
@@ -55,8 +57,6 @@ namespace SpriteAssist
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
             textureImporter.RemoveRemap(sourceAssetIdentifier);
             textureImporter.SaveAndReimport();
-
-            MeshPrefab = null;
         }
     }
 }
