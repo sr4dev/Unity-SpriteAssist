@@ -22,9 +22,9 @@ namespace SpriteAssist
             return configData.IsOverriden ? _creator[configData.mode] : _defaultCreator;
         }
 
-        public abstract void OverrideGeometry(Sprite sprite, SpriteConfigData configData);
+        public abstract void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData);
 
-        public abstract GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data);
+        public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
     }

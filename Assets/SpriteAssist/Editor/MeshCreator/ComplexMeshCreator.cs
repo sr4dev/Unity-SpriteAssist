@@ -5,19 +5,19 @@ namespace SpriteAssist
 {
     public class ComplexMeshCreator : MeshCreatorBase
     {
-        public override void OverrideGeometry(Sprite sprite, SpriteConfigData data)
+        public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             //does not supported
         }
 
-        public override GameObject CreateExternalObject(Sprite sprite, SpriteConfigData data)
+        public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
         {
-            GameObject root = sprite.CreateEmptyMeshPrefab(true);
+            GameObject root = PrefabUtil.UpdateMeshPrefab(textureInfo, true, oldPrefabPath);
             GameObject sub = root.transform.GetChild(0).gameObject;
             sprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
             sprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
-            sprite.AddComponentsAssets(transparentVertices, transparentTriangles, root, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
-            sprite.AddComponentsAssets(opaqueVertices, opaqueTriangles, sub, RENDER_TYPE_OPAQUE, data.opaqueShaderName);
+            PrefabUtil.AddComponentsAssets(root, transparentVertices, transparentTriangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName);
+            PrefabUtil.AddComponentsAssets(sub, opaqueVertices, opaqueTriangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName);
             return root;
         }
 
