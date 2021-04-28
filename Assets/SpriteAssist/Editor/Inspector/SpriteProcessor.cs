@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Eventing.Reader;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -180,21 +181,40 @@ namespace SpriteAssist
                     EditorGUI.BeginChangeCheck();
                     _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
                     _configData.thickness = Mathf.Max(0, _configData.thickness);
+                    EditorGUILayout.Space();
 
-                    if (IsTextureImporterMode)
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        EditorGUIUtility.wideMode = true;
-                        _configData.meshPrefabPixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", _configData.meshPrefabPixelsPerUnit);
-                        _configData.meshPrefabPivot = EditorGUILayout.Vector2Field("Texture pivot", _configData.meshPrefabPivot);
+                        EditorGUILayout.PrefixLabel("Scale and pivot");
+                        if (GUILayout.Button("Copy from Sprite"))
+                        {
+                            Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(_importData.assetPath).First(obj => obj is Sprite) as Sprite;
+                            if (rootSprite != null)
+                            {
+                                _configData.meshPrefabPixelsPerUnit = rootSprite.pixelsPerUnit;
+                                _configData.meshPrefabPivot = rootSprite.GetNormalizedPivot();
+                            }
+                        }
                     }
-                    else
+
+                    using (new EditorGUI.IndentLevelScope())
                     {
-                        EditorGUIUtility.wideMode = true;
-                        bool wasEnabled = GUI.enabled;
-                        GUI.enabled = false;
-                        EditorGUILayout.FloatField("Sprite pixels per unit", _importData.sprite.pixelsPerUnit);
-                        EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.pivot / _importData.sprite.rect.size);
-                        GUI.enabled = wasEnabled;
+                        if (IsTextureImporterMode)
+                        {
+                            EditorGUIUtility.wideMode = true;
+                            _configData.meshPrefabPixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit",
+                                _configData.meshPrefabPixelsPerUnit);
+                            _configData.meshPrefabPivot = EditorGUILayout.Vector2Field("Texture pivot", _configData.meshPrefabPivot);
+                        }
+                        else
+                        {
+                            EditorGUIUtility.wideMode = true;
+                            bool wasEnabled = GUI.enabled;
+                            GUI.enabled = false;
+                            EditorGUILayout.FloatField("Sprite pixels per unit", _importData.sprite.pixelsPerUnit);
+                            EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.GetNormalizedPivot());
+                            GUI.enabled = wasEnabled;
+                        }
                     }
 
                     if (EditorGUI.EndChangeCheck())
