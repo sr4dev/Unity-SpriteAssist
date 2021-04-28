@@ -180,6 +180,23 @@ namespace SpriteAssist
                     EditorGUI.BeginChangeCheck();
                     _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
                     _configData.thickness = Mathf.Max(0, _configData.thickness);
+
+                    if (IsTextureImporterMode)
+                    {
+                        EditorGUIUtility.wideMode = true;
+                        _configData.meshPrefabPixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", _configData.meshPrefabPixelsPerUnit);
+                        _configData.meshPrefabPivot = EditorGUILayout.Vector2Field("Texture pivot", _configData.meshPrefabPivot);
+                    }
+                    else
+                    {
+                        EditorGUIUtility.wideMode = true;
+                        bool wasEnabled = GUI.enabled;
+                        GUI.enabled = false;
+                        EditorGUILayout.FloatField("Sprite pixels per unit", _importData.sprite.pixelsPerUnit);
+                        EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.pivot / _importData.sprite.rect.size);
+                        GUI.enabled = wasEnabled;
+                    }
+
                     if (EditorGUI.EndChangeCheck())
                     {
                         _isDataChanged = true;
@@ -199,7 +216,7 @@ namespace SpriteAssist
 
                 EditorGUILayout.Space();
                 using (new EditorGUILayout.HorizontalScope())
-                using (new EditorGUI.DisabledScope(!_isDataChanged && !IsTextureImporterMode))
+                using (new EditorGUI.DisabledScope(!_isDataChanged))
                 {
                     GUILayout.FlexibleSpace();
 
@@ -297,7 +314,7 @@ namespace SpriteAssist
                         break;
 
                     case Texture2D texture:
-                        sprite = SpriteUtil.CreateDummySprite(texture);
+                        sprite = SpriteUtil.CreateDummySprite(texture, _configData.meshPrefabPivot, _configData.meshPrefabPixelsPerUnit);
                         break;
 
                     default:
