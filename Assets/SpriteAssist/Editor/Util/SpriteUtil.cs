@@ -24,7 +24,7 @@ namespace SpriteAssist
             spriteName = sprite.name;
             pixelPerUnit = sprite.pixelsPerUnit;
             pivot = sprite.pivot;
-            normalizedPivot = sprite.pivot / sprite.rect.size;
+            normalizedPivot = sprite.GetNormalizedPivot();
             rect = sprite.rect;
         }
     }
@@ -240,6 +240,11 @@ namespace SpriteAssist
 
     public static class SpriteUtil
     {
+        public static Vector2 GetNormalizedPivot(this Sprite sprite)
+        {
+            return sprite.pivot / sprite.rect.size;
+        }
+
         public static void GetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices2D, out ushort[] triangles2D, MeshRenderType meshRenderType)
         {
             if (!TryGetVertexAndTriangle2D(sprite, configData, out vertices2D, out triangles2D, meshRenderType))
