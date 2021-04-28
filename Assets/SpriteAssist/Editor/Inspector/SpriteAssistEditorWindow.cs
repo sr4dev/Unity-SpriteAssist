@@ -67,6 +67,11 @@ namespace SpriteAssist
                     if (import.HasMeshPrefab && GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
                     {
                         GameObject meshPrefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(import.MeshPrefab);
+                        meshPrefabInstance.name = gameObject.name;
+                        meshPrefabInstance.layer = gameObject.layer;
+                        meshPrefabInstance.tag = gameObject.tag;
+                        meshPrefabInstance.isStatic = gameObject.isStatic;
+                        meshPrefabInstance.SetActive(gameObject.activeSelf);
                         meshPrefabInstance.transform.SetParent(gameObject.transform.parent);
                         meshPrefabInstance.transform.localPosition = gameObject.transform.localPosition;
                         meshPrefabInstance.transform.localRotation = gameObject.transform.localRotation;
@@ -77,6 +82,8 @@ namespace SpriteAssist
                             t.SetParent(meshPrefabInstance.transform); 
                         }
 
+                        int index = gameObject.transform.GetSiblingIndex();
+                        meshPrefabInstance.transform.SetSiblingIndex(index);
                         DestroyImmediate(gameObject);
                     }
                 }
