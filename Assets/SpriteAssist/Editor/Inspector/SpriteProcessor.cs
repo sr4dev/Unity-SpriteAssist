@@ -186,14 +186,10 @@ namespace SpriteAssist
                     using (new EditorGUILayout.HorizontalScope())
                     {
                         EditorGUILayout.PrefixLabel("Scale and pivot");
-                        if (GUILayout.Button("Copy from Sprite"))
+                        if (IsTextureImporterMode && GUILayout.Button("Copy from Sprite"))
                         {
-                            Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(_importData.assetPath).First(obj => obj is Sprite) as Sprite;
-                            if (rootSprite != null)
-                            {
-                                _configData.meshPrefabPixelsPerUnit = rootSprite.pixelsPerUnit;
-                                _configData.meshPrefabPivot = rootSprite.GetNormalizedPivot();
-                            }
+                            Apply(false, false, true);
+                            return;
                         }
                     }
 
@@ -202,9 +198,8 @@ namespace SpriteAssist
                         if (IsTextureImporterMode)
                         {
                             EditorGUIUtility.wideMode = true;
-                            _configData.meshPrefabPixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit",
-                                _configData.meshPrefabPixelsPerUnit);
-                            _configData.meshPrefabPivot = EditorGUILayout.Vector2Field("Texture pivot", _configData.meshPrefabPivot);
+                            _importData.textureImporter.spritePixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", _importData.textureImporter.spritePixelsPerUnit);
+                            _importData.textureImporter.spritePivot = EditorGUILayout.Vector2Field("Texture pivot", _importData.textureImporter.spritePivot);
                         }
                         else
                         {
@@ -317,7 +312,7 @@ namespace SpriteAssist
             _isDataChanged = false;
         }
 
-        private void Apply(bool withMeshPrefabCreation = false, bool hasMeshPrefab = false)
+        private void Apply(bool withMeshPrefabCreation = false, bool hasMeshPrefab = false, bool withCopyFromSprite = false)
         {
             Undo.RegisterCompleteObjectUndo(_targets, "SpriteAssist Texture");
 
@@ -325,6 +320,23 @@ namespace SpriteAssist
             
             foreach (var target in _targets)
             {
+                string assetPath = AssetDatabase.GetAssetPath(target);
+                TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                if (textureImporter == null)
+                {
+                    continue;
+                }
+
+                if (withCopyFromSprite)
+                {
+                    Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).First(obj => obj is Sprite) as Sprite;
+                    if (rootSprite != null)
+                    {
+                        textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
+                        textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
+                    }
+                }
+
                 Sprite sprite = null;
 
                 switch (target)
@@ -334,16 +346,14 @@ namespace SpriteAssist
                         break;
 
                     case Texture2D texture:
-                        sprite = SpriteUtil.CreateDummySprite(texture, _configData.meshPrefabPivot, _configData.meshPrefabPixelsPerUnit);
+                        sprite = SpriteUtil.CreateDummySprite(texture, textureImporter.spritePivot, textureImporter.spritePixelsPerUnit);
                         break;
 
                     default:
                         continue;
                 }
 
-                string assetPath = AssetDatabase.GetAssetPath(target);
-                SpriteImportData importData = new SpriteImportData(sprite, assetPath);
-                
+                SpriteImportData importData = new SpriteImportData(sprite, textureImporter, assetPath);
                 importData.textureImporter.userData = _originalUserData;
 
                 EditorUtility.SetDirty(importData.textureImporter);
@@ -376,7 +386,6 @@ namespace SpriteAssist
                         importData.RemapExternalObject(prefab);
                     }
                 } 
-
             }
 
             _isDataChanged = false;
