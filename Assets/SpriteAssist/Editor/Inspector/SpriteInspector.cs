@@ -51,7 +51,7 @@ namespace SpriteAssist
 
         public void SetSpriteProcessor(Object t, string assetPath)
         {
-            if (SpriteProcessor == null && t is Sprite sprite && !string.IsNullOrEmpty(assetPath))
+            if (SpriteProcessor == null && t is Sprite sprite && !string.IsNullOrEmpty(assetPath) && assetPath.StartsWith("Assets"))
             {
                 SpriteProcessor = new SpriteProcessor(sprite, assetPath);
             }

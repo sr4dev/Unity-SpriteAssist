@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using UnityEditor.iOS;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -56,6 +57,11 @@ namespace SpriteAssist
                 if (spriteRenderer != null && spriteRenderer.sprite != null)
                 {
                     string texturePath = AssetDatabase.GetAssetPath(spriteRenderer.sprite.texture);
+                    if (string.IsNullOrEmpty(texturePath) || !texturePath.StartsWith("Assets"))
+                    {
+                        return;
+                    }
+
                     SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
 
                     if (import.HasMeshPrefab && GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
@@ -65,6 +71,11 @@ namespace SpriteAssist
                         meshPrefabInstance.transform.localPosition = gameObject.transform.localPosition;
                         meshPrefabInstance.transform.localRotation = gameObject.transform.localRotation;
                         meshPrefabInstance.transform.localScale = gameObject.transform.localScale;
+
+                        foreach (Transform t in gameObject.transform)
+                        {
+                            t.SetParent(meshPrefabInstance.transform); 
+                        }
 
                         DestroyImmediate(gameObject);
                     }
