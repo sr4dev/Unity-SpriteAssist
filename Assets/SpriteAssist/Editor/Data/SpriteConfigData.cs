@@ -11,6 +11,7 @@ namespace SpriteAssist
         private const byte ALPHA_TOLERANCE = 10;
         private const float EDGE_SMOOTHING = 1f;
         private const bool DETECT_HOLES = true;
+        private const float PIXELS_PER_UNIT = 100;
 
         [Flags]
         public enum Mode
@@ -34,6 +35,8 @@ namespace SpriteAssist
         public string transparentShaderName;
         public string opaqueShaderName;
         public float thickness;
+        public Vector2 meshPrefabPivot = new Vector2(0.5f, 0.5f);
+        public float meshPrefabPixelsPerUnit = PIXELS_PER_UNIT;
 
         public bool IsOverriden => mode != Mode.UnityDefault;
         

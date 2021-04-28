@@ -293,11 +293,16 @@ namespace SpriteAssist
 
         public static Sprite CreateDummySprite(Texture2D texture)
         {
+            return CreateDummySprite(texture, new Vector2(0.5f, 0.5f), 100);
+        }
+
+        public static Sprite CreateDummySprite(Texture2D texture, Vector3 pivot, float pixelsPerUnit)
+        {
             Texture2D originalTexture = TextureUtil.GetOriginalTexture(texture);
 
             //texture.GetOriginalImageSize(out int width, out int height);
             Rect rect = new Rect(0, 0, originalTexture.width, originalTexture.height);
-            Sprite sprite = Sprite.Create(originalTexture, rect, Vector2.one, 100);
+            Sprite sprite = Sprite.Create(originalTexture, rect, pivot, pixelsPerUnit);
             sprite.name = originalTexture.name + "(Dummy Sprite)";
             return sprite;
         }
