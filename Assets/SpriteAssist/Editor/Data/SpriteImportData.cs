@@ -29,6 +29,17 @@ namespace SpriteAssist
             textureImporter.ReadTextureSettings(textureImporterSettings);
             sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
         }
+
+        public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)
+        {
+            this.sprite = sprite;
+            this.assetPath = assetPath;
+
+            textureImporter = importer;
+            textureImporterSettings = new TextureImporterSettings();
+            textureImporter.ReadTextureSettings(textureImporterSettings);
+            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
+        }
         
         private Object FindExternalObject()
         {

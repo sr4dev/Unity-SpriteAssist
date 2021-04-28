@@ -35,8 +35,6 @@ namespace SpriteAssist
         public string transparentShaderName;
         public string opaqueShaderName;
         public float thickness;
-        public Vector2 meshPrefabPivot = new Vector2(0.5f, 0.5f);
-        public float meshPrefabPixelsPerUnit = PIXELS_PER_UNIT;
 
         public bool IsOverriden => mode != Mode.UnityDefault;
         
