@@ -17,8 +17,7 @@ namespace SpriteAssist
 
         public bool HasMeshPrefab { get { return MeshPrefab != null; } }
 
-        public GameObject MeshPrefab { get { return FindExternalObject() as GameObject; }
-        }
+        public GameObject MeshPrefab { get { return FindExternalObject() as GameObject; } }
 
         public SpriteImportData(Sprite sprite, string assetPath)
         {
