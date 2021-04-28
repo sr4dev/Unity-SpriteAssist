@@ -7,6 +7,8 @@ namespace SpriteAssist
     [CanEditMultipleObjects]
     public class SpriteInspector : UnityInternalEditor<Sprite>
     {
+        private Vector2 _scrollPosition;
+
         public SpriteProcessor SpriteProcessor { get; private set; }
 
         protected override void OnEnable()
@@ -25,9 +27,14 @@ namespace SpriteAssist
         
         public override void OnInspectorGUI()
         {
-            SpriteProcessor?.OnInspectorGUI();
+            using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPosition))
+            {
+                _scrollPosition = scroll.scrollPosition;
 
-            base.OnInspectorGUI();
+                SpriteProcessor?.OnInspectorGUI();
+
+                base.OnInspectorGUI();
+            }
         }
 
         public override void OnPreviewGUI(Rect rect, GUIStyle background)
