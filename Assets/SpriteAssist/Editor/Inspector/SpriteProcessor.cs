@@ -417,6 +417,9 @@ namespace SpriteAssist
             _configData = SpriteConfigData.GetData(_importData.textureImporter.userData);
             _isDataChanged = true;
 
+            if (_targets == null)
+                return;
+
             foreach (var t in _targets)
             {
                 string path = AssetDatabase.GetAssetPath(t);
