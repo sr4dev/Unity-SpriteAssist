@@ -111,8 +111,7 @@ namespace SpriteAssist
 
                             if (import.HasMeshPrefab)
                             {
-                                GameObject meshPrefabInstance =
-                                    (GameObject) PrefabUtility.InstantiatePrefab(import.MeshPrefab);
+                                GameObject meshPrefabInstance = (GameObject) PrefabUtility.InstantiatePrefab(import.MeshPrefab);
                                 meshPrefabInstance.name = gameObject.name;
                                 meshPrefabInstance.layer = gameObject.layer;
                                 meshPrefabInstance.tag = gameObject.tag;
@@ -131,6 +130,7 @@ namespace SpriteAssist
                                 int index = gameObject.transform.GetSiblingIndex();
                                 meshPrefabInstance.transform.SetSiblingIndex(index);
                                 DestroyImmediate(gameObject);
+                                EditorUtility.SetDirty(meshPrefabInstance);
                             }
                         }
                     }
