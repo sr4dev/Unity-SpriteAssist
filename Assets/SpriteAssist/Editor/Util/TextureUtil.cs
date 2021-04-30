@@ -16,7 +16,7 @@ namespace SpriteAssist
 
                 if (importer != null)
                 {
-                    object[] args = new object[] { 0, 0 };
+                    object[] args = new object[] {0, 0};
                     MethodInfo mi = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
                     mi.Invoke(importer, args);
 
