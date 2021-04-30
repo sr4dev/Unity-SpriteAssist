@@ -161,7 +161,10 @@ namespace SpriteAssist
                 }
                 else if (gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
                 {
-                    target = meshRenderer.sharedMaterial.mainTexture;
+                    if (meshRenderer.sharedMaterial != null)
+                    {
+                        target = meshRenderer.sharedMaterial.mainTexture;
+                    }
                 }
             }
 
