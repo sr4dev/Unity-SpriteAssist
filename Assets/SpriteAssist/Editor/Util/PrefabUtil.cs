@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -49,7 +50,7 @@ namespace SpriteAssist
             {
                 return CreateMeshPrefab(textureInfo, hasSubObject);
             }
-        
+
             GameObject instance = PrefabUtility.LoadPrefabContents(oldPrefabPath);
 
             if (instance.transform.childCount > 0)
@@ -72,7 +73,7 @@ namespace SpriteAssist
             PrefabUtility.UnloadPrefabContents(instance);
             return prefab;
         }
-        
+
         public static void AddComponentsAssets(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName)
         {
             //add components
@@ -104,6 +105,7 @@ namespace SpriteAssist
                 name = renderType,
                 mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(textureInfo.textureAssetPath)
             };
+
             meshRenderer.sharedMaterial = material;
 
             //set assets as sub-asset
@@ -126,6 +128,48 @@ namespace SpriteAssist
             }
 
             AssetDatabase.SaveAssets();
+        }
+
+        public static bool IsMutablePrefab(GameObject gameObject)
+        {
+            return !(PrefabUtility.IsAnyPrefabInstanceRoot(gameObject) ^ PrefabUtility.IsPartOfPrefabInstance(gameObject));
+        }
+
+        public static bool TryGetMutableInstanceInHierarchy(Object target, out GameObject gameObject)
+        {
+            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target)) && target is GameObject go && IsMutablePrefab(go))
+            {
+                gameObject = go;
+                return true;
+            }
+
+            gameObject = null;
+            return false;
+        }
+
+        public static bool TryGetSpriteFromInstance(GameObject gameObject, out Sprite sprite)
+        {
+            SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                sprite = spriteRenderer.sprite;
+                return true;
+            }
+
+            sprite = null;
+            return false;
+        }
+
+        public static bool TryGetInternalAssetPath(Object obj, out string path)
+        {
+            path = AssetDatabase.GetAssetPath(obj);
+            return !string.IsNullOrEmpty(path) && path.StartsWith("Assets");
+        }
+
+        public static bool IsPrefabModeRoot(GameObject test)
+        {
+            PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            return prefabStage != null && prefabStage.prefabContentsRoot == test;
         }
     }
 }

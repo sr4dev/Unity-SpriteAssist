@@ -1,12 +1,10 @@
-﻿using System.Linq.Expressions;
-using UnityEditor;
-using UnityEditor.iOS;
+﻿using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
-
     public class SpriteAssistEditorWindow : EditorWindow
     {
         private SpriteInspector _spriteInspector;
@@ -37,6 +35,8 @@ namespace SpriteAssist
                         {
                             SwapSpriteRenderer(Selection.objects);
                         }
+
+                        EditorGUILayout.HelpBox("Mesh Prefab found. You can swap this SpriteRenderer to Mesh Prefab.", MessageType.Info);
                     }
 
                     _spriteInspector.DrawHeader();
@@ -67,26 +67,20 @@ namespace SpriteAssist
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
         }
-        
-        private bool HasSpriteRendererAny(Object[] targets)
+
+        private static bool HasSpriteRendererAny(Object[] targets)
         {
             foreach (var target in targets)
             {
-                //is in hierarchy
-                if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target)) && target is GameObject gameObject)
+                if (PrefabUtil.TryGetMutableInstanceInHierarchy(target, out GameObject gameObject) &&
+                    PrefabUtil.TryGetSpriteFromInstance(gameObject, out Sprite sprite) &&
+                    PrefabUtil.TryGetInternalAssetPath(sprite.texture, out string texturePath))
                 {
-                    var spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-                    if (spriteRenderer != null && spriteRenderer.sprite != null)
+                    SpriteImportData import = new SpriteImportData(sprite, texturePath);
+
+                    if (import.HasMeshPrefab)
                     {
-                        string texturePath = AssetDatabase.GetAssetPath(spriteRenderer.sprite.texture);
-                        if (!string.IsNullOrEmpty(texturePath) && texturePath.StartsWith("Assets"))
-                        {
-                            SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
-                            if (import.HasMeshPrefab)
-                            {
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
             }
@@ -94,45 +88,46 @@ namespace SpriteAssist
             return false;
         }
 
-        private void SwapSpriteRenderer(Object[] targets)
+        private static void SwapSpriteRenderer(Object[] targets)
         {
             foreach (var target in targets)
             {
-                //is in hierarchy
-                if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target)) && target is GameObject gameObject)
+                if (PrefabUtil.TryGetMutableInstanceInHierarchy(target, out GameObject gameObject) &&
+                    PrefabUtil.TryGetSpriteFromInstance(gameObject, out Sprite sprite) &&
+                    PrefabUtil.TryGetInternalAssetPath(sprite.texture, out string texturePath))
                 {
-                    var spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-                    if (spriteRenderer != null && spriteRenderer.sprite != null)
+                    SpriteImportData import = new SpriteImportData(sprite, texturePath);
+
+                    if (import.HasMeshPrefab)
                     {
-                        string texturePath = AssetDatabase.GetAssetPath(spriteRenderer.sprite.texture);
-                        if (!string.IsNullOrEmpty(texturePath) && texturePath.StartsWith("Assets"))
+                        GameObject meshPrefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(import.MeshPrefab);
+                        meshPrefabInstance.name = gameObject.name;
+                        meshPrefabInstance.layer = gameObject.layer;
+                        meshPrefabInstance.tag = gameObject.tag;
+                        meshPrefabInstance.isStatic = gameObject.isStatic;
+                        meshPrefabInstance.SetActive(gameObject.activeSelf);
+                        meshPrefabInstance.transform.SetParent(gameObject.transform.parent);
+                        meshPrefabInstance.transform.localPosition = gameObject.transform.localPosition;
+                        meshPrefabInstance.transform.localRotation = gameObject.transform.localRotation;
+                        meshPrefabInstance.transform.localScale = gameObject.transform.localScale;
+
+                        foreach (Transform t in gameObject.transform)
                         {
-                            SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
-
-                            if (import.HasMeshPrefab)
+                            if (PrefabUtil.IsMutablePrefab(t.gameObject))
                             {
-                                GameObject meshPrefabInstance = (GameObject) PrefabUtility.InstantiatePrefab(import.MeshPrefab);
-                                meshPrefabInstance.name = gameObject.name;
-                                meshPrefabInstance.layer = gameObject.layer;
-                                meshPrefabInstance.tag = gameObject.tag;
-                                meshPrefabInstance.isStatic = gameObject.isStatic;
-                                meshPrefabInstance.SetActive(gameObject.activeSelf);
-                                meshPrefabInstance.transform.SetParent(gameObject.transform.parent);
-                                meshPrefabInstance.transform.localPosition = gameObject.transform.localPosition;
-                                meshPrefabInstance.transform.localRotation = gameObject.transform.localRotation;
-                                meshPrefabInstance.transform.localScale = gameObject.transform.localScale;
-
-                                foreach (Transform t in gameObject.transform)
-                                {
-                                    t.SetParent(meshPrefabInstance.transform);
-                                }
-
-                                int index = gameObject.transform.GetSiblingIndex();
-                                meshPrefabInstance.transform.SetSiblingIndex(index);
-                                DestroyImmediate(gameObject);
-                                EditorUtility.SetDirty(meshPrefabInstance);
+                                t.SetParent(meshPrefabInstance.transform);
                             }
                         }
+
+                        int index = gameObject.transform.GetSiblingIndex();
+                        meshPrefabInstance.transform.SetSiblingIndex(index);
+
+                        if (!PrefabUtil.IsPrefabModeRoot(gameObject))
+                        {
+                            DestroyImmediate(gameObject);
+                        }
+
+                        EditorUtility.SetDirty(meshPrefabInstance);
                     }
                 }
             }
@@ -142,7 +137,7 @@ namespace SpriteAssist
         {
             AssemblyReloadEvents.afterAssemblyReload += CreateEditor;
         }
-        
+
         private void OnSelectionChange()
         {
             Repaint();
@@ -157,7 +152,10 @@ namespace SpriteAssist
             {
                 if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
                 {
-                    target = spriteRenderer.sprite.texture;
+                    if (spriteRenderer.sprite != null)
+                    {
+                        target = spriteRenderer.sprite.texture;
+                    }
                 }
                 else if (gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
                 {
