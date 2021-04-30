@@ -22,9 +22,15 @@ namespace SpriteAssist
 
         public bool IsExtendedByEditorWindow { get; set; }
 
-        public bool IsUIEnabled => !EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() || IsExtendedByEditorWindow;
+        public bool IsUIEnabled
+        {
+            get { return !EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() || IsExtendedByEditorWindow; }
+        }
 
-        public bool IsEditorWindow => EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() && IsExtendedByEditorWindow;
+        public bool IsEditorWindow
+        {
+            get { return EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() && IsExtendedByEditorWindow; }
+        }
 
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
@@ -64,11 +70,11 @@ namespace SpriteAssist
             EditorGUILayout.Space();
 
             using (new EditorGUILayout.HorizontalScope())
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.PrefixLabel("Source Texture");
-                EditorGUILayout.ObjectField(_importData.sprite.texture, typeof(Texture2D), false);
-            }
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.PrefixLabel("Source Texture");
+                    EditorGUILayout.ObjectField(_importData.sprite.texture, typeof(Texture2D), false);
+                }
         }
 
         private void ShowDisabledUI()
@@ -91,7 +97,7 @@ namespace SpriteAssist
                         _preview.SetWireframes(_meshCreator.GetMeshWireframes());
                     }
                 }
-                
+
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     using (new EditorGUILayout.VerticalScope("box"))
@@ -105,7 +111,7 @@ namespace SpriteAssist
                         using (new EditorGUI.IndentLevelScope())
                         {
                             _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
-                            _configData.transparentAlphaTolerance = (byte) EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
+                            _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
                             _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                             EditorGUILayout.Space();
                         }
@@ -117,7 +123,7 @@ namespace SpriteAssist
                         using (new EditorGUI.IndentLevelScope())
                         {
                             _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
-                            _configData.opaqueAlphaTolerance = (byte) EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
+                            _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
                             using (new EditorGUI.DisabledScope(true))
                             {
                                 //force true
@@ -185,7 +191,8 @@ namespace SpriteAssist
                     using (new EditorGUILayout.HorizontalScope())
                     {
                         EditorGUILayout.PrefixLabel("Scale and pivot");
-                        if (IsTextureImporterMode && GUILayout.Button("Copy from Sprite"))
+                        if (IsTextureImporterMode && _importData.textureImporter.textureType == TextureImporterType.Sprite &&
+                            GUILayout.Button("Copy from Sprite"))
                         {
                             Apply(false, false, true);
                             return;
@@ -222,7 +229,7 @@ namespace SpriteAssist
                     {
                         if (_importData.MeshPrefab == null)
                         {
-                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 0, 5, 5) }))
+                            using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 0, 5, 5)}))
                                 EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
                         }
                     }
@@ -230,20 +237,20 @@ namespace SpriteAssist
 
                 EditorGUILayout.Space();
                 using (new EditorGUILayout.HorizontalScope())
-                using (new EditorGUI.DisabledScope(!_isDataChanged))
-                {
-                    GUILayout.FlexibleSpace();
-
-                    if (GUILayout.Button("Revert", GUILayout.Width(50)))
+                    using (new EditorGUI.DisabledScope(!_isDataChanged))
                     {
-                        Revert();
-                    }
+                        GUILayout.FlexibleSpace();
 
-                    if (GUILayout.Button("Apply", GUILayout.Width(50)))
-                    {
-                        Apply();
+                        if (GUILayout.Button("Revert", GUILayout.Width(50)))
+                        {
+                            Revert();
+                        }
+
+                        if (GUILayout.Button("Apply", GUILayout.Width(50)))
+                        {
+                            Apply();
+                        }
                     }
-                }
 
                 if (!_importData.IsTightMesh)
                 {
@@ -399,7 +406,7 @@ namespace SpriteAssist
                         GameObject prefab = _meshCreator.CreateExternalObject(sprite, textureInfo, _configData, oldPrefabPath);
                         importData.RemapExternalObject(prefab);
                     }
-                } 
+                }
             }
 
             _isDataChanged = false;
@@ -412,7 +419,12 @@ namespace SpriteAssist
 
             foreach (var t in _targets)
             {
-                AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(t), ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                string path = AssetDatabase.GetAssetPath(t);
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                }
             }
         }
     }
