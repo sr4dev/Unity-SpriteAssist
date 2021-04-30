@@ -31,6 +31,14 @@ namespace SpriteAssist
 
                 if (_spriteInspector != null && _spriteInspector.SpriteProcessor != null)
                 {
+                    if (HasSpriteRendererAny(Selection.objects))
+                    {
+                        if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
+                        {
+                            SwapSpriteRenderer(Selection.objects);
+                        }
+                    }
+
                     _spriteInspector.DrawHeader();
                     _spriteInspector.OnInspectorGUI();
                     GUILayout.FlexibleSpace();
@@ -58,14 +66,6 @@ namespace SpriteAssist
         {
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
-
-            if (HasSpriteRendererAny(Selection.objects))
-            {
-                if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
-                {
-                    SwapSpriteRenderer(Selection.objects);
-                }
-            }
         }
         
         private bool HasSpriteRendererAny(Object[] targets)
@@ -152,6 +152,18 @@ namespace SpriteAssist
         private void CreateEditor()
         {
             Object target = Selection.activeObject;
+
+            if (target is GameObject gameObject)
+            {
+                if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+                {
+                    target = spriteRenderer.sprite.texture;
+                }
+                else if (gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                {
+                    target = meshRenderer.sharedMaterial.mainTexture;
+                }
+            }
 
             Sprite sprite;
             bool isTextureImporterMode;
