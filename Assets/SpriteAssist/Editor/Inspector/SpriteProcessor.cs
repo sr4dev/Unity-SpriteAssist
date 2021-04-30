@@ -316,10 +316,25 @@ namespace SpriteAssist
             Undo.RegisterCompleteObjectUndo(_targets, "SpriteAssist Texture");
 
             _originalUserData = JsonUtility.ToJson(_configData);
-            
-            foreach (var target in _targets)
+
+            for (var i = 0; i < _targets.Length; i++)
             {
-                string assetPath = AssetDatabase.GetAssetPath(target);
+                var selectedTarget = _targets[i];
+
+                //override target
+                if (selectedTarget is GameObject gameObject)
+                {
+                    if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+                    {
+                        selectedTarget = spriteRenderer.sprite.texture;
+                    }
+                    else if (gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                    {
+                        selectedTarget = meshRenderer.sharedMaterial.mainTexture;
+                    }
+                }
+
+                string assetPath = AssetDatabase.GetAssetPath(selectedTarget);
                 TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
                 if (textureImporter == null)
                 {
@@ -338,7 +353,7 @@ namespace SpriteAssist
 
                 Sprite sprite = null;
 
-                switch (target)
+                switch (selectedTarget)
                 {
                     case Sprite value:
                         sprite = value;
