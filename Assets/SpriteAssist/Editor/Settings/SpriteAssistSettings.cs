@@ -12,7 +12,11 @@ namespace SpriteAssist
         private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
         private const int THUMBNAIL_COUNT = 10;
-        
+
+        public string prefabNamePrefix;
+        public string prefabNameSuffix;
+        public string prefabRelativePath;
+
         public string defaultTransparentShaderName;
         public string defaultOpaqueShaderName;
         public int defaultThickness;
@@ -45,6 +49,9 @@ namespace SpriteAssist
                 }
 
                 settings = CreateInstance<SpriteAssistSettings>();
+                settings.prefabNamePrefix = null;
+                settings.prefabNameSuffix = null;
+                settings.prefabRelativePath = null;
                 settings.defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
                 settings.defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
                 settings.maxThumbnailPreviewCount = THUMBNAIL_COUNT;
