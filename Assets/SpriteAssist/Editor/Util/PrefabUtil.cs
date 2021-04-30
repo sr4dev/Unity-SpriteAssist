@@ -10,7 +10,7 @@ namespace SpriteAssist
         {
             string prefix = SpriteAssistSettings.Settings.prefabNamePrefix;
             string suffix = SpriteAssistSettings.Settings.prefabNameSuffix;
-            string objectName = $"{prefix}{textureInfo.textureName}{suffix}.prefab";
+            string objectName = $"{prefix}{textureInfo.textureName}{suffix}";
 
             string currentDirectory = Path.GetDirectoryName(textureInfo.textureAssetPath);
             string relativePath = SpriteAssistSettings.Settings.prefabRelativePath;

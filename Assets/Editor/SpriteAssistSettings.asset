@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b2706a94cd2c14e9552204682cf280, type: 3}
   m_Name: SpriteAssistSettings
   m_EditorClassIdentifier: 
+  prefabNamePrefix: 
+  prefabNameSuffix: 
+  prefabRelativePath: 
   defaultTransparentShaderName: Unlit/Transparent
   defaultOpaqueShaderName: Unlit/Texture
   defaultThickness: 0
