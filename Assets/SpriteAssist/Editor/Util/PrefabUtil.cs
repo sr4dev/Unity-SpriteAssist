@@ -147,16 +147,15 @@ namespace SpriteAssist
             return false;
         }
 
-        public static bool TryGetSpriteFromInstance(GameObject gameObject, out Sprite sprite)
+        public static bool TryGetSpriteRendererWithSprite(GameObject gameObject, out SpriteRenderer spriteRenderer)
         {
-            SpriteRenderer spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+            spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+            
             if (spriteRenderer != null && spriteRenderer.sprite != null)
             {
-                sprite = spriteRenderer.sprite;
                 return true;
             }
 
-            sprite = null;
             return false;
         }
 
