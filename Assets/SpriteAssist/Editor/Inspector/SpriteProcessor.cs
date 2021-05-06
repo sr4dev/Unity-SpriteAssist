@@ -350,7 +350,7 @@ namespace SpriteAssist
 
                 if (withCopyFromSprite)
                 {
-                    Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).First(obj => obj is Sprite) as Sprite;
+                    Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
                     if (rootSprite != null)
                     {
                         textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;

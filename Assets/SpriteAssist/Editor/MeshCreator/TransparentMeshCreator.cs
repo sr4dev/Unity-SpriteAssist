@@ -8,7 +8,7 @@ namespace SpriteAssist
         public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             sprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
-            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo);
+            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
             sprite.OverrideGeometry(vertices, triangles);
         }
 
