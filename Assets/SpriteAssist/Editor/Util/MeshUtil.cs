@@ -4,7 +4,7 @@ namespace SpriteAssist
 {
     public static class MeshUtil
     {
-        public static Vector2[] GetScaledVertices(Vector2[] vertices, TextureInfo textureInfo, float additionalScale = 1, bool isFlipY = false)
+        public static Vector2[] GetScaledVertices(Vector2[] vertices, TextureInfo textureInfo, float additionalScale = 1, bool isFlipY = false, bool isClamped = false)
         {
             float scaledPixelsPerUnit = textureInfo.pixelPerUnit * additionalScale;
             Vector2 scaledPivot = textureInfo.pivot * additionalScale;
@@ -19,8 +19,11 @@ namespace SpriteAssist
                     vertex.y = (vertex.y - scaledSize.y) * -1.0f;
                 }
 
-                //vertex.x = Mathf.Clamp(vertex.x, 0, textureScaleInfo.rect.size.x);
-                //vertex.y = Mathf.Clamp(vertex.y, 0, textureScaleInfo.rect.size.y);
+                if (isClamped)
+                {
+                    vertex.x = Mathf.Clamp(vertex.x, 0, textureInfo.rect.size.x);
+                    vertex.y = Mathf.Clamp(vertex.y, 0, textureInfo.rect.size.y);
+                }
 
                 vertices[i] = vertex;
             }
