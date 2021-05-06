@@ -185,13 +185,11 @@ namespace SpriteAssist
 
                     if (PrefabUtil.IsPrefabModeRoot(gameObject) || isRoot)
                     {
-                        Debug.Log("root " + gameObject.name);
                         meshPrefabInstance.transform.SetParent(gameObject.transform);
                         DestroyImmediate(spriteRenderer);
                     }
                     else
                     {
-                        Debug.Log("sub " + gameObject.name);
                         int index = gameObject.transform.GetSiblingIndex();
                         meshPrefabInstance.transform.SetSiblingIndex(index);
                         DestroyImmediate(gameObject);
