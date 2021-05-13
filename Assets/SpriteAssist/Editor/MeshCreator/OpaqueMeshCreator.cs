@@ -16,7 +16,7 @@ namespace SpriteAssist
         {
             GameObject prefab = PrefabUtil.UpdateMeshPrefab(textureInfo, false, oldPrefabPath);
             sprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            PrefabUtil.AddComponentsAssets(prefab, vertices, triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName);
+            PrefabUtil.AddComponentsAssets(prefab, vertices, triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
             return prefab;
         }
 
