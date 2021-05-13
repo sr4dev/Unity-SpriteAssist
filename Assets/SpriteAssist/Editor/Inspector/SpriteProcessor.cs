@@ -11,6 +11,11 @@ namespace SpriteAssist
         private readonly SpriteImportData _importData;
         private readonly SpritePreview _preview;
 
+        private static bool _isOpenMeshSettings = true;
+        private static bool _isOpenMeshPrefab = true;
+        private static bool _isOpenScaleAndPivot;
+        private static bool _isOpenTagsAndLayers;
+
         private string _originalUserData;
         private SpriteConfigData _configData;
         private MeshCreatorBase _meshCreator;
@@ -84,143 +89,236 @@ namespace SpriteAssist
 
         private void ShowEnabledUI()
         {
-            using (var checkDataChange = new EditorGUI.ChangeCheckScope())
+            using (var checkChangedMode = new EditorGUI.ChangeCheckScope())
             {
-                using (var checkModeChange = new EditorGUI.ChangeCheckScope())
-                {
-                    _configData.mode = (SpriteConfigData.Mode)EditorGUILayout.EnumPopup("SpriteAssist Mode", _configData.mode);
-                    EditorGUILayout.Space();
+                _configData.mode = (SpriteConfigData.Mode) EditorGUILayout.EnumPopup("SpriteAssist Mode", _configData.mode);
+                EditorGUILayout.Space();
 
-                    if (checkModeChange.changed)
-                    {
-                        _meshCreator = MeshCreatorBase.GetInstnace(_configData);
-                        _preview.SetWireframes(_meshCreator.GetMeshWireframes());
-                    }
+                if (checkChangedMode.changed)
+                {
+                    _meshCreator = MeshCreatorBase.GetInstnace(_configData);
+                    _preview.SetWireframes(_meshCreator.GetMeshWireframes());
                 }
 
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-                {
-                    using (new EditorGUILayout.VerticalScope("box"))
-                    {
-                        EditorGUILayout.LabelField("Mesh Settings");
-                    }
+                _isDataChanged |= checkChangedMode.changed;
+            }
 
-                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh))
+            if (!IsExtendedByEditorWindow)
+            {
+                EditorGUI.indentLevel++;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.VerticalScope("box"))
+                {
+                    _isOpenMeshSettings = EditorGUILayout.Foldout(_isOpenMeshSettings, "Mesh Settings");
+                }
+
+                if (_isOpenMeshSettings)
+                {
+                    using (var checkChangedMeshSettings = new EditorGUI.ChangeCheckScope())
                     {
-                        EditorGUILayout.LabelField("Transparent Mesh");
-                        using (new EditorGUI.IndentLevelScope())
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh))
                         {
-                            _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
-                            _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
-                            _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
+                            EditorGUILayout.LabelField("Transparent Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.transparentDetail = EditorGUILayout.Slider("Detail", _configData.transparentDetail, 0.001f, 1f);
+                                _configData.transparentAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.transparentAlphaTolerance, 0, 254);
+                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
+                                EditorGUILayout.Space();
+                            }
+                        }
+
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
+                        {
+                            EditorGUILayout.LabelField("Opaque Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
+                                _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
+                                using (new EditorGUI.DisabledScope(true))
+                                {
+                                    //force true
+                                    EditorGUILayout.Toggle("Detect Holes (forced)", true);
+                                }
+
+                                EditorGUILayout.Space();
+                            }
+                        }
+
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh) || _configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
+                        {
+                            _configData.edgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.edgeSmoothing, 0f, 1f);
+                            _configData.useNonZero = EditorGUILayout.Toggle("Non-zero Winding", _configData.useNonZero);
                             EditorGUILayout.Space();
                         }
+
+                        if (_configData.mode == SpriteConfigData.Mode.UnityDefault)
+                        {
+                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
+                                EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
+                        }
+
+                        if (_configData.mode == SpriteConfigData.Mode.Complex)
+                        {
+                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
+                                EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
+                        }
+
+                        _isDataChanged |= checkChangedMeshSettings.changed;
+                    }
+                }
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope("box"))
+                {
+                    _isOpenMeshPrefab = EditorGUILayout.Foldout(_isOpenMeshPrefab, "Mesh Prefab");
+                }
+
+                if (_isOpenMeshPrefab)
+                {
+                    using (var checkChangedMeshPrefab = new EditorGUI.ChangeCheckScope())
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            EditorGUILayout.ObjectField("Prefab", _importData.MeshPrefab, typeof(GameObject), false);
+                            string buttonText = _importData.HasMeshPrefab ? "Remove" : "Create";
+                            if (GUILayout.Button(buttonText, GUILayout.Width(60)))
+                            {
+                                Apply(true, _importData.HasMeshPrefab);
+                                return;
+                            }
+                        }
+
+                        if (!_importData.HasMeshPrefab)
+                        {
+                            Shader transparentShader = ShaderUtil.FindTransparentShader(_configData.transparentShaderName);
+                            Shader opaqueShader = ShaderUtil.FindOpaqueShader(_configData.opaqueShaderName);
+                            transparentShader = (Shader)EditorGUILayout.ObjectField("Transparent Shader", transparentShader, typeof(Shader), false);
+                            opaqueShader = (Shader)EditorGUILayout.ObjectField("Opaque Shader", opaqueShader, typeof(Shader), false);
+                            _configData.transparentShaderName = transparentShader == null ? null : transparentShader.name;
+                            _configData.opaqueShaderName = opaqueShader == null ? null : opaqueShader.name;
+                        }
+
+                        _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
+                        _configData.thickness = Mathf.Max(0, _configData.thickness);
+                        EditorGUILayout.Space();
+
+                        _isDataChanged |= checkChangedMeshPrefab.changed;
                     }
 
-                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
+                    _isOpenScaleAndPivot = EditorGUILayout.Foldout(_isOpenScaleAndPivot, "Scale and pivot");
+
+                    if (_isOpenScaleAndPivot)
                     {
-                        EditorGUILayout.LabelField("Opaque Mesh");
+                        using (var checkChangedScaleAndPivot = new EditorGUI.ChangeCheckScope())
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
-                            _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
-                            using (new EditorGUI.DisabledScope(true))
+                            using (new EditorGUILayout.HorizontalScope())
                             {
-                                //force true
-                                EditorGUILayout.Toggle("Detect Holes (forced)", true);
+                                GUILayout.Space(16);
+
+                                if (IsTextureImporterMode && _importData.textureImporter.textureType == TextureImporterType.Sprite &&
+                                    GUILayout.Button("Copy from Sprite"))
+                                {
+                                    Apply(false, false, true);
+                                    return;
+                                }
                             }
 
-                            EditorGUILayout.Space();
+                            if (IsTextureImporterMode)
+                            {
+                                EditorGUIUtility.wideMode = true;
+                                _importData.textureImporter.spritePixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", _importData.textureImporter.spritePixelsPerUnit);
+                                _importData.textureImporter.spritePivot = EditorGUILayout.Vector2Field("Texture pivot", _importData.textureImporter.spritePivot);
+                            }
+                            else
+                            {
+                                EditorGUIUtility.wideMode = true;
+                                bool wasEnabled = GUI.enabled;
+                                GUI.enabled = false;
+                                EditorGUILayout.FloatField("Sprite pixels per unit", _importData.sprite.pixelsPerUnit);
+                                EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.GetNormalizedPivot());
+                                EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.GetNormalizedPivot());
+                                GUI.enabled = wasEnabled;
+                            }
+
+                            _isDataChanged |= checkChangedScaleAndPivot.changed;
                         }
                     }
 
-                    if (_configData.mode.HasFlag(SpriteConfigData.Mode.TransparentMesh) || _configData.mode.HasFlag(SpriteConfigData.Mode.OpaqueMesh))
-                    {
-                        _configData.edgeSmoothing = EditorGUILayout.Slider("Edge Smoothing", _configData.edgeSmoothing, 0f, 1f);
-                        _configData.useNonZero = EditorGUILayout.Toggle("Non-zero Winding", _configData.useNonZero);
-                        EditorGUILayout.Space();
-                    }
+                    _isOpenTagsAndLayers = EditorGUILayout.Foldout(_isOpenTagsAndLayers, "Tags and Layers");
 
-                    if (_configData.mode == SpriteConfigData.Mode.UnityDefault)
+                    if (_isOpenTagsAndLayers)
                     {
-                        using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 5, 0, 5)}))
-                            EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
-                    }
-
-                    if (_configData.mode == SpriteConfigData.Mode.Complex)
-                    {
-                        using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 5, 0, 5)}))
-                            EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
-                    }
-
-                    _isDataChanged |= checkDataChange.changed;
-                }
-
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-                {
-                    using (new EditorGUILayout.VerticalScope("box"))
-                    {
-                        EditorGUILayout.LabelField("Mesh Prefab");
-                    }
-
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        EditorGUILayout.ObjectField("Prefab", _importData.MeshPrefab, typeof(GameObject), false);
-                        string buttonText = _importData.HasMeshPrefab ? "Remove" : "Create";
-                        if (GUILayout.Button(buttonText, GUILayout.Width(60)))
+                        using (var checkChangedTagsAndLayers = new EditorGUI.ChangeCheckScope())
+                        using (new EditorGUI.IndentLevelScope())
                         {
-                            Apply(true, _importData.HasMeshPrefab);
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                _configData.overrideTag = EditorGUILayout.Toggle(_configData.overrideTag, GUILayout.Width(45));
+                                GUILayout.Space(-30);
+
+                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideTag))
+                                {
+                                    if (_configData.overrideTag)
+                                    {
+                                        _configData.tag = EditorGUILayout.TagField("Tag", _configData.tag);
+                                    }
+                                    else
+                                    {
+                                        EditorGUILayout.TagField("Tag", SpriteAssistSettings.Settings.defaultTag);
+                                    }
+                                }
+                            }
+
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                _configData.overrideLayer = EditorGUILayout.Toggle(_configData.overrideLayer, GUILayout.Width(45));
+                                GUILayout.Space(-30);
+
+                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideLayer))
+                                {
+                                    if (_configData.overrideLayer)
+                                    {
+                                        _configData.layer = EditorGUILayout.LayerField("Layer", _configData.layer);
+                                    }
+                                    else
+                                    {
+                                        EditorGUILayout.LayerField("Layer", SpriteAssistSettings.Settings.defaultLayer);
+                                    }
+                                }
+                            }
+
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                _configData.overrideSortingLayer = EditorGUILayout.Toggle(_configData.overrideSortingLayer, GUILayout.Width(45));
+                                GUILayout.Space(-30);
+
+                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideSortingLayer))
+                                {
+                                    if (_configData.overrideSortingLayer)
+                                    {
+                                        int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == _configData.sortingLayerId);
+                                        index = EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
+                                        _configData.sortingLayerId = SortingLayer.layers[index].id;
+                                        _configData.sortingOrder = EditorGUILayout.IntField( _configData.sortingOrder, GUILayout.Width(60));
+                                    }
+                                    else
+                                    {
+                                        int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == SpriteAssistSettings.Settings.defaultSortingLayerId);
+                                        EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
+                                        EditorGUILayout.IntField(SpriteAssistSettings.Settings.defaultSortingOrder, GUILayout.Width(60));
+                                    }
+                                }
+                            }
+
+                            _isDataChanged |= checkChangedTagsAndLayers.changed;
                         }
-                    }
-
-                    if (!_importData.HasMeshPrefab)
-                    {
-                        Shader transparentShader = ShaderUtil.FindTransparentShader(_configData.transparentShaderName);
-                        Shader opaqueShader = ShaderUtil.FindOpaqueShader(_configData.opaqueShaderName);
-                        transparentShader = (Shader)EditorGUILayout.ObjectField("Transparent Shader", transparentShader, typeof(Shader), false);
-                        opaqueShader = (Shader)EditorGUILayout.ObjectField("Opaque Shader", opaqueShader, typeof(Shader), false);
-                        _configData.transparentShaderName = transparentShader == null ? null : transparentShader.name;
-                        _configData.opaqueShaderName = opaqueShader == null ? null : opaqueShader.name;
-                    }
-
-                    EditorGUI.BeginChangeCheck();
-                    _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
-                    _configData.thickness = Mathf.Max(0, _configData.thickness);
-                    EditorGUILayout.Space();
-
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        EditorGUILayout.PrefixLabel("Scale and pivot");
-                        if (IsTextureImporterMode && _importData.textureImporter.textureType == TextureImporterType.Sprite &&
-                            GUILayout.Button("Copy from Sprite"))
-                        {
-                            Apply(false, false, true);
-                            return;
-                        }
-                    }
-
-                    using (new EditorGUI.IndentLevelScope())
-                    {
-                        if (IsTextureImporterMode)
-                        {
-                            EditorGUIUtility.wideMode = true;
-                            _importData.textureImporter.spritePixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", _importData.textureImporter.spritePixelsPerUnit);
-                            _importData.textureImporter.spritePivot = EditorGUILayout.Vector2Field("Texture pivot", _importData.textureImporter.spritePivot);
-                        }
-                        else
-                        {
-                            EditorGUIUtility.wideMode = true;
-                            bool wasEnabled = GUI.enabled;
-                            GUI.enabled = false;
-                            EditorGUILayout.FloatField("Sprite pixels per unit", _importData.sprite.pixelsPerUnit);
-                            EditorGUILayout.Vector2Field("Sprite pivot", _importData.sprite.GetNormalizedPivot());
-                            GUI.enabled = wasEnabled;
-                        }
-                    }
-
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        _isDataChanged = true;
                     }
 
                     EditorGUILayout.Space();
@@ -229,42 +327,43 @@ namespace SpriteAssist
                     {
                         if (_importData.MeshPrefab == null)
                         {
-                            using (new EditorGUILayout.VerticalScope(new GUIStyle {margin = new RectOffset(5, 0, 5, 5)}))
+                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 0, 5, 5) }))
                                 EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
                         }
                     }
                 }
+            }
 
-                EditorGUILayout.Space();
-                using (new EditorGUILayout.HorizontalScope())
-                    using (new EditorGUI.DisabledScope(!_isDataChanged))
-                    {
-                        GUILayout.FlexibleSpace();
+            EditorGUILayout.Space();
 
-                        if (GUILayout.Button("Revert", GUILayout.Width(50)))
-                        {
-                            Revert();
-                        }
+            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(!_isDataChanged))
+            {
+                GUILayout.FlexibleSpace();
 
-                        if (GUILayout.Button("Apply", GUILayout.Width(50)))
-                        {
-                            Apply();
-                        }
-                    }
-
-                if (!_importData.IsTightMesh)
+                if (GUILayout.Button("Revert", GUILayout.Width(50)))
                 {
-                    EditorGUILayout.HelpBox("Mesh Type is not Tight Mesh. Change texture setting.", MessageType.Warning);
+                    Revert();
                 }
 
-                EditorGUILayout.Space();
-
-                if (checkDataChange.changed)
+                if (GUILayout.Button("Apply", GUILayout.Width(50)))
                 {
-                    Undo.RegisterCompleteObjectUndo(_importData.textureImporter, "SpriteAssist Texture");
-
-                    _importData.textureImporter.userData = JsonUtility.ToJson(_configData);
+                    Apply();
                 }
+            }
+
+            if (!_importData.IsTightMesh)
+            {
+                EditorGUILayout.HelpBox("Mesh Type is not Tight Mesh. Change texture setting.", MessageType.Warning);
+            }
+
+            EditorGUILayout.Space();
+
+            if (_isDataChanged)
+            {
+                Undo.RegisterCompleteObjectUndo(_importData.textureImporter, "SpriteAssist Texture");
+
+                _importData.textureImporter.userData = JsonUtility.ToJson(_configData);
             }
         }
 

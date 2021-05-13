@@ -1,5 +1,4 @@
-﻿using LibTessDotNet;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -12,6 +11,7 @@ namespace SpriteAssist
         private const float EDGE_SMOOTHING = 1f;
         private const bool DETECT_HOLES = true;
         private const float PIXELS_PER_UNIT = 100;
+        private const string TAG = "Untagged";
 
         [Flags]
         public enum Mode
@@ -35,6 +35,15 @@ namespace SpriteAssist
         public string transparentShaderName;
         public string opaqueShaderName;
         public float thickness;
+
+        public bool overrideTag;
+        public bool overrideLayer;
+        public bool overrideSortingLayer;
+
+        public string tag = TAG;
+        public int layer;
+        public int sortingLayerId;
+        public int sortingOrder;
 
         public bool IsOverriden => mode != Mode.UnityDefault;
         
