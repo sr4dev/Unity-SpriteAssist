@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -33,6 +35,29 @@ namespace SpriteAssist
                         {
                             EditorGUILayout.PropertyField(settings.FindProperty("defaultTransparentShaderName"), new GUIContent("Transparent"));
                             EditorGUILayout.PropertyField(settings.FindProperty("defaultOpaqueShaderName"), new GUIContent("Opaque"));
+                            EditorGUILayout.Space();
+                        }
+
+                        EditorGUILayout.LabelField("Tags and Layers");
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            var tagProperty = settings.FindProperty("defaultTag");
+                            var layerProperty = settings.FindProperty("defaultLayer");
+                            var sortingLayerProperty = settings.FindProperty("defaultSortingLayerId");
+                            var sortingOrder = settings.FindProperty("defaultSortingOrder");
+
+                            tagProperty.stringValue = EditorGUILayout.TagField("Tag", tagProperty.stringValue);
+                            layerProperty.intValue = EditorGUILayout.LayerField("Layer", layerProperty.intValue);
+                            
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                sortingOrder.intValue = EditorGUILayout.IntField("Sorting Layer", sortingOrder.intValue);
+                                GUILayout.Space(-20);
+                                int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == sortingLayerProperty.intValue);
+                                index = EditorGUILayout.Popup(index, (from layer in SortingLayer.layers select layer.name).ToArray());
+                                sortingLayerProperty.intValue = SortingLayer.layers[index].id;
+                            }
+
                             EditorGUILayout.Space();
                         }
 
