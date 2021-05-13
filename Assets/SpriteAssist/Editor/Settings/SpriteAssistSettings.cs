@@ -11,7 +11,7 @@ namespace SpriteAssist
 
         private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
-        private const string TAG = "Untagged";
+        public const string DEFAULT_TAG = "Untagged";
         private const int THUMBNAIL_COUNT = 10;
 
         public string prefabNamePrefix;
@@ -22,7 +22,7 @@ namespace SpriteAssist
         public string defaultOpaqueShaderName;
         public int defaultThickness;
 
-        public string defaultTag;
+        public string defaultTag = DEFAULT_TAG;
         public int defaultLayer;
         public int defaultSortingLayerId;
         public int defaultSortingOrder;
@@ -60,7 +60,7 @@ namespace SpriteAssist
                 settings.prefabRelativePath = null;
                 settings.defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
                 settings.defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
-                settings.defaultTag = TAG;
+                settings.defaultTag = DEFAULT_TAG;
                 settings.maxThumbnailPreviewCount = THUMBNAIL_COUNT;
                 AssetDatabase.CreateAsset(settings, SETTINGS_PATH);
                 AssetDatabase.SaveAssets();
