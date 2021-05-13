@@ -74,8 +74,26 @@ namespace SpriteAssist
             return prefab;
         }
 
-        public static void AddComponentsAssets(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName)
+        public static void AddComponentsAssets(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
+            if (spriteConfigData.overrideSortingLayer)
+            {
+                prefab.layer = spriteConfigData.layer;
+            }
+            else
+            {
+                prefab.layer = SpriteAssistSettings.Settings.defaultLayer;
+            }
+
+            if (spriteConfigData.overrideTag)
+            {
+                prefab.tag = spriteConfigData.tag;
+            }
+            else
+            {
+                prefab.tag = SpriteAssistSettings.Settings.defaultTag;
+            }
+
             //add components
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
             MeshRenderer meshRenderer = prefab.GetComponent<MeshRenderer>();
@@ -88,6 +106,17 @@ namespace SpriteAssist
             if (meshRenderer == null)
             {
                 meshRenderer = prefab.AddComponent<MeshRenderer>();
+            }
+
+            if (spriteConfigData.overrideSortingLayer)
+            {
+                meshRenderer.sortingLayerID = spriteConfigData.sortingLayerId;
+                meshRenderer.sortingOrder = spriteConfigData.sortingOrder;
+            }
+            else
+            {
+                meshRenderer.sortingLayerID = SpriteAssistSettings.Settings.defaultSortingLayerId;
+                meshRenderer.sortingOrder = SpriteAssistSettings.Settings.defaultSortingOrder;
             }
 
             //create new mesh
