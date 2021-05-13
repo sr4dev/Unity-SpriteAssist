@@ -76,22 +76,12 @@ namespace SpriteAssist
 
         public static void AddComponentsAssets(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
-            if (spriteConfigData.overrideSortingLayer)
-            {
-                prefab.layer = spriteConfigData.layer;
-            }
-            else
-            {
-                prefab.layer = SpriteAssistSettings.Settings.defaultLayer;
-            }
+            prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.Settings.defaultLayer;
+            string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.Settings.defaultTag;
 
-            if (spriteConfigData.overrideTag)
+            if (string.IsNullOrEmpty(tag))
             {
-                prefab.tag = spriteConfigData.tag;
-            }
-            else
-            {
-                prefab.tag = SpriteAssistSettings.Settings.defaultTag;
+                prefab.tag = SpriteAssistSettings.DEFAULT_TAG;
             }
 
             //add components
