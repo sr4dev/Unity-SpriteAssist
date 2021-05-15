@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -9,6 +8,8 @@ namespace SpriteAssist
     {
         private SpriteInspector _spriteInspector;
         private Sprite _sprite;
+        private bool _isEnabled;
+        private bool _hasSpriteRendererAny;
 
         [MenuItem("Window/SpriteAssist")]
         private static void ShowWindow()
@@ -18,47 +19,34 @@ namespace SpriteAssist
 
         private void OnGUI()
         {
-            bool fallback = false;
-
-            if (Selection.activeObject != null && _sprite != null)
+            if (_spriteInspector == null)
             {
-                if (_spriteInspector == null)
+                CreateEditor();
+            }
+            
+            if (_isEnabled)
+            {
+                if (_hasSpriteRendererAny)
                 {
-                    CreateEditor();
-                }
-
-                if (_spriteInspector != null && _spriteInspector.SpriteProcessor != null)
-                {
-                    if (RendererUtil.HasSpriteRendererAny(Selection.objects))
+                    if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
                     {
-                        if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
-                        {
-                            RendererUtil.SwapRendererSpriteToMeshInHierarchy(Selection.objects);
-                        }
-
-                        EditorGUILayout.HelpBox("Mesh Prefab found. You can swap this SpriteRenderer to Mesh Prefab.", MessageType.Info);
+                        RendererUtil.SwapRendererSpriteToMeshInHierarchy(Selection.objects);
                     }
 
-                    _spriteInspector.DrawHeader();
-                    _spriteInspector.OnInspectorGUI();
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Space(30);
-                    _spriteInspector.DrawPreview(GUILayoutUtility.GetRect(position.width, position.width / 2));
-                    GUILayout.Space(30);
+                    EditorGUILayout.HelpBox("Mesh Prefab found. You can swap this SpriteRenderer to Mesh Prefab.", MessageType.Info);
                 }
-                else
-                {
-                    fallback = true;
-                }
+
+                _spriteInspector.DrawHeader();
+                _spriteInspector.OnInspectorGUI();
+                GUILayout.FlexibleSpace();
+                GUILayout.Space(30);
+                _spriteInspector.DrawPreview(GUILayoutUtility.GetRect(position.width, position.width / 2));
+                GUILayout.Space(30);
             }
             else
             {
-                fallback = true;
-            }
-
-            if (fallback)
-            {
-                OnGUIFallback();
+                EditorGUILayout.Space();
+                EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
             }
             
             //experimental
@@ -70,13 +58,6 @@ namespace SpriteAssist
                 RendererUtil.SwapAllRecursively(s);
             }
         }
-
-        private void OnGUIFallback()
-        {
-            EditorGUILayout.Space();
-            EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
-        }
-
 
         private void OnEnable()
         {
@@ -90,6 +71,28 @@ namespace SpriteAssist
         }
 
         private void CreateEditor()
+        {
+            if (_spriteInspector != null)
+            {
+                DestroyImmediate(_spriteInspector);
+            }
+
+            Object target = GetTargetRelatedWithTexture();
+
+            if (TryGetSprite(target, out _sprite, out bool isTextureImporterMode))
+            {
+                string path = AssetDatabase.GetAssetPath(target);
+                _spriteInspector = (SpriteInspector)Editor.CreateEditor(_sprite);
+                _spriteInspector.SetSpriteProcessor(_sprite, path);
+                _spriteInspector.SpriteProcessor.IsExtendedByEditorWindow = true;
+                _spriteInspector.SpriteProcessor.IsTextureImporterMode = isTextureImporterMode;
+            }
+
+            _isEnabled = _sprite != null && _spriteInspector != null && _spriteInspector.SpriteProcessor != null;
+            _hasSpriteRendererAny = RendererUtil.HasSpriteRendererAny(Selection.objects);
+        }
+
+        private static Object GetTargetRelatedWithTexture()
         {
             Object target = Selection.activeObject;
 
@@ -111,45 +114,30 @@ namespace SpriteAssist
                 }
             }
 
-            Sprite sprite;
-            bool isTextureImporterMode;
+            return target;
+        }
 
+        private static bool TryGetSprite(Object target, out Sprite sprite, out bool fromTexture)
+        {
             switch (target)
             {
                 case Sprite value:
                     sprite = value;
-                    isTextureImporterMode = false;
+                    fromTexture = false;
                     break;
 
                 case Texture2D texture:
                     sprite = SpriteUtil.CreateDummySprite(texture);
-                    isTextureImporterMode = true;
+                    fromTexture = true;
                     break;
 
                 default:
                     sprite = null;
-                    isTextureImporterMode = false;
+                    fromTexture = false;
                     break;
             }
 
-            if (sprite == null)
-            {
-                _sprite = null;
-                return;
-            }
-
-            _sprite = sprite;
-
-            if (_spriteInspector != null)
-            {
-                DestroyImmediate(_spriteInspector);
-            }
-
-            string path = AssetDatabase.GetAssetPath(target);
-            _spriteInspector = (SpriteInspector)Editor.CreateEditor(sprite);
-            _spriteInspector.SetSpriteProcessor(sprite, path);
-            _spriteInspector.SpriteProcessor.IsExtendedByEditorWindow = true;
-            _spriteInspector.SpriteProcessor.IsTextureImporterMode = isTextureImporterMode;
+            return sprite != null;
         }
     }
 }
