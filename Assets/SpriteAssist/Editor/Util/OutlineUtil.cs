@@ -41,7 +41,7 @@ namespace SpriteAssist
 
         private static Vector2[][] GenerateOpaqueOutline(Sprite sprite, float detail, byte alphaTolerance)
         {
-            Vector2[][] paths = GenerateTransparentOutline(sprite, 1, alphaTolerance, true);
+            Vector2[][] paths = GenerateTransparentOutline(sprite, 0.5f + detail * 0.5f, alphaTolerance, true);
             List<List<IntPoint>> intPointList = ConvertToIntPointList(paths, detail);
             List<List<IntPoint>> offsetIntPointList = new List<List<IntPoint>>();
             ClipperOffset offset = new ClipperOffset();
