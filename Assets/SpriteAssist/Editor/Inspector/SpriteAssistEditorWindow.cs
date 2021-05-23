@@ -1,11 +1,11 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
     public class SpriteAssistEditorWindow : EditorWindow
     {
+        private readonly EditorGUISplitView _verticalSplitView = new EditorGUISplitView (EditorGUISplitView.Direction.Vertical, 20);
         private SpriteInspector _spriteInspector;
         private Sprite _sprite;
         private bool _isEnabled;
@@ -17,6 +17,15 @@ namespace SpriteAssist
             GetWindow<SpriteAssistEditorWindow>("SpriteAssist");
         }
 
+        [MenuItem("Assets/SpriteAssist/Swap Sprite Renderers to Mesh Prefab", false, 700)]
+        private static void SwapAll()
+        {
+            Object obj = Selection.activeObject;
+            string s = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
+
+            RendererUtil.SwapAllRecursively(s);
+        }
+
         private void OnGUI()
         {
             if (_spriteInspector == null)
@@ -26,6 +35,8 @@ namespace SpriteAssist
             
             if (_isEnabled)
             {
+                _verticalSplitView.BeginSplitView();
+                
                 if (_hasSpriteRendererAny)
                 {
                     if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
@@ -38,10 +49,13 @@ namespace SpriteAssist
 
                 _spriteInspector.DrawHeader();
                 _spriteInspector.OnInspectorGUI();
-                GUILayout.FlexibleSpace();
-                GUILayout.Space(30);
-                _spriteInspector.DrawPreview(GUILayoutUtility.GetRect(position.width, position.width / 2));
-                GUILayout.Space(30);
+
+                Rect resizeHandelRect = _verticalSplitView.Split(position);
+                float height = position.height - resizeHandelRect.y;
+
+                EditorGUILayout.Space(5);
+                _spriteInspector.DrawPreview(GUILayoutUtility.GetRect(height, height));
+                _verticalSplitView.EndSplitView();
             }
             else
             {
@@ -49,13 +63,9 @@ namespace SpriteAssist
                 EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
             }
             
-            //experimental
-            if (GUILayout.Button("Swap All"))
-            {
-                Object obj = Selection.activeObject;
-                string s = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
-                
-                RendererUtil.SwapAllRecursively(s);
+            if (_verticalSplitView.Resized)
+            {  
+                Repaint();
             }
         }
 
@@ -66,8 +76,8 @@ namespace SpriteAssist
 
         private void OnSelectionChange()
         {
-            Repaint();
             CreateEditor();
+            Repaint();
         }
 
         private void CreateEditor()
