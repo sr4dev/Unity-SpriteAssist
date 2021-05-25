@@ -9,7 +9,6 @@ namespace SpriteAssist
         private SpriteInspector _spriteInspector;
         private Sprite _sprite;
         private bool _isEnabled;
-        private bool _hasSpriteRendererAny;
 
         [MenuItem("Window/SpriteAssist")]
         private static void ShowWindow()
@@ -17,13 +16,21 @@ namespace SpriteAssist
             GetWindow<SpriteAssistEditorWindow>("SpriteAssist");
         }
 
-        [MenuItem("Assets/SpriteAssist/Swap Sprite Renderers to Mesh Prefab", false, 700)]
-        private static void SwapAll()
+        [MenuItem("Assets/SpriteAssist/Swap Sprite Renderers to Mesh Prefab", priority = 700)]
+        private static void SwapInProject()
         {
             Object obj = Selection.activeObject;
             string s = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
 
             RendererUtil.SwapAllRecursively(s);
+            EditorUtility.DisplayDialog("SpriteAssist", "Done", "OK");
+        }
+
+        [MenuItem("GameObject/SpriteAssist/Swap Sprite Renderers to Mesh Prefab", priority = 21)]
+        private static void SwapInHierarchy()
+        {
+            RendererUtil.SwapRendererSpriteToMeshInHierarchy(Selection.objects);
+            EditorUtility.DisplayDialog("SpriteAssist", "Done", "OK");
         }
 
         private void OnGUI()
@@ -36,16 +43,6 @@ namespace SpriteAssist
             if (_isEnabled)
             {
                 _verticalSplitView.BeginSplitView();
-                
-                if (_hasSpriteRendererAny)
-                {
-                    if (GUILayout.Button("Swap SpriteRenderer to Mesh Prefab"))
-                    {
-                        RendererUtil.SwapRendererSpriteToMeshInHierarchy(Selection.objects);
-                    }
-
-                    EditorGUILayout.HelpBox("Mesh Prefab found. You can swap this SpriteRenderer to Mesh Prefab.", MessageType.Info);
-                }
 
                 _spriteInspector.DrawHeader();
                 _spriteInspector.OnInspectorGUI();
@@ -60,7 +57,7 @@ namespace SpriteAssist
             else
             {
                 EditorGUILayout.Space();
-                EditorGUILayout.HelpBox("Select a Texture or Sprite Asset.", MessageType.Info);
+                EditorGUILayout.HelpBox("Select a Renderer, Texture or Sprite Asset.", MessageType.Info);
             }
             
             if (_verticalSplitView.Resized)
@@ -99,7 +96,6 @@ namespace SpriteAssist
             }
 
             _isEnabled = _sprite != null && _spriteInspector != null && _spriteInspector.SpriteProcessor != null;
-            _hasSpriteRendererAny = RendererUtil.HasSpriteRendererAny(Selection.objects);
         }
 
         private static Object GetTargetRelatedWithTexture()
