@@ -12,6 +12,7 @@ namespace SpriteAssist
         private static readonly MethodInfo _generateOutlineMethodInfo = typeof(UnityEditor.Sprites.SpriteUtility).GetMethod("GenerateOutlineFromSprite", BindingFlags.NonPublic | BindingFlags.Static);
         private const float FLOAT_TO_INT_SCALE = 1000f;
         private const float INT_TO_FLOAT_SCALE = 1 / FLOAT_TO_INT_SCALE;
+        private const float EXTRUDE_SCALE = -500;
 
         public static Vector2[][] GenerateOutline(Sprite sprite, SpriteConfigData data, MeshRenderType meshRenderType)
         {
@@ -21,7 +22,7 @@ namespace SpriteAssist
                     return GenerateTransparentOutline(sprite, data.transparentDetail, data.transparentAlphaTolerance, data.detectHoles);
 
                 case MeshRenderType.Opaque:
-                    return GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance);
+                    return GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance, data.opaqueExtrude);
 
                 case MeshRenderType.SeparatedTransparent:
                     return GenerateSeparatedTransparent(sprite, data);
@@ -33,27 +34,29 @@ namespace SpriteAssist
 
         private static Vector2[][] GenerateTransparentOutline(Sprite sprite, float detail, byte alphaTolerance, bool detectHoles)
         {
-            detail = Mathf.Pow(detail, 3);
-            object[] parameters = new object[] { sprite, detail, alphaTolerance, detectHoles, null };
+            float newDetail = Mathf.Pow(detail, 3);
+            object[] parameters = new object[] { sprite, newDetail, alphaTolerance, detectHoles, null };
             _generateOutlineMethodInfo.Invoke(null, parameters);
             return (Vector2[][])parameters[4];
         }
-
-        private static Vector2[][] GenerateOpaqueOutline(Sprite sprite, float detail, byte alphaTolerance)
+        
+        private static Vector2[][] GenerateOpaqueOutline(Sprite sprite, float detail, byte alphaTolerance, double extrude)
         {
-            Vector2[][] paths = GenerateTransparentOutline(sprite, 0.5f + detail * 0.5f, alphaTolerance, true);
+            float newDetail = 0.5f + detail * 0.5f;
+            double newExtrude = extrude * EXTRUDE_SCALE;
+            Vector2[][] paths = GenerateTransparentOutline(sprite, newDetail, alphaTolerance, true);
             List<List<IntPoint>> intPointList = ConvertToIntPointList(paths, detail);
             List<List<IntPoint>> offsetIntPointList = new List<List<IntPoint>>();
             ClipperOffset offset = new ClipperOffset();
             offset.AddPaths(intPointList, JoinType.jtMiter, EndType.etClosedPolygon);
-            offset.Execute(ref offsetIntPointList, -32);//TODO: magic number!
+            offset.Execute(ref offsetIntPointList, newExtrude);
             return ConvertToVector2Array(offsetIntPointList);
         }
 
         private static Vector2[][] GenerateSeparatedTransparent(Sprite sprite, SpriteConfigData data)
         {
             Vector2[][] transparentPaths = GenerateTransparentOutline(sprite, data.transparentDetail, data.transparentAlphaTolerance, data.detectHoles);
-            Vector2[][] opaquePaths = GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance);
+            Vector2[][] opaquePaths = GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance, data.opaqueExtrude);
             List<List<IntPoint>> convertedTransparentPaths = ConvertToIntPointList(transparentPaths);
             List<List<IntPoint>> convertedOpaquePaths = ConvertToIntPointList(opaquePaths);
             List<List<IntPoint>> intersectionPaths = new List<List<IntPoint>>();
@@ -66,13 +69,13 @@ namespace SpriteAssist
 
         private static List<List<IntPoint>> ConvertToIntPointList(Vector2[][] paths, float simplify)
         {
-            simplify = Mathf.Clamp01(1 - (simplify * 0.01f + 0.99f));
+            float newSimplify = Mathf.Clamp01(1 - (simplify * 0.01f + 0.99f));
             List<List<IntPoint>> intPointPaths = new List<List<IntPoint>>(paths.Length);
 
             for (int i = 0; i < paths.Length; i++)
             {
                 List<Vector2> simplifiedPath = new List<Vector2>(paths.Length);
-                LineUtility.Simplify(paths[i].ToList(), simplify, simplifiedPath);
+                LineUtility.Simplify(paths[i].ToList(), newSimplify, simplifiedPath);
                 List<IntPoint> intPointPath = new List<IntPoint>(simplifiedPath.Count);
 
                 for (int j = 0; j < simplifiedPath.Count; j++)

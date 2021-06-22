@@ -11,6 +11,7 @@ namespace SpriteAssist
         private const float EDGE_SMOOTHING = 1f;
         private const bool DETECT_HOLES = true;
         private const float PIXELS_PER_UNIT = 100;
+        private const float OPAQUE_EXTRUDE = 0.064f;
         private const string TAG = "Untagged";
 
         [Flags]
@@ -28,6 +29,7 @@ namespace SpriteAssist
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
         public float opaqueDetail = DETAIL;
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
+        public float opaqueExtrude = OPAQUE_EXTRUDE;
         public bool detectHoles = DETECT_HOLES;
         public float edgeSmoothing = EDGE_SMOOTHING;
         public bool useNonZero = false;

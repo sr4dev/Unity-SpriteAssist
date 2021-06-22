@@ -17,14 +17,16 @@ namespace SpriteAssist
             { SpriteConfigData.Mode.Complex, new ComplexMeshCreator() }
         };
 
-        public static MeshCreatorBase GetInstnace(SpriteConfigData configData)
+        public static MeshCreatorBase GetInstance(SpriteConfigData configData)
         {
-            return configData.IsOverriden ? _creator[configData.mode] : _defaultCreator;
+            return configData.mode != SpriteConfigData.Mode.UnityDefault ? _creator[configData.mode] : _defaultCreator;
         }
 
         public abstract void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData);
 
         public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
+
+        public abstract void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
     }
