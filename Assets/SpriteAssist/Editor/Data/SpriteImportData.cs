@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -27,7 +28,7 @@ namespace SpriteAssist
             textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
+            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
         }
 
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)
@@ -38,7 +39,8 @@ namespace SpriteAssist
             textureImporter = importer;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), sprite.texture.name);
+
+            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
         }
         
         private Object FindExternalObject()
@@ -58,7 +60,7 @@ namespace SpriteAssist
         {
             textureImporter.RemoveRemap(sourceAssetIdentifier);
             textureImporter.AddRemap(sourceAssetIdentifier, prefab);
-            textureImporter.SaveAndReimport();
+            //textureImporter.SaveAndReimport();
         }
 
         public void RemoveExternalPrefab()
@@ -66,7 +68,7 @@ namespace SpriteAssist
             if (MeshPrefab != null)
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
             textureImporter.RemoveRemap(sourceAssetIdentifier);
-            textureImporter.SaveAndReimport();
+            //textureImporter.SaveAndReimport();
         }
     }
 }

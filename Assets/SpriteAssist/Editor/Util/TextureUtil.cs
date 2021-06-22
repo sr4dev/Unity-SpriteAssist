@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq.Expressions;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -31,7 +33,7 @@ namespace SpriteAssist
             return false;
         }
 
-        public static Texture2D GetOriginalTexture(Texture2D texture)
+        public static Texture2D GetRawTexture(Texture2D texture)
         {
             string projectPath = Path.GetDirectoryName(Application.dataPath);
             string assetPath = AssetDatabase.GetAssetPath(texture);
