@@ -14,10 +14,13 @@ namespace SpriteAssist
 
         public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
         {
-            GameObject prefab = PrefabUtil.UpdateMeshPrefab(textureInfo, false, oldPrefabPath);
+            return PrefabUtil.UpdateMeshPrefab(textureInfo, false, oldPrefabPath);
+        }
+
+        public override void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        {
             sprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
-            PrefabUtil.AddComponentsAssets(prefab, vertices, triangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
-            return prefab;
+            PrefabUtil.AddComponentsAssets(sprite, externalObject, vertices, triangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

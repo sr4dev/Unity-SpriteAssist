@@ -123,7 +123,7 @@ namespace SpriteAssist
             return target;
         }
 
-        private static bool TryGetSprite(Object target, out Sprite sprite, out bool fromTexture)
+        public static bool TryGetSprite(Object target, out Sprite sprite, out bool fromTexture)
         {
             switch (target)
             {

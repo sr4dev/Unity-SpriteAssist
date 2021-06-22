@@ -92,7 +92,7 @@ namespace SpriteAssist
             return prefab;
         }
 
-        public static void AddComponentsAssets(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
+        public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
             prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.Settings.defaultLayer;
             string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.Settings.defaultTag;
@@ -137,18 +137,16 @@ namespace SpriteAssist
             meshFilter.mesh = mesh;
 
             //create new material
-            Material material = new Material(Shader.Find(shaderName))
-            {
-                name = renderType,
-                mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(textureInfo.textureAssetPath)
-            };
+            Material material = new Material(Shader.Find(shaderName));
+            material.name = renderType;
+            material.mainTexture = sprite.texture;
 
             meshRenderer.sharedMaterial = material;
 
             //set assets as sub-asset
             AssetDatabase.AddObjectToAsset(material, prefab);
             AssetDatabase.AddObjectToAsset(mesh, prefab);
-            AssetDatabase.SaveAssets();
+            //AssetDatabase.SaveAssets();
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
@@ -164,7 +162,7 @@ namespace SpriteAssist
                 }
             }
 
-            AssetDatabase.SaveAssets();
+            //AssetDatabase.SaveAssets();
         }
 
         public static bool IsMutablePrefab(GameObject gameObject)

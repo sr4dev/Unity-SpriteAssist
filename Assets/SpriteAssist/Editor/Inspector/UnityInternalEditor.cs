@@ -16,68 +16,94 @@ namespace SpriteAssist
 
         public override void OnInspectorGUI()
         {
-            _baseEditor.OnInspectorGUI();
+            if (_baseEditor != null) 
+                _baseEditor.OnInspectorGUI();
         }
 
         public override bool HasPreviewGUI()
         {
             UpdateTargetIndexForPreview();
 
-            return _baseEditor.HasPreviewGUI();
+            if (_baseEditor != null)
+                return _baseEditor.HasPreviewGUI();
+            else
+                return false;
         }
 
         public override void OnPreviewGUI(Rect rect, GUIStyle background)
         {
             UpdateTargetIndexForPreview();
 
-            _baseEditor.OnPreviewGUI(rect, background);
+            if (_baseEditor != null)
+                _baseEditor.OnPreviewGUI(rect, background);
         }
 
         public override string GetInfoString()
         {
-            return _baseEditor.GetInfoString();
+            if (_baseEditor != null)
+                return _baseEditor.GetInfoString();
+            else
+                return null;
         }
         public override bool RequiresConstantRepaint()
         {
-            return _baseEditor.RequiresConstantRepaint();
+            if (_baseEditor != null)
+                return _baseEditor.RequiresConstantRepaint();
+            else
+                return false;
         }
 
         public override GUIContent GetPreviewTitle()
         {
-            return _baseEditor.GetPreviewTitle();
+            if (_baseEditor != null)
+                return _baseEditor.GetPreviewTitle();
+            else
+                return null;
         }
 
         public override void OnPreviewSettings()
         {
-            _baseEditor.OnPreviewSettings();
+            if (_baseEditor != null)
+                _baseEditor.OnPreviewSettings();
         }
 
         public override void ReloadPreviewInstances()
         {
-            _baseEditor.ReloadPreviewInstances();
+            if (_baseEditor != null)
+                _baseEditor.ReloadPreviewInstances();
         }
 
         public override bool UseDefaultMargins()
         {
-            return _baseEditor.UseDefaultMargins();
+            if (_baseEditor != null)
+                return _baseEditor.UseDefaultMargins();
+            else
+                return false;
         }
 
 
         protected override void OnHeaderGUI()
         {
             UpdateTargetIndexForPreview();
-            
-            _onHeaderGUIMethodInfo.Invoke(_baseEditor, null);
+
+            if (_baseEditor != null)
+                _onHeaderGUIMethodInfo.Invoke(_baseEditor, null);
         }
 
         public override string ToString()
         {
-            return _baseEditor.ToString();
+            if (_baseEditor != null)
+                return _baseEditor.ToString();
+            else
+                return null;
         }
 
         public override Texture2D RenderStaticPreview(string assetPath, Object[] subAssets, int width, int height)
         {
-            return _baseEditor.RenderStaticPreview(assetPath, subAssets, width, height);
+            if (_baseEditor != null)
+                return _baseEditor.RenderStaticPreview(assetPath, subAssets, width, height);
+            else
+                return null;
         }
 
         protected virtual void OnEnable()

@@ -1,28 +1,44 @@
-﻿using UnityEditor;
+﻿using System.Diagnostics;
+using UnityEditor;
 using UnityEngine;
 
 namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {
-        private void OnPostprocessSprites(Texture2D texture, Sprite[] sprites)
+        private void OnPostprocessTexture(Texture2D _)
         {
             TextureImporter textureImporter = assetImporter as TextureImporter;
             TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            SpriteConfigData configData = SpriteConfigData.GetData(textureImporter.userData);
 
-            if (textureImporterSettings.spriteMeshType != SpriteMeshType.Tight || !configData.IsOverriden)
+            EditorApplication.delayCall += () =>
             {
-                return;
-            }
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
 
-            MeshCreatorBase creator = MeshCreatorBase.GetInstnace(configData);
+                if (sprite == null)
+                {
+                    Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+                    sprite = SpriteUtil.CreateSprite(texture, textureImporter.spritePivot, textureImporter.spritePixelsPerUnit);
+                }
+
+                SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
+                spriteProcessor.UpdateSubAssetsInMeshPrefab(spriteProcessor.mainImportData);
+                AssetDatabase.SaveAssets();
+            };
+
+        }
+
+        private void OnPostprocessSprites(Texture2D _, Sprite[] sprites)
+        {
+            TextureImporter textureImporter = assetImporter as TextureImporter;
+            TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
+            textureImporter.ReadTextureSettings(textureImporterSettings);
 
             foreach (var sprite in sprites)
             {
-                TextureInfo textureInfo = new TextureInfo(assetPath, sprite);
-                creator.OverrideGeometry(sprite, textureInfo, configData);
+                SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
+                spriteProcessor.OverrideGeometry();
             }
         }
     }
