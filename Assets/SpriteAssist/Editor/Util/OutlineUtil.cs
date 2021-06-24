@@ -24,6 +24,9 @@ namespace SpriteAssist
                 case MeshRenderType.Opaque:
                     return GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance, data.opaqueExtrude);
 
+                case MeshRenderType.OpaqueWithoutExtrude:
+                    return GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance, 0);
+
                 case MeshRenderType.SeparatedTransparent:
                     return GenerateSeparatedTransparent(sprite, data);
 
@@ -43,8 +46,14 @@ namespace SpriteAssist
         private static Vector2[][] GenerateOpaqueOutline(Sprite sprite, float detail, byte alphaTolerance, double extrude)
         {
             float newDetail = 0.5f + detail * 0.5f;
-            double newExtrude = extrude * EXTRUDE_SCALE;
             Vector2[][] paths = GenerateTransparentOutline(sprite, newDetail, alphaTolerance, true);
+
+            if (extrude <= 0)
+            {
+                return paths;
+            }
+
+            double newExtrude = extrude * EXTRUDE_SCALE;
             List<List<IntPoint>> intPointList = ConvertToIntPointList(paths, detail);
             List<List<IntPoint>> offsetIntPointList = new List<List<IntPoint>>();
             ClipperOffset offset = new ClipperOffset();

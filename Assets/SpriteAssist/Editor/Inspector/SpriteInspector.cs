@@ -11,6 +11,8 @@ namespace SpriteAssist
 
         public SpriteProcessor SpriteProcessor { get; private set; }
 
+        public bool disableBaseGUI = false;
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -31,9 +33,12 @@ namespace SpriteAssist
             {
                 _scrollPosition = scroll.scrollPosition;
 
-                SpriteProcessor?.OnInspectorGUI();
+                SpriteProcessor?.OnInspectorGUI(disableBaseGUI);
 
-                base.OnInspectorGUI();
+                if (!disableBaseGUI)
+                {
+                    base.OnInspectorGUI();
+                }
             }
         }
 

@@ -69,6 +69,7 @@ namespace SpriteAssist
                     break;
 
                 case MeshRenderType.Opaque:
+                case MeshRenderType.OpaqueWithoutExtrude:
                     icon = "<color=red>" + icon + "</color>";
                     break;
             }

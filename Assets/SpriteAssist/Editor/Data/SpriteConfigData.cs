@@ -17,13 +17,14 @@ namespace SpriteAssist
         [Flags]
         public enum Mode
         {
-            UnityDefault = 0,
+            UnityDefaultForTransparent = 0,
+            UnityDefaultForOpaque = 1 << 2,
             TransparentMesh = 1 << 0,
             OpaqueMesh = 1 << 1,
             Complex = TransparentMesh | OpaqueMesh
         }
         
-        public Mode mode = Mode.UnityDefault;
+        public Mode mode = Mode.UnityDefaultForTransparent;
 
         public float transparentDetail = DETAIL;
         public byte transparentAlphaTolerance = ALPHA_TOLERANCE;
@@ -46,8 +47,6 @@ namespace SpriteAssist
         public int layer;
         public int sortingLayerId;
         public int sortingOrder;
-
-        public bool IsOverriden => mode != Mode.UnityDefault;
         
         public static SpriteConfigData GetData(string jsonData)
         {

@@ -205,5 +205,18 @@ namespace SpriteAssist
             PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
             return prefabStage != null && prefabStage.prefabContentsRoot == test;
         }
+
+        public static void TryRename(string spriteAssetPath, GameObject meshPrefab)
+        {
+            var currentMeshPrefabPath = AssetDatabase.GetAssetPath(meshPrefab);
+
+            var spriteAssetName = Path.GetFileNameWithoutExtension(spriteAssetPath);
+            var meshPrefabName = Path.GetFileNameWithoutExtension(currentMeshPrefabPath);
+
+            if (spriteAssetName != meshPrefabName)
+            {
+                AssetDatabase.RenameAsset(currentMeshPrefabPath, spriteAssetName);
+            }
+        }
     }
 }

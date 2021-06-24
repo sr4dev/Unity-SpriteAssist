@@ -43,7 +43,9 @@ namespace SpriteAssist
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
 
-            if (configData == null || configData.mode == SpriteConfigData.Mode.UnityDefault)
+            if (configData == null ||
+                configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent ||
+                configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
             {
                 return false;
             }
@@ -59,36 +61,6 @@ namespace SpriteAssist
             }
 
             return true;
-        }
-
-
-        public static Sprite CreateSprite(Texture2D texture)
-        {
-            return CreateSprite(texture, new Vector2(0.5f, 0.5f), 100);
-        }
-
-        public static Sprite CreateSprite(Texture2D texture, Vector3 pivot, float pixelsPerUnit)
-        {
-            Rect rect = new Rect(0, 0, texture.width, texture.height);
-            Sprite sprite = Sprite.Create(texture, rect, pivot, pixelsPerUnit);
-            sprite.name = texture.name;
-            return sprite;
-        }
-
-        public static Sprite CreateDummySprite(Texture2D texture)
-        {
-            return CreateDummySprite(texture, new Vector2(0.5f, 0.5f), 100);
-        }
-
-        public static Sprite CreateDummySprite(Texture2D texture, Vector3 pivot, float pixelsPerUnit)
-        {
-            Texture2D rawTexture = TextureUtil.GetRawTexture(texture);
-
-            //texture.GetOriginalImageSize(out int width, out int height);
-            Rect rect = new Rect(0, 0, rawTexture.width, rawTexture.height);
-            Sprite sprite = Sprite.Create(rawTexture, rect, pivot, pixelsPerUnit);
-            sprite.name = texture.name + "(Dummy Sprite)";
-            return sprite;
         }
     }
 }
