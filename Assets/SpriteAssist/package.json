@@ -1,7 +1,7 @@
 {
   "name": "com.sr4dev.unity-spriteassist",
   "displayName": "Unity-SpriteAssist",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "unity": "2019.4",
   "description": "Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conviniently.",
   "license": "MIT",
@@ -15,7 +15,7 @@
     {
       "displayName": "Samples",
       "description": "Sprite Assist samples(sprite, scene, etc...)",
-      "path": "Assets/SpriteAssist/Example"
+      "path": "Example~"
     }
   ]
 }
