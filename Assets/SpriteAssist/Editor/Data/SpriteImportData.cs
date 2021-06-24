@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -8,11 +9,16 @@ namespace SpriteAssist
 {
     public class SpriteImportData
     {
+        public const string MESH_PREFAB_IDENTIFIER = "MeshPrefab";
+
         public readonly Sprite sprite;
         public readonly string assetPath;
         public readonly TextureImporter textureImporter;
         public readonly TextureImporterSettings textureImporterSettings;
-        public readonly AssetImporter.SourceAssetIdentifier sourceAssetIdentifier;
+
+        //TODO [Obsolete]
+        private readonly AssetImporter.SourceAssetIdentifier _oldSourceAssetIdentifier;
+        private readonly AssetImporter.SourceAssetIdentifier _newSourceAssetIdentifier;
 
         public bool IsTightMesh { get { return textureImporterSettings.spriteMeshType == SpriteMeshType.Tight; } }
 
@@ -28,7 +34,8 @@ namespace SpriteAssist
             textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
+            _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
+            _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }
 
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)
@@ -40,13 +47,21 @@ namespace SpriteAssist
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
 
-            sourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
+            _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
+            _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }
         
         private Object FindExternalObject()
         {
             Dictionary<AssetImporter.SourceAssetIdentifier, Object> map = textureImporter.GetExternalObjectMap();
-            return map.ContainsKey(sourceAssetIdentifier) ? map[sourceAssetIdentifier] : null;
+
+            if (map.ContainsKey(_oldSourceAssetIdentifier))
+                return map[_oldSourceAssetIdentifier];
+
+            if (map.ContainsKey(_newSourceAssetIdentifier))
+                return map[_newSourceAssetIdentifier];
+
+            return null;
         }
 
         public void SetPrefabAsExternalObject(GameObject prefab)
@@ -58,8 +73,9 @@ namespace SpriteAssist
 
         public void RemapExternalObject(GameObject prefab)
         {
-            textureImporter.RemoveRemap(sourceAssetIdentifier);
-            textureImporter.AddRemap(sourceAssetIdentifier, prefab);
+            textureImporter.RemoveRemap(_oldSourceAssetIdentifier);
+            textureImporter.RemoveRemap(_newSourceAssetIdentifier);
+            textureImporter.AddRemap(_newSourceAssetIdentifier, prefab);
             //textureImporter.SaveAndReimport();
         }
 
@@ -67,7 +83,8 @@ namespace SpriteAssist
         {
             if (MeshPrefab != null)
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
-            textureImporter.RemoveRemap(sourceAssetIdentifier);
+            textureImporter.RemoveRemap(_oldSourceAssetIdentifier);
+            textureImporter.RemoveRemap(_newSourceAssetIdentifier);
             //textureImporter.SaveAndReimport();
         }
     }

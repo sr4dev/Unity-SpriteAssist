@@ -8,18 +8,18 @@ namespace SpriteAssist
         public const string RENDER_TYPE_TRANSPARENT = "Transparent";
         public const string RENDER_TYPE_OPAQUE = "Opaque";
 
-        private static readonly MeshCreatorBase _defaultCreator = new DefaultMeshCreator();
-
         private static readonly IReadOnlyDictionary<SpriteConfigData.Mode, MeshCreatorBase> _creator = new Dictionary<SpriteConfigData.Mode, MeshCreatorBase>()
         {
+            { SpriteConfigData.Mode.UnityDefaultForTransparent, new DefaultTransparentMeshCreator() },
+            { SpriteConfigData.Mode.UnityDefaultForOpaque, new DefaultOpaqueMeshCreator() },
             { SpriteConfigData.Mode.TransparentMesh, new TransparentMeshCreator() },
             { SpriteConfigData.Mode.OpaqueMesh, new OpaqueMeshCreator() },
             { SpriteConfigData.Mode.Complex, new ComplexMeshCreator() }
         };
 
-        public static MeshCreatorBase GetInstance(SpriteConfigData configData)
+        public static MeshCreatorBase GetInstance(SpriteConfigData.Mode mode)
         {
-            return configData.mode != SpriteConfigData.Mode.UnityDefault ? _creator[configData.mode] : _defaultCreator;
+            return _creator[mode];
         }
 
         public abstract void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData);

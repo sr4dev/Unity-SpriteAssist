@@ -14,8 +14,6 @@ namespace SpriteAssist
 
         private static bool _isOpenMeshSettings = true;
         private static bool _isOpenMeshPrefab = true;
-        private static bool _isOpenScaleAndPivot;
-        private static bool _isOpenTagsAndLayers;
 
         private string _originalUserData;
         private SpriteConfigData _configData;
@@ -23,74 +21,40 @@ namespace SpriteAssist
 
         private bool _isDataChanged = false;
 
-        public bool IsTextureImporterMode { get; set; }
-
-        public bool IsExtendedByEditorWindow { get; set; }
-
         private Object[] _targets;
-
-        public bool IsUIEnabled
-        {
-            get { return !EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() || IsExtendedByEditorWindow; }
-        }
-
-        public bool IsEditorWindow
-        {
-            get { return EditorWindow.HasOpenInstances<SpriteAssistEditorWindow>() && IsExtendedByEditorWindow; }
-        }
 
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
             mainImportData = new SpriteImportData(sprite, assetPath);
             _originalUserData = mainImportData.textureImporter.userData;
             _configData = SpriteConfigData.GetData(_originalUserData);
-            _meshCreator = MeshCreatorBase.GetInstance(_configData);
+            _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
 
             Undo.undoRedoPerformed += UndoReimport;
         }
         
-        public void OnInspectorGUI()
+        public void OnInspectorGUI(bool disableBaseGUI)
         {
             _targets = Selection.objects;
 
-            ShowCommonUI();
-
-            if (IsUIEnabled)
+            if (!disableBaseGUI)
             {
-                ShowEnabledUI();
-            }
-            else
-            {
-                ShowDisabledUI();
-            }
-        }
+                EditorGUILayout.Space();
 
-        private void ShowCommonUI()
-        {
-            if (!IsEditorWindow && GUILayout.Button("Open with SpriteAssist EditorWindow"))
-            {
-                ShowSaveOrRevertUI();
-                EditorWindow.GetWindow<SpriteAssistEditorWindow>();
-            }
-
-            EditorGUILayout.Space();
-
-            using (new EditorGUILayout.HorizontalScope())
+                using (new EditorGUILayout.HorizontalScope())
                 using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUILayout.PrefixLabel("Source Texture");
                     EditorGUILayout.ObjectField(mainImportData.sprite.texture, typeof(Texture2D), false);
                 }
-        }
+            }
 
-        private void ShowDisabledUI()
-        {
-            EditorGUILayout.HelpBox("SpriteAssist EditorWindow is already open.", MessageType.Info);
-        }
+            if (disableBaseGUI)
+            {
+                EditorGUI.indentLevel++;
+            }
 
-        private void ShowEnabledUI()
-        {
             using (var checkChangedMode = new EditorGUI.ChangeCheckScope())
             {
                 _configData.mode = (SpriteConfigData.Mode) EditorGUILayout.EnumPopup("SpriteAssist Mode", _configData.mode);
@@ -98,24 +62,23 @@ namespace SpriteAssist
 
                 if (checkChangedMode.changed)
                 {
-                    _meshCreator = MeshCreatorBase.GetInstance(_configData);
+                    _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
                     _preview.SetWireframes(_meshCreator.GetMeshWireframes());
 
-                    if (_configData.mode == SpriteConfigData.Mode.UnityDefault)
-                    {
-                        //force apply and reimport
-                        Apply();
-                        return;
-                    }
+                    //force apply and reimport
+                    Apply();
+                    return;
                 }
 
                 _isDataChanged |= checkChangedMode.changed;
             }
 
-            if (!IsExtendedByEditorWindow)
+            if (disableBaseGUI)
             {
-                EditorGUI.indentLevel++;
+                EditorGUI.indentLevel--;
             }
+
+            EditorGUI.indentLevel++;
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -166,7 +129,7 @@ namespace SpriteAssist
                             EditorGUILayout.Space();
                         }
 
-                        if (_configData.mode == SpriteConfigData.Mode.UnityDefault)
+                        if (_configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent || _configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
                         {
                             using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
                                 EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
@@ -217,121 +180,73 @@ namespace SpriteAssist
 
                         _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
                         _configData.thickness = Mathf.Max(0, _configData.thickness);
+
+                        EditorGUILayout.Space();
+
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            _configData.overrideTag = EditorGUILayout.Toggle(_configData.overrideTag, GUILayout.Width(45));
+                            GUILayout.Space(-30);
+
+                            using (new EditorGUI.DisabledGroupScope(!_configData.overrideTag))
+                            {
+                                if (_configData.overrideTag)
+                                {
+                                    _configData.tag = EditorGUILayout.TagField("Tag", _configData.tag);
+                                }
+                                else
+                                {
+                                    EditorGUILayout.TagField("Tag", SpriteAssistSettings.Settings.defaultTag);
+                                }
+                            }
+                        }
+
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            _configData.overrideLayer = EditorGUILayout.Toggle(_configData.overrideLayer, GUILayout.Width(45));
+                            GUILayout.Space(-30);
+
+                            using (new EditorGUI.DisabledGroupScope(!_configData.overrideLayer))
+                            {
+                                if (_configData.overrideLayer)
+                                {
+                                    _configData.layer = EditorGUILayout.LayerField("Layer", _configData.layer);
+                                }
+                                else
+                                {
+                                    EditorGUILayout.LayerField("Layer", SpriteAssistSettings.Settings.defaultLayer);
+                                }
+                            }
+                        }
+
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            _configData.overrideSortingLayer = EditorGUILayout.Toggle(_configData.overrideSortingLayer, GUILayout.Width(45));
+                            GUILayout.Space(-30);
+
+                            using (new EditorGUI.DisabledGroupScope(!_configData.overrideSortingLayer))
+                            {
+                                if (_configData.overrideSortingLayer)
+                                {
+                                    int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == _configData.sortingLayerId);
+                                    index = EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
+                                    _configData.sortingLayerId = SortingLayer.layers[index].id;
+                                    _configData.sortingOrder = EditorGUILayout.IntField(_configData.sortingOrder, GUILayout.Width(60));
+                                }
+                                else
+                                {
+                                    int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == SpriteAssistSettings.Settings.defaultSortingLayerId);
+                                    EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
+                                    EditorGUILayout.IntField(SpriteAssistSettings.Settings.defaultSortingOrder, GUILayout.Width(60));
+                                }
+                            }
+                        }
+
                         EditorGUILayout.Space();
 
                         _isDataChanged |= checkChangedMeshPrefab.changed;
                     }
-
-                    _isOpenScaleAndPivot = EditorGUILayout.Foldout(_isOpenScaleAndPivot, "Scale and pivot");
-
-                    if (_isOpenScaleAndPivot)
-                    {
-                        using (var checkChangedScaleAndPivot = new EditorGUI.ChangeCheckScope())
-                        using (new EditorGUI.IndentLevelScope())
-                        {
-                            using (new EditorGUILayout.HorizontalScope())
-                            {
-                                GUILayout.Space(16);
-
-                                if (IsTextureImporterMode && mainImportData.textureImporter.textureType == TextureImporterType.Sprite &&
-                                    GUILayout.Button("Copy from Sprite"))
-                                {
-                                    Apply(false, false, true);
-                                    return;
-                                }
-                            }
-
-                            if (IsTextureImporterMode)
-                            {
-                                EditorGUIUtility.wideMode = true;
-                                mainImportData.textureImporter.spritePixelsPerUnit = EditorGUILayout.FloatField("Texture pixels per unit", mainImportData.textureImporter.spritePixelsPerUnit);
-                                mainImportData.textureImporter.spritePivot = EditorGUILayout.Vector2Field("Texture pivot", mainImportData.textureImporter.spritePivot);
-                            }
-                            else
-                            {
-                                EditorGUIUtility.wideMode = true;
-                                bool wasEnabled = GUI.enabled;
-                                GUI.enabled = false;
-                                EditorGUILayout.FloatField("Sprite pixels per unit", mainImportData.sprite.pixelsPerUnit);
-                                EditorGUILayout.Vector2Field("Sprite pivot", mainImportData.sprite.GetNormalizedPivot());
-                                EditorGUILayout.Vector2Field("Sprite pivot", mainImportData.sprite.GetNormalizedPivot());
-                                GUI.enabled = wasEnabled;
-                            }
-
-                            _isDataChanged |= checkChangedScaleAndPivot.changed;
-                        }
-                    }
-
-                    _isOpenTagsAndLayers = EditorGUILayout.Foldout(_isOpenTagsAndLayers, "Tags and Layers");
-
-                    if (_isOpenTagsAndLayers)
-                    {
-                        using (var checkChangedTagsAndLayers = new EditorGUI.ChangeCheckScope())
-                        using (new EditorGUI.IndentLevelScope())
-                        {
-                            using (new EditorGUILayout.HorizontalScope())
-                            {
-                                _configData.overrideTag = EditorGUILayout.Toggle(_configData.overrideTag, GUILayout.Width(45));
-                                GUILayout.Space(-30);
-
-                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideTag))
-                                {
-                                    if (_configData.overrideTag)
-                                    {
-                                        _configData.tag = EditorGUILayout.TagField("Tag", _configData.tag);
-                                    }
-                                    else
-                                    {
-                                        EditorGUILayout.TagField("Tag", SpriteAssistSettings.Settings.defaultTag);
-                                    }
-                                }
-                            }
-
-                            using (new EditorGUILayout.HorizontalScope())
-                            {
-                                _configData.overrideLayer = EditorGUILayout.Toggle(_configData.overrideLayer, GUILayout.Width(45));
-                                GUILayout.Space(-30);
-
-                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideLayer))
-                                {
-                                    if (_configData.overrideLayer)
-                                    {
-                                        _configData.layer = EditorGUILayout.LayerField("Layer", _configData.layer);
-                                    }
-                                    else
-                                    {
-                                        EditorGUILayout.LayerField("Layer", SpriteAssistSettings.Settings.defaultLayer);
-                                    }
-                                }
-                            }
-
-                            using (new EditorGUILayout.HorizontalScope())
-                            {
-                                _configData.overrideSortingLayer = EditorGUILayout.Toggle(_configData.overrideSortingLayer, GUILayout.Width(45));
-                                GUILayout.Space(-30);
-
-                                using (new EditorGUI.DisabledGroupScope(!_configData.overrideSortingLayer))
-                                {
-                                    if (_configData.overrideSortingLayer)
-                                    {
-                                        int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == _configData.sortingLayerId);
-                                        index = EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
-                                        _configData.sortingLayerId = SortingLayer.layers[index].id;
-                                        _configData.sortingOrder = EditorGUILayout.IntField( _configData.sortingOrder, GUILayout.Width(60));
-                                    }
-                                    else
-                                    {
-                                        int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == SpriteAssistSettings.Settings.defaultSortingLayerId);
-                                        EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
-                                        EditorGUILayout.IntField(SpriteAssistSettings.Settings.defaultSortingOrder, GUILayout.Width(60));
-                                    }
-                                }
-                            }
-
-                            _isDataChanged |= checkChangedTagsAndLayers.changed;
-                        }
-                    }
-
+                    
                     EditorGUILayout.Space();
 
                     if (_configData != null && _configData.mode == SpriteConfigData.Mode.Complex)
@@ -380,11 +295,6 @@ namespace SpriteAssist
 
         public void OnPreviewGUI(Rect rect, Sprite sprite, TextureInfo textureInfo)
         {
-            if (!IsUIEnabled)
-            {
-                return;
-            }
-
             //skip 'rect (0, 0, 1, 1)' issue
             if (rect.width <= 1 || rect.height <= 1)
             {
@@ -422,7 +332,7 @@ namespace SpriteAssist
         private void Revert()
         {
             _configData = SpriteConfigData.GetData(_originalUserData);
-            _meshCreator = MeshCreatorBase.GetInstance(_configData);
+            _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview.SetWireframes(_meshCreator.GetMeshWireframes());
             mainImportData.textureImporter.userData = _originalUserData;
             _isDataChanged = false;
@@ -434,67 +344,60 @@ namespace SpriteAssist
 
             _originalUserData = JsonUtility.ToJson(_configData);
 
-            foreach (var t in _targets)
+            foreach (var selectedTarget in _targets)
             {
-                var selectedTarget = t;
-
-                //override target
-                if (t is GameObject gameObject)
-                {
-                    if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-                    {
-                        selectedTarget = spriteRenderer.sprite.texture;
-                    }
-                    else if (gameObject.TryGetComponent<MeshRenderer>(out var meshRenderer))
-                    {
-                        selectedTarget = meshRenderer.sharedMaterial.mainTexture;
-                    }
-                }
-
-                string assetPath = AssetDatabase.GetAssetPath(selectedTarget);
-                TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                if (textureImporter == null)
-                {
-                    continue;
-                }
-
-                if (withCopyFromSprite)
-                {
-                    Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
-                    if (rootSprite != null)
-                    {
-                        textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
-                        textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
-                    }
-                }
-
                 Sprite sprite = null;
 
                 switch (selectedTarget)
                 {
-                    case Sprite value:
-                        sprite = value;
+                    case Sprite s:
+                        sprite = s;
                         break;
 
-                    case Texture2D texture:
-                        sprite = SpriteUtil.CreateDummySprite(texture, textureImporter.spritePivot, textureImporter.spritePixelsPerUnit);
+                    case GameObject go:
+                        if (go.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+                        {
+                            sprite = spriteRenderer.sprite;
+                        }
+                        else if (go.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                        {
+                            var path = AssetDatabase.GetAssetPath(meshRenderer.sharedMaterial.mainTexture);
+                            sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                        }
                         break;
-
-                    default:
-                        continue;
                 }
 
-                SpriteImportData importData = new SpriteImportData(sprite, textureImporter, assetPath);
-                importData.textureImporter.userData = _originalUserData;
-
-                if (withMeshPrefabProcess)
+                if (sprite != null)
                 {
-                    SetMeshPrefabContainer(importData, hasMeshPrefab);
-                }
+                    string assetPath = AssetDatabase.GetAssetPath(sprite);
+                    TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
 
-                EditorUtility.SetDirty(importData.textureImporter);
-                AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
-                importData.textureImporter.SaveAndReimport();
+                    if (textureImporter != null)
+                    {
+                        SpriteImportData importData = new SpriteImportData(sprite, textureImporter, assetPath);
+                        importData.textureImporter.userData = _originalUserData;
+
+                        if (withMeshPrefabProcess)
+                        {
+                            SetMeshPrefabContainer(importData, hasMeshPrefab);
+                        }
+
+                        if (withCopyFromSprite)
+                        {
+                            Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
+
+                            if (rootSprite != null)
+                            {
+                                textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
+                                textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
+                            }
+                        }
+
+                        EditorUtility.SetDirty(importData.textureImporter);
+                        AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                        importData.textureImporter.SaveAndReimport();
+                    }
+                }
             }
 
             _isDataChanged = false;
@@ -521,10 +424,16 @@ namespace SpriteAssist
             if (importData.HasMeshPrefab)
             {
                 PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
+
+                if (SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)
+                {
+                    PrefabUtil.TryRename(importData.assetPath, importData.MeshPrefab);
+                }
+
                 TextureInfo textureInfo = new TextureInfo(importData.assetPath, importData.sprite);
-                GameObject newMeshPrefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
-                _meshCreator.UpdateExternalObject(newMeshPrefab, importData.sprite, textureInfo, _configData);
-                importData.RemapExternalObject(newMeshPrefab);
+                GameObject prefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
+                _meshCreator.UpdateExternalObject(prefab, importData.sprite, textureInfo, _configData);
+                importData.RemapExternalObject(prefab);
             }
         }
 
