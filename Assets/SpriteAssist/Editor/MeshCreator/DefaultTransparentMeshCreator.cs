@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    public class DefaultMeshCreator : MeshCreatorBase
+    public class DefaultTransparentMeshCreator : MeshCreatorBase
     {
         public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
@@ -18,8 +18,7 @@ namespace SpriteAssist
 
         public override void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            Vector3[] vertices3D = Array.ConvertAll(sprite.vertices, i => new Vector3(i.x, i.y, 0));
-            int[] triangles3D = Array.ConvertAll(sprite.triangles, i => (int)i);
+            sprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.Transparent);
             PrefabUtil.AddComponentsAssets(sprite, externalObject, vertices3D, triangles3D, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
         }
 
@@ -31,5 +30,4 @@ namespace SpriteAssist
             };
         }
     }
-
 }

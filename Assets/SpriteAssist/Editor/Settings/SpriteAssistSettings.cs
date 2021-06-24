@@ -29,6 +29,8 @@ namespace SpriteAssist
 
         public int maxThumbnailPreviewCount;
         
+        public bool enableRenameMeshPrefabAutomatically;
+
         private static SpriteAssistSettings _setting;
 
         public static SpriteAssistSettings Settings

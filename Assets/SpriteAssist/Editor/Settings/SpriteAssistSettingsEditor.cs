@@ -24,27 +24,28 @@ namespace SpriteAssist
                         EditorGUILayout.LabelField("Prefab File");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            EditorGUILayout.PropertyField(settings.FindProperty("prefabNamePrefix"), new GUIContent("File Name Prefix"));
-                            EditorGUILayout.PropertyField(settings.FindProperty("prefabNameSuffix"), new GUIContent("File Name Suffix"));
-                            EditorGUILayout.PropertyField(settings.FindProperty("prefabRelativePath"), new GUIContent("Relative Path"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabNamePrefix)), new GUIContent("File Name Prefix"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabNameSuffix)), new GUIContent("File Name Suffix"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabRelativePath)), new GUIContent("Relative Path"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)), new GUIContent("Auto Rename", "Rename prefab when renamed texture asset"));
                             EditorGUILayout.Space();
                         }
 
                         EditorGUILayout.LabelField("Default Shader");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            EditorGUILayout.PropertyField(settings.FindProperty("defaultTransparentShaderName"), new GUIContent("Transparent"));
-                            EditorGUILayout.PropertyField(settings.FindProperty("defaultOpaqueShaderName"), new GUIContent("Opaque"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultTransparentShaderName)), new GUIContent("Transparent"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultOpaqueShaderName)), new GUIContent("Opaque"));
                             EditorGUILayout.Space();
                         }
 
                         EditorGUILayout.LabelField("Tags and Layers");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            var tagProperty = settings.FindProperty("defaultTag");
-                            var layerProperty = settings.FindProperty("defaultLayer");
-                            var sortingLayerProperty = settings.FindProperty("defaultSortingLayerId");
-                            var sortingOrder = settings.FindProperty("defaultSortingOrder");
+                            var tagProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultTag));
+                            var layerProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultLayer));
+                            var sortingLayerProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultSortingLayerId));
+                            var sortingOrder = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultSortingOrder));
 
                             tagProperty.stringValue = EditorGUILayout.TagField("Tag", tagProperty.stringValue);
                             layerProperty.intValue = EditorGUILayout.LayerField("Layer", layerProperty.intValue);
@@ -62,7 +63,7 @@ namespace SpriteAssist
                         }
 
                         EditorGUILayout.LabelField("Preview thumbnail", EditorStyles.boldLabel);
-                        EditorGUILayout.PropertyField(settings.FindProperty("maxThumbnailPreviewCount"), new GUIContent("Max count"));
+                        EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.maxThumbnailPreviewCount)), new GUIContent("Max count"));
                         EditorGUILayout.Space();
                     }
                     

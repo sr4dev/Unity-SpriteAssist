@@ -4,6 +4,7 @@
     {
         Transparent,
         Opaque,
-        SeparatedTransparent
+        SeparatedTransparent,
+        OpaqueWithoutExtrude
     }
 }
