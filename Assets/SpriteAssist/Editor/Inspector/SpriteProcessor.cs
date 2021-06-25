@@ -423,17 +423,27 @@ namespace SpriteAssist
             //update mesh prefab
             if (importData.HasMeshPrefab)
             {
-                PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
+                //TODO prevent reimport loop
+                if (EditorUtility.IsDirty(importData.textureImporter))
+                {
+                    EditorUtility.ClearDirty(importData.textureImporter);
+                    return;
+                }
 
                 if (SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)
                 {
                     PrefabUtil.TryRename(importData.assetPath, importData.MeshPrefab);
                 }
 
+                //importData.RemoveExternalPrefab();
+                PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
+
                 TextureInfo textureInfo = new TextureInfo(importData.assetPath, importData.sprite);
-                GameObject prefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
-                _meshCreator.UpdateExternalObject(prefab, importData.sprite, textureInfo, _configData);
-                importData.RemapExternalObject(prefab);
+                _meshCreator.UpdateExternalObject(importData.MeshPrefab, importData.sprite, textureInfo, _configData);
+                importData.RemapExternalObject(importData.MeshPrefab);
+                importData.textureImporter.SaveAndReimport();
+                EditorUtility.SetDirty(importData.textureImporter);
+
             }
         }
 
