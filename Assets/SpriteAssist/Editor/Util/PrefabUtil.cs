@@ -66,6 +66,7 @@ namespace SpriteAssist
         {
             var externalObjectPath = AssetDatabase.GetAssetPath(externalObject);
             GameObject instance = PrefabUtility.InstantiatePrefab(externalObject) as GameObject;
+            PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
 
             if (instance.transform.childCount > 0)
             {
