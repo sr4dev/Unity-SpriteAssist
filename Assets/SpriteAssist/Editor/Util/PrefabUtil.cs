@@ -62,14 +62,10 @@ namespace SpriteAssist
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
-        public static GameObject UpdateMeshPrefab(TextureInfo textureInfo, bool hasSubObject, string oldPrefabPath)
+        public static GameObject UpdateMeshPrefab(TextureInfo textureInfo, bool hasSubObject, GameObject externalObject)
         {
-            if (string.IsNullOrEmpty(oldPrefabPath))
-            {
-                return CreateMeshPrefab(textureInfo, hasSubObject);
-            }
-
-            GameObject instance = PrefabUtility.LoadPrefabContents(oldPrefabPath);
+            var externalObjectPath = AssetDatabase.GetAssetPath(externalObject);
+            GameObject instance = PrefabUtility.InstantiatePrefab(externalObject) as GameObject;
 
             if (instance.transform.childCount > 0)
             {
@@ -83,12 +79,12 @@ namespace SpriteAssist
 
             if (hasSubObject)
             {
-                GameObject subInstance = new GameObject(textureInfo.textureName + "(sub)");
+                GameObject subInstance = new GameObject(instance.transform.name + "(sub)");
                 subInstance.transform.SetParent(instance.transform);
             }
 
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(instance, oldPrefabPath);
-            PrefabUtility.UnloadPrefabContents(instance);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(instance, externalObjectPath, InteractionMode.AutomatedAction);
+            Object.DestroyImmediate(instance);
             return prefab;
         }
 
@@ -206,7 +202,7 @@ namespace SpriteAssist
             return prefabStage != null && prefabStage.prefabContentsRoot == test;
         }
 
-        public static void TryRename(string spriteAssetPath, GameObject meshPrefab)
+        public static bool TryRename(string spriteAssetPath, GameObject meshPrefab)
         {
             var currentMeshPrefabPath = AssetDatabase.GetAssetPath(meshPrefab);
 
@@ -216,7 +212,11 @@ namespace SpriteAssist
             if (spriteAssetName != meshPrefabName)
             {
                 AssetDatabase.RenameAsset(currentMeshPrefabPath, spriteAssetName);
+                Debug.Log($"Mesh Prefab Renamed: {currentMeshPrefabPath}, {meshPrefabName} -> {spriteAssetName}");
+                return true;
             }
+
+            return false;
         }
     }
 }

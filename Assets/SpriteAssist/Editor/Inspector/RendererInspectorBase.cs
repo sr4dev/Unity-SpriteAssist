@@ -35,6 +35,9 @@ namespace SpriteAssist
             
             CreateSpriteAssistEditor();
 
+            if (_spriteInspector == null)
+                return;
+
             GUIStyle style = EditorStyles.foldout;
             FontStyle previousStyle = style.fontStyle;
             style.fontStyle = FontStyle.Bold;
