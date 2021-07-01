@@ -38,12 +38,12 @@ namespace SpriteAssist
             }
         }
 
-        private static bool TryGetVertexAndTriangle2D(Sprite sprite, SpriteConfigData configData, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
+        public static bool TryGetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
         {
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
 
-            if (configData == null ||
+            if (configData == null || sprite == null ||
                 configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent ||
                 configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
             {
@@ -62,5 +62,23 @@ namespace SpriteAssist
 
             return true;
         }
+        
+        public static Sprite CreateDummySprite(Sprite originalSprite, string assetPath)
+        {
+            string name = originalSprite.texture.name;
+            int width = originalSprite.texture.width;
+            int height = originalSprite.texture.height;
+            Vector2 pivot = originalSprite.GetNormalizedPivot();
+            Rect rect = new Rect(0, 0, width, height);
+            float pixelsPerUnit = originalSprite.pixelsPerUnit;
+
+            Texture2D rawTexture = TextureUtil.GetRawTexture(assetPath, name, width, height);
+            Sprite newSprite = Sprite.Create(rawTexture, rect, pivot, pixelsPerUnit);
+            newSprite.name = name + "(Dummy Sprite)";
+            return newSprite;
+        }
+
+
     }
+
 }

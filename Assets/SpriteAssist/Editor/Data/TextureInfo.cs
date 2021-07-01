@@ -12,7 +12,7 @@ namespace SpriteAssist
         public Vector2 normalizedPivot;
         public Rect rect;
 
-        public TextureInfo(string originalAssetPath, Sprite sprite)
+        public TextureInfo(Sprite sprite, string originalAssetPath)
         {
             textureAssetPath = originalAssetPath;
             textureName = sprite.texture.name;

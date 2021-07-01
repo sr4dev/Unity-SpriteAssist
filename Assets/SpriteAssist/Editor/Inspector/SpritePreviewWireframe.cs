@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -26,13 +27,18 @@ namespace SpriteAssist
             _material = new Material(Shader.Find(SHADER_NAME));
             _material.SetTexture(_mainTex, texture);
             _material.hideFlags = HideFlags.HideAndDontSave;
-
+            
             _meshRenderType = meshRenderType;
         }
 
-        public void UpdateAndResize(Rect rect, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        public void UpdateAndResize(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            sprite.GetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType);
+            if (!dummySprite.TryGetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType))
+            {
+                _vertices = baseSprite.vertices;
+                _triangles = baseSprite.triangles;
+            }
+            
             Vector2[] vertices = _vertices.ToArray();
             float spriteMinScale = GetMinRectScale(rect, textureInfo.rect);
             _scaledVertices = MeshUtil.GetScaledVertices(vertices, textureInfo, spriteMinScale, true);
@@ -42,9 +48,8 @@ namespace SpriteAssist
         {
             float spriteMinScale = GetMinRectScale(rect, textureInfo.rect);
             Vector2 position = rect.center - (textureInfo.rect.size * spriteMinScale * 0.5f);
-
+            
             _material.SetPass(0);
-
             GLDraw(position, _scaledVertices, _triangles, false);
             GLDraw(position, _scaledVertices, _triangles, true);
         }
@@ -93,7 +98,7 @@ namespace SpriteAssist
             GL.PopMatrix();
             GL.wireframe = false;
         }
-
+        
         private static float GetMinRectScale(Rect rect, Rect sRect)
         {
             return Mathf.Min(rect.width / sRect.width, rect.height / sRect.height);

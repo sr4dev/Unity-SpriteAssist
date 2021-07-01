@@ -5,7 +5,7 @@ namespace SpriteAssist
 {
     public class DefaultOpaqueMeshCreator : MeshCreatorBase
     {
-        public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             //use unity native mesh
         }
@@ -15,12 +15,12 @@ namespace SpriteAssist
             return PrefabUtil.CreateMeshPrefab(textureInfo, false);
         }
 
-        public override void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
 
-            sprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.OpaqueWithoutExtrude);
-            PrefabUtil.AddComponentsAssets(sprite, externalObject, vertices3D, triangles3D, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
+            baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.OpaqueWithoutExtrude);
+            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices3D, triangles3D, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
