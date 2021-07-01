@@ -13,6 +13,7 @@ namespace SpriteAssist
 
         public readonly Sprite sprite;
         public readonly string assetPath;
+        public readonly Sprite dummySprite;
         public readonly TextureImporter textureImporter;
         public readonly TextureImporterSettings textureImporterSettings;
 
@@ -30,6 +31,7 @@ namespace SpriteAssist
         {
             this.sprite = sprite;
             this.assetPath = assetPath;
+            dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
 
             textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
             textureImporterSettings = new TextureImporterSettings();
@@ -42,6 +44,7 @@ namespace SpriteAssist
         {
             this.sprite = sprite;
             this.assetPath = assetPath;
+            dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
 
             textureImporter = importer;
             textureImporterSettings = new TextureImporterSettings();

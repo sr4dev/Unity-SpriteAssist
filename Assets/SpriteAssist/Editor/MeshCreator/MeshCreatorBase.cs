@@ -22,11 +22,11 @@ namespace SpriteAssist
             return _creator[mode];
         }
 
-        public abstract void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData);
+        public abstract void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData);
 
         public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
 
-        public abstract void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data);
+        public abstract void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
     }
