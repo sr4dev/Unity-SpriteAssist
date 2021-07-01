@@ -5,7 +5,7 @@ namespace SpriteAssist
 {
     public class ComplexMeshCreator : MeshCreatorBase
     {
-        public override void OverrideGeometry(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             //does not supported
         }
@@ -15,16 +15,16 @@ namespace SpriteAssist
             return PrefabUtil.CreateMeshPrefab(textureInfo, true);
         }
 
-        public override void UpdateExternalObject(GameObject externalObject, Sprite sprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             PrefabUtil.UpdateMeshPrefab(textureInfo, true, externalObject);
 
             GameObject root = externalObject;
             GameObject sub = root.transform.GetChild(0).gameObject;
-            sprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
-            sprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
-            PrefabUtil.AddComponentsAssets(sprite, root, transparentVertices, transparentTriangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
-            PrefabUtil.AddComponentsAssets(sprite, sub, opaqueVertices, opaqueTriangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
+            dummySprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
+            dummySprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
+            PrefabUtil.AddComponentsAssets(baseSprite, root, transparentVertices, transparentTriangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
+            PrefabUtil.AddComponentsAssets(baseSprite, sub, opaqueVertices, opaqueTriangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

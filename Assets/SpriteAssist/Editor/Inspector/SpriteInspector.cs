@@ -16,7 +16,7 @@ namespace SpriteAssist
         protected override void OnEnable()
         {
             base.OnEnable();
-
+            
             SetSpriteProcessor(target, AssetDatabase.GetAssetPath(target));
         }
 
@@ -53,11 +53,14 @@ namespace SpriteAssist
             {
                 return;
             }
-
+            
             if (Selection.objects.Length <= SpriteAssistSettings.Settings.maxThumbnailPreviewCount)
             {
-                TextureInfo textureInfo = new TextureInfo(AssetDatabase.GetAssetPath(target), sprite);
-                SpriteProcessor?.OnPreviewGUI(rect, sprite, textureInfo);
+                string assetPath = AssetDatabase.GetAssetPath(target);
+                Sprite dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
+
+                TextureInfo textureInfo = new TextureInfo(dummySprite, assetPath);
+                SpriteProcessor?.OnPreviewGUI(rect, sprite, dummySprite, textureInfo);
             }
         }
 

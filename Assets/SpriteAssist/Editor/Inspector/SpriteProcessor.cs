@@ -293,7 +293,7 @@ namespace SpriteAssist
             }
         }
 
-        public void OnPreviewGUI(Rect rect, Sprite sprite, TextureInfo textureInfo)
+        public void OnPreviewGUI(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo)
         {
             //skip 'rect (0, 0, 1, 1)' issue
             if (rect.width <= 1 || rect.height <= 1)
@@ -303,7 +303,7 @@ namespace SpriteAssist
 
             //for multiple preview
             bool hasMultipleTargets = Selection.objects.Length > 1;
-            _preview.Show(rect, sprite, textureInfo, _configData, hasMultipleTargets);
+            _preview.Show(rect, baseSprite, dummySprite, textureInfo, _configData, hasMultipleTargets);
         }
 
         public void Dispose()
@@ -367,37 +367,41 @@ namespace SpriteAssist
                         break;
                 }
 
-                if (sprite != null)
+                if (sprite == null)
                 {
-                    string assetPath = AssetDatabase.GetAssetPath(sprite);
-                    TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                    continue;
+                }
 
-                    if (textureImporter != null)
+                string assetPath = AssetDatabase.GetAssetPath(sprite);
+                TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+
+                if (textureImporter == null)
+                {
+                    continue;
+                }
+
+                SpriteImportData importData = new SpriteImportData(sprite, textureImporter, assetPath);
+                importData.textureImporter.userData = _originalUserData;
+
+                if (withMeshPrefabProcess)
+                {
+                    SetMeshPrefabContainer(importData, hasMeshPrefab);
+                }
+
+                if (withCopyFromSprite)
+                {
+                    Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
+
+                    if (rootSprite != null)
                     {
-                        SpriteImportData importData = new SpriteImportData(sprite, textureImporter, assetPath);
-                        importData.textureImporter.userData = _originalUserData;
-
-                        if (withMeshPrefabProcess)
-                        {
-                            SetMeshPrefabContainer(importData, hasMeshPrefab);
-                        }
-
-                        if (withCopyFromSprite)
-                        {
-                            Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
-
-                            if (rootSprite != null)
-                            {
-                                textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
-                                textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
-                            }
-                        }
-
-                        EditorUtility.SetDirty(importData.textureImporter);
-                        AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
-                        importData.textureImporter.SaveAndReimport();
+                        textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
+                        textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
                     }
                 }
+
+                EditorUtility.SetDirty(importData.textureImporter);
+                AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                importData.textureImporter.SaveAndReimport();
             }
 
             _isDataChanged = false;
@@ -412,7 +416,7 @@ namespace SpriteAssist
             else
             {
                 importData.RemoveExternalPrefab();
-                TextureInfo textureInfo = new TextureInfo(importData.assetPath, importData.sprite);
+                TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
                 GameObject prefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
                 importData.SetPrefabAsExternalObject(prefab);
             }
@@ -438,8 +442,8 @@ namespace SpriteAssist
                 //importData.RemoveExternalPrefab();
                 PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
 
-                TextureInfo textureInfo = new TextureInfo(importData.assetPath, importData.sprite);
-                _meshCreator.UpdateExternalObject(importData.MeshPrefab, importData.sprite, textureInfo, _configData);
+                TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
+                _meshCreator.UpdateExternalObject(importData.MeshPrefab, importData.sprite, importData.dummySprite, textureInfo, _configData);
                 importData.RemapExternalObject(importData.MeshPrefab);
                 importData.textureImporter.SaveAndReimport();
                 EditorUtility.SetDirty(importData.textureImporter);
@@ -449,8 +453,8 @@ namespace SpriteAssist
 
         public void OverrideGeometry()
         {
-            TextureInfo textureInfo = new TextureInfo(mainImportData.assetPath, mainImportData.sprite);
-            _meshCreator.OverrideGeometry(mainImportData.sprite, textureInfo, _configData);
+            TextureInfo textureInfo = new TextureInfo(mainImportData.sprite, mainImportData.assetPath);
+            _meshCreator.OverrideGeometry(mainImportData.sprite, mainImportData.dummySprite, textureInfo, _configData);
         }
 
         private void UndoReimport()

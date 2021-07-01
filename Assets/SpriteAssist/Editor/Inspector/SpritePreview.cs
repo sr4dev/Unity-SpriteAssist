@@ -17,7 +17,7 @@ namespace SpriteAssist
             _wireframes = wireframes;
         }
 
-        public void Show(Rect rect, Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData, bool hasMultipleTargets)
+        public void Show(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData, bool hasMultipleTargets)
         {
             _rect = rect;
             _textureInfo = textureInfo;
@@ -25,7 +25,7 @@ namespace SpriteAssist
 
             foreach (var wireframe in _wireframes)
             {
-                wireframe.UpdateAndResize(_rect, sprite, textureInfo, configData);
+                wireframe.UpdateAndResize(_rect, baseSprite, dummySprite, textureInfo, configData);
                 _infoText += wireframe.GetInfo(textureInfo) + "\n";
             }
 
