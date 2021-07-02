@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace SpriteAssist
 
         private static bool _isOpenMeshSettings = true;
         private static bool _isOpenMeshPrefab = true;
+        private static bool _isOpenTools = true;
 
         private string _originalUserData;
         private SpriteConfigData _configData;
@@ -259,6 +261,24 @@ namespace SpriteAssist
                     }
                 }
             }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope("box"))
+                {
+                    _isOpenTools = EditorGUILayout.Foldout(_isOpenTools, "Tools");
+                }
+
+                if (_isOpenTools)
+                {
+                    if (GUILayout.Button("Resize to Power of Two"))
+                    {
+                        Apply();
+                        SpriteUtil.AddAlphaArea(mainImportData.dummySprite, mainImportData.assetPath);
+                    }
+                }
+            }
+
 
             EditorGUILayout.Space();
 
