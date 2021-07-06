@@ -153,7 +153,30 @@ namespace SpriteAssist
             background.Apply();
             return background;
         }
-        
+
+        public static Sprite FindSprite(UnityEngine.Object target)
+        {
+            switch (target)
+            {
+                case Sprite s:
+                    return s;
+
+                case GameObject go:
+                    if (go.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+                    {
+                        return spriteRenderer.sprite;
+                    }
+                    else if (go.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                    {
+                        var path = AssetDatabase.GetAssetPath(meshRenderer.sharedMaterial.mainTexture);
+                        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                    }
+                    break;
+            }
+
+            return null;
+        }
+
     }
 
 }

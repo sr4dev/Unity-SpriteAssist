@@ -133,8 +133,11 @@ namespace SpriteAssist
 
         private void UpdateTargetIndexForPreview()
         {
-            int index = (int)_referenceTargetIndexPropertyInfo.GetValue(this, null);
-            _referenceTargetIndexPropertyInfo.SetValue(_baseEditor, index, null);
+            if (_baseEditor != null)
+            {
+                int index = (int)_referenceTargetIndexPropertyInfo.GetValue(this, null);
+                _referenceTargetIndexPropertyInfo.SetValue(_baseEditor, index, null);
+            }
         }
     }
 }

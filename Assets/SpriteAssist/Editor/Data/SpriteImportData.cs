@@ -27,6 +27,29 @@ namespace SpriteAssist
 
         public GameObject MeshPrefab { get { return FindExternalObject() as GameObject; } }
 
+        public static bool TryGetSpriteImportData(Object obj, out SpriteImportData spriteImportData)
+        {
+            spriteImportData = null;
+
+            Sprite sprite = SpriteUtil.FindSprite(obj);
+
+            if (sprite == null)
+            {
+                return false;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(sprite);
+            TextureImporter textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+
+            if (textureImporter == null)
+            {
+                return false;
+            }
+
+            spriteImportData = new SpriteImportData(sprite, textureImporter, assetPath);
+            return spriteImportData != null;
+        }
+
         public SpriteImportData(Sprite sprite, string assetPath)
         {
             this.sprite = sprite;

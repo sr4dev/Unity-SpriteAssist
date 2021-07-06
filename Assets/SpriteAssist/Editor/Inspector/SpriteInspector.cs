@@ -13,6 +13,10 @@ namespace SpriteAssist
 
         public bool disableBaseGUI = false;
 
+        public Sprite _oldSprite;
+        private Sprite _dummySprite;
+        private TextureInfo _textureInfo;
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -39,6 +43,7 @@ namespace SpriteAssist
                 {
                     base.OnInspectorGUI();
                 }
+
             }
         }
 
@@ -48,19 +53,24 @@ namespace SpriteAssist
             base.OnPreviewGUI(rect, background);
 
             Sprite sprite = target as Sprite;
-
             if (sprite == null)
             {
                 return;
             }
+
+            bool isTargetChanged = _oldSprite != sprite;
+            _oldSprite = sprite;
             
             if (Selection.objects.Length <= SpriteAssistSettings.Settings.maxThumbnailPreviewCount)
             {
-                string assetPath = AssetDatabase.GetAssetPath(target);
-                Sprite dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
+                if (isTargetChanged)
+                {
+                    string assetPath = AssetDatabase.GetAssetPath(sprite);
+                    _dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
+                    _textureInfo = new TextureInfo(_dummySprite, assetPath);
+                }
 
-                TextureInfo textureInfo = new TextureInfo(dummySprite, assetPath);
-                SpriteProcessor?.OnPreviewGUI(rect, sprite, dummySprite, textureInfo);
+                SpriteProcessor?.OnPreviewGUI(rect, sprite, _dummySprite, _textureInfo);
             }
         }
 

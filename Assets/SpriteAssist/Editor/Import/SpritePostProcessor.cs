@@ -18,14 +18,20 @@ namespace SpriteAssist
                 spriteProcessor.OverrideGeometry();
             }
 
-            //update mesh prefab
-            EditorApplication.delayCall += () =>
+            //auto rename
+            if (SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)
             {
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-                SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
-                spriteProcessor.UpdateSubAssetsInMeshPrefab(spriteProcessor.mainImportData);
-                AssetDatabase.SaveAssets();
-            };
+                EditorApplication.delayCall += () =>
+                {
+                    Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                    SpriteImportData importData = new SpriteImportData(sprite, assetPath);
+
+                    if (importData.HasMeshPrefab)
+                    {
+                        PrefabUtil.TryRename(importData.assetPath, importData.MeshPrefab);
+                    }
+                };
+            }
         }
     }
 }

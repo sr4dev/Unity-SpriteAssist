@@ -7,8 +7,9 @@ namespace SpriteAssist
 {
     public class SpritePreview : IDisposable
     {
+        public Rect rect;
+
         private List<SpritePreviewWireframe> _wireframes;
-        private Rect _rect;
         private string _infoText;
         private TextureInfo _textureInfo;
 
@@ -17,27 +18,30 @@ namespace SpriteAssist
             _wireframes = wireframes;
         }
 
-        public void Show(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData, bool hasMultipleTargets)
+        public void Update(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData)
         {
-            _rect = rect;
+            this.rect = rect;
             _textureInfo = textureInfo;
             _infoText = "";
 
             foreach (var wireframe in _wireframes)
             {
-                wireframe.UpdateAndResize(_rect, baseSprite, dummySprite, textureInfo, configData);
+                wireframe.UpdateAndResize(this.rect, baseSprite, dummySprite, _textureInfo, configData);
                 _infoText += wireframe.GetInfo(textureInfo) + "\n";
             }
+        }
 
+        public void Show(bool hasMultipleTargets)
+        {
             foreach (var wireframe in _wireframes)
             {
-                wireframe.Draw(_rect, _textureInfo);
+                wireframe.Draw(rect, _textureInfo);
             }
 
             if (!hasMultipleTargets)
             {
                 var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, richText = true, fontStyle = FontStyle.Bold };
-                EditorGUI.DropShadowLabel(_rect, _infoText, style);
+                EditorGUI.DropShadowLabel(rect, _infoText, style);
             }
         }
 
