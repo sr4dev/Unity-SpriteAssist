@@ -53,7 +53,21 @@ namespace SpriteAssist
             }
 
             Vector2[][] paths = OutlineUtil.GenerateOutline(sprite, configData, meshRenderType);
-            TriangulationUtil.Triangulate(paths, configData.edgeSmoothing, configData.useNonZero, out vertices, out triangles);
+
+            if (meshRenderType == MeshRenderType.Grid)
+            {
+                vertices = paths[0];
+                triangles = new ushort[vertices.Length];
+
+                for (var i = 0; i < triangles.Length; i++)
+                {
+                    triangles[i] = (ushort)i;
+                }
+            }
+            else
+            {
+                TriangulationUtil.Triangulate(paths, configData.edgeSmoothing, configData.useNonZero, out vertices, out triangles);
+            }
 
             //validate
             if (vertices.Length >= ushort.MaxValue)

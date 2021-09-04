@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpriteAssist
 {
-    public class TransparentMeshCreator : MeshCreatorBase
+    public class GridMeshCreator : MeshCreatorBase
     {
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
+            dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Grid);
             vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
             baseSprite.OverrideGeometry(vertices, triangles);
         }
@@ -21,7 +21,7 @@ namespace SpriteAssist
         {
             PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
 
-            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
+            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Grid);
             PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
         }
 
@@ -29,7 +29,7 @@ namespace SpriteAssist
         {
             return new List<SpritePreviewWireframe>()
             {
-                new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.Transparent)
+                new SpritePreviewWireframe(SpritePreviewWireframe.transparentColor, MeshRenderType.Grid)
             };
         }
     }

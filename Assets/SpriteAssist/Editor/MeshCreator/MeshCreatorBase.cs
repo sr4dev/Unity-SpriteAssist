@@ -14,7 +14,8 @@ namespace SpriteAssist
             { SpriteConfigData.Mode.UnityDefaultForOpaque, new DefaultOpaqueMeshCreator() },
             { SpriteConfigData.Mode.TransparentMesh, new TransparentMeshCreator() },
             { SpriteConfigData.Mode.OpaqueMesh, new OpaqueMeshCreator() },
-            { SpriteConfigData.Mode.Complex, new ComplexMeshCreator() }
+            { SpriteConfigData.Mode.ComplexMesh, new ComplexMeshCreator() },
+            { SpriteConfigData.Mode.GridMesh, new GridMeshCreator() }
         };
 
         public static MeshCreatorBase GetInstance(SpriteConfigData.Mode mode)

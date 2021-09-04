@@ -141,10 +141,23 @@ namespace SpriteAssist
                                 EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
                         }
 
-                        if (_configData.mode == SpriteConfigData.Mode.Complex)
+                        if (_configData.mode == SpriteConfigData.Mode.ComplexMesh)
                         {
                             using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
                                 EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
+                        }
+
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.GridMesh))
+                        {
+                            EditorGUILayout.LabelField("Grid Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 8, 128);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0f, 1f);
+                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
+                                
+                                EditorGUILayout.Space();
+                            }
                         }
 
                         _isPreviewChanged |= checkChangedMeshSettings.changed;
@@ -257,7 +270,7 @@ namespace SpriteAssist
                     
                     EditorGUILayout.Space();
 
-                    if (_configData != null && _configData.mode == SpriteConfigData.Mode.Complex)
+                    if (_configData != null && _configData.mode == SpriteConfigData.Mode.ComplexMesh)
                     {
                         if (mainImportData.MeshPrefab == null)
                         {
