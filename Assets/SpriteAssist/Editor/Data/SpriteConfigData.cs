@@ -21,7 +21,8 @@ namespace SpriteAssist
             UnityDefaultForOpaque = 1 << 2,
             TransparentMesh = 1 << 0,
             OpaqueMesh = 1 << 1,
-            Complex = TransparentMesh | OpaqueMesh
+            ComplexMesh = TransparentMesh | OpaqueMesh,
+            GridMesh = 1 << 3
         }
         
         public Mode mode = Mode.UnityDefaultForTransparent;
@@ -31,6 +32,8 @@ namespace SpriteAssist
         public float opaqueDetail = DETAIL;
         public byte opaqueAlphaTolerance = ALPHA_TOLERANCE;
         public float opaqueExtrude = OPAQUE_EXTRUDE;
+        public int gridSize;
+        public float gridTolerance;
         public bool detectHoles = DETECT_HOLES;
         public float edgeSmoothing = EDGE_SMOOTHING;
         public bool useNonZero = false;
@@ -47,7 +50,7 @@ namespace SpriteAssist
         public int layer;
         public int sortingLayerId;
         public int sortingOrder;
-        
+
         public static SpriteConfigData GetData(string jsonData)
         {
             SpriteConfigData data = null;

@@ -5,6 +5,7 @@
         Transparent,
         Opaque,
         SeparatedTransparent,
-        OpaqueWithoutExtrude
+        OpaqueWithoutExtrude,
+        Grid
     }
 }

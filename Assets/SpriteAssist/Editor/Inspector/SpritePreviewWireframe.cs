@@ -12,9 +12,9 @@ namespace SpriteAssist
         private const string SHADER_NAME = "Unlit/Transparent";
         private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
         private Material _material;
-        private Vector2[] _vertices;
-        private Vector2[] _scaledVertices;
-        private ushort[] _triangles;
+        private Vector2[] _vertices = new Vector2[0];
+        private Vector2[] _scaledVertices = new Vector2[0];
+        private ushort[] _triangles = new ushort[0];
         private readonly MeshRenderType _meshRenderType;
 
         public SpritePreviewWireframe(Color color, MeshRenderType meshRenderType)
@@ -69,6 +69,7 @@ namespace SpriteAssist
             {
                 case MeshRenderType.Transparent:
                 case MeshRenderType.SeparatedTransparent:
+                case MeshRenderType.Grid:
                     icon = "<color=blue>" + icon + "</color>";
                     break;
 
