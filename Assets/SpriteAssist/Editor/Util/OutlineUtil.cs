@@ -40,11 +40,10 @@ namespace SpriteAssist
 
         private static Vector2[][] GenerateGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
         {
-            const float a = 0.01f;
-            
-            var texture = sprite.texture;
-            var unitCountX = Mathf.CeilToInt((float)texture.width / gridSize);
-            var unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
+            float pixelsPerUnit = sprite.pixelsPerUnit;
+            Texture2D texture = sprite.texture;
+            int unitCountX = Mathf.CeilToInt((float)texture.width / gridSize);
+            int unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
             var offset = new Vector2(texture.width, texture.height) * -0.5f;
 
             List<Vector2> res = new List<Vector2>();
@@ -53,24 +52,22 @@ namespace SpriteAssist
             {
                 for (int unitY = 0; unitY < unitCountY; unitY++)
                 {
-                    var x = unitX * gridSize;
-                    var y = unitY * gridSize;
-                    var rect = new RectInt(x, y, gridSize, gridSize);
+                    RectInt rect = new RectInt(unitX * gridSize, unitY * gridSize, gridSize, gridSize);
+                    rect.width = Mathf.Min(rect.width, texture.width - rect.x);
+                    rect.height = Mathf.Min(rect.height, texture.height - rect.y);
 
                     if (dataDetectHoles && !HasGrid(texture, rect, tolerance))
                     {
                         continue;
                     }
                     
-                    var quadVerts = CropOverBorders(rect, x, y, texture);
+                    res.Add((new Vector2(rect.xMin, rect.yMin) + offset) / pixelsPerUnit);
+                    res.Add((new Vector2(rect.xMin, rect.yMax) + offset) / pixelsPerUnit);
+                    res.Add((new Vector2(rect.xMax, rect.yMin) + offset) / pixelsPerUnit);
                     
-                    res.Add((new Vector2(quadVerts.xMin, quadVerts.yMin) + offset) * a);
-                    res.Add((new Vector2(quadVerts.xMin, quadVerts.yMax) + offset) * a);
-                    res.Add((new Vector2(quadVerts.xMax, quadVerts.yMin) + offset) * a);
-                    
-                    res.Add((new Vector2(quadVerts.xMax, quadVerts.yMin) + offset) * a);
-                    res.Add((new Vector2(quadVerts.xMin, quadVerts.yMax) + offset) * a);
-                    res.Add((new Vector2(quadVerts.xMax, quadVerts.yMax) + offset) * a);
+                    res.Add((new Vector2(rect.xMax, rect.yMin) + offset) / pixelsPerUnit);
+                    res.Add((new Vector2(rect.xMin, rect.yMax) + offset) / pixelsPerUnit);
+                    res.Add((new Vector2(rect.xMax, rect.yMax) + offset) / pixelsPerUnit);
                 }
             }
             
@@ -79,20 +76,13 @@ namespace SpriteAssist
         
         private static bool HasGrid(Texture2D texture, RectInt rect, float tolerance)
         {
-            var endX = rect.x + rect.width;
-            var endY = rect.y + rect.height;
-            for (int y = rect.y, i = 0; y < endY; y++)
-            for (int x = rect.x; x < endX; x++, i++)
-                if (texture.GetPixel(x, y).a > tolerance)
-                    return true;
+            int endX = rect.x + rect.width;
+            int endY = rect.y + rect.height;
+            for (int y = rect.y; y < endY; y++)
+                for (int x = rect.x; x < endX; x++)
+                    if (texture.GetPixel(x, y).a > tolerance)
+                        return true;
             return false;
-        }
-        
-        private static RectInt CropOverBorders (RectInt rect, int x, int y, Texture texture)
-        {
-            rect.width = Mathf.Min(rect.width, texture.width - x);
-            rect.height = Mathf.Min(rect.height, texture.height - y);
-            return rect;
         }
 
         private static Vector2[][] GenerateTransparentOutline(Sprite sprite, float detail, byte alphaTolerance, bool detectHoles)
