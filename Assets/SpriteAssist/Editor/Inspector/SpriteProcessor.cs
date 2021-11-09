@@ -8,27 +8,24 @@ namespace SpriteAssist
 {
     public class SpriteProcessor : IDisposable
     {
-        public readonly SpriteImportData mainImportData;
-
-        private readonly SpritePreview _preview;
-
         private static bool _isOpenMeshSettings = true;
         private static bool _isOpenMeshPrefab = true;
         private static bool _isOpenTools = true;
 
-        private string _originalUserData;
-        private SpriteConfigData _configData;
-        private MeshCreatorBase _meshCreator;
+        private readonly SpriteImportData _mainImportData;
+        private readonly SpritePreview _preview;
 
         private bool _isDataChanged;
         private bool _isPreviewChanged;
-
+        private string _originalUserData;
+        private SpriteConfigData _configData;
+        private MeshCreatorBase _meshCreator;
         private Object[] _targets;
 
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
-            mainImportData = new SpriteImportData(sprite, assetPath);
-            _originalUserData = mainImportData.textureImporter.userData;
+            _mainImportData = new SpriteImportData(sprite, assetPath);
+            _originalUserData = _mainImportData.textureImporter.userData;
             _configData = SpriteConfigData.GetData(_originalUserData);
             _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
@@ -51,7 +48,7 @@ namespace SpriteAssist
                 using (new EditorGUI.DisabledScope(true))
                 {
                     EditorGUILayout.PrefixLabel("Source Texture");
-                    EditorGUILayout.ObjectField(mainImportData.sprite.texture, typeof(Texture2D), false);
+                    EditorGUILayout.ObjectField(_mainImportData.sprite.texture, typeof(Texture2D), false);
                 }
             }
 
@@ -65,6 +62,9 @@ namespace SpriteAssist
                 _configData.mode = (SpriteConfigData.Mode) EditorGUILayout.EnumPopup("SpriteAssist Mode", _configData.mode);
                 EditorGUILayout.Space();
 
+                _isPreviewChanged |= checkChangedMode.changed;
+                _isDataChanged |= checkChangedMode.changed;
+
                 if (checkChangedMode.changed)
                 {
                     _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
@@ -74,9 +74,6 @@ namespace SpriteAssist
                     Apply();
                     return;
                 }
-
-                _isPreviewChanged |= checkChangedMode.changed;
-                _isDataChanged |= checkChangedMode.changed;
             }
 
             if (disableBaseGUI)
@@ -153,7 +150,7 @@ namespace SpriteAssist
                             using (new EditorGUI.IndentLevelScope())
                             {
                                 _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 8, 128);
-                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0f, 1f);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 1f);
                                 _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 
                                 EditorGUILayout.Space();
@@ -179,16 +176,16 @@ namespace SpriteAssist
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            EditorGUILayout.ObjectField("Prefab", mainImportData.MeshPrefab, typeof(GameObject), false);
-                            string buttonText = mainImportData.HasMeshPrefab ? "Remove" : "Create";
+                            EditorGUILayout.ObjectField("Prefab", _mainImportData.MeshPrefab, typeof(GameObject), false);
+                            string buttonText = _mainImportData.HasMeshPrefab ? "Remove" : "Create";
                             if (GUILayout.Button(buttonText, GUILayout.Width(60)))
                             {
-                                Apply(true, mainImportData.HasMeshPrefab);
+                                Apply(true, _mainImportData.HasMeshPrefab);
                                 return;
                             }
                         }
 
-                        if (!mainImportData.HasMeshPrefab)
+                        if (!_mainImportData.HasMeshPrefab)
                         {
                             Shader transparentShader = ShaderUtil.FindTransparentShader(_configData.transparentShaderName);
                             Shader opaqueShader = ShaderUtil.FindOpaqueShader(_configData.opaqueShaderName);
@@ -272,7 +269,7 @@ namespace SpriteAssist
 
                     if (_configData != null && _configData.mode == SpriteConfigData.Mode.ComplexMesh)
                     {
-                        if (mainImportData.MeshPrefab == null)
+                        if (_mainImportData.MeshPrefab == null)
                         {
                             using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 0, 5, 5) }))
                                 EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
@@ -321,7 +318,7 @@ namespace SpriteAssist
                 }
             }
 
-            if (!mainImportData.IsTightMesh)
+            if (!_mainImportData.IsTightMesh)
             {
                 EditorGUILayout.HelpBox("Mesh Type is not Tight Mesh. Change texture setting.", MessageType.Warning);
             }
@@ -330,9 +327,9 @@ namespace SpriteAssist
 
             if (_isDataChanged)
             {
-                Undo.RegisterCompleteObjectUndo(mainImportData.textureImporter, "SpriteAssist Texture");
+                Undo.RegisterCompleteObjectUndo(_mainImportData.textureImporter, "SpriteAssist Texture");
 
-                mainImportData.textureImporter.userData = JsonUtility.ToJson(_configData);
+                _mainImportData.textureImporter.userData = JsonUtility.ToJson(_configData);
             }
         }
 
@@ -347,7 +344,7 @@ namespace SpriteAssist
             //for multiple preview
             bool hasMultipleTargets = Selection.objects.Length > 1;
             
-            if (_isPreviewChanged || _preview.rect != rect || hasMultipleTargets)
+            if (_isPreviewChanged || _preview.Rect != rect || hasMultipleTargets)
             {
                 _preview.Update(rect, baseSprite, dummySprite, textureInfo, _configData);
                 _isPreviewChanged = false;
@@ -366,15 +363,15 @@ namespace SpriteAssist
 
         public void OverrideGeometry()
         {
-            TextureInfo textureInfo = new TextureInfo(mainImportData.sprite, mainImportData.assetPath);
-            _meshCreator.OverrideGeometry(mainImportData.sprite, mainImportData.dummySprite, textureInfo, _configData);
+            TextureInfo textureInfo = new TextureInfo(_mainImportData.sprite, _mainImportData.assetPath);
+            _meshCreator.OverrideGeometry(_mainImportData.sprite, _mainImportData.dummySprite, textureInfo, _configData);
         }
 
         private void ShowSaveOrRevertUI()
         {
             if (_isDataChanged)
             {
-                if (EditorUtility.DisplayDialog("Unapplied import settings", $"Unapplied import settings for '{mainImportData.assetPath}'", "Apply", "Revert"))
+                if (EditorUtility.DisplayDialog("Unapplied import settings", $"Unapplied import settings for '{_mainImportData.assetPath}'", "Apply", "Revert"))
                 {
                     Apply();
                 }
@@ -390,12 +387,17 @@ namespace SpriteAssist
             _configData = SpriteConfigData.GetData(_originalUserData);
             _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview.SetWireframes(_meshCreator.GetMeshWireframes());
-            mainImportData.textureImporter.userData = _originalUserData;
+            _mainImportData.textureImporter.userData = _originalUserData;
             _isDataChanged = false;
         }
 
         private void Apply(bool withMeshPrefabProcess = false, bool hasMeshPrefab = false, bool withCopyFromSprite = false)
         {
+            if (_targets == null)
+            {
+                return;
+            }
+
             Undo.RegisterCompleteObjectUndo(_targets, "SpriteAssist Texture");
 
             _originalUserData = JsonUtility.ToJson(_configData);
@@ -474,7 +476,7 @@ namespace SpriteAssist
 
         private void UndoReimport()
         {
-            _configData = SpriteConfigData.GetData(mainImportData.textureImporter.userData);
+            _configData = SpriteConfigData.GetData(_mainImportData.textureImporter.userData);
             _isDataChanged = true;
 
             if (_targets == null)
