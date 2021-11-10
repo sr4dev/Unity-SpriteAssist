@@ -2,7 +2,13 @@ fileFormatVersion: 2
 guid: e93e0337537c67f4f9cd22a12cb245e5
 TextureImporter:
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:GameObject
+      assembly: UnityEngine.CoreModule
+      name: MeshPrefab
+    second: {fileID: 4524198379331876197, guid: 6ece66c88b15a0544a0fb480e92334ca,
+      type: 3}
   serializedVersion: 11
   mipmaps:
     mipMapMode: 0
@@ -23,6 +29,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -31,12 +39,12 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: -1
-    mipBias: -100
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -54,9 +62,12 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 0
   platformSettings:
   - serializedVersion: 3
@@ -96,9 +107,10 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable: {}
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
-  userData: '{"mode":1,"transparentDetail":0.4580000042915344,"transparentAlphaTolerance":10,"opaqueDetail":0.30000001192092898,"opaqueAlphaTolerance":10,"detectHoles":false,"edgeSmoothing":1.0,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0}'
+  userData: '{"mode":8,"transparentDetail":0.30000001192092898,"transparentAlphaTolerance":10,"opaqueDetail":0.30000001192092898,"opaqueAlphaTolerance":10,"opaqueExtrude":0.06400000303983689,"gridSize":8,"gridTolerance":0.0,"detectHoles":false,"edgeSmoothing":1.0,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0,"overrideTag":false,"overrideLayer":false,"overrideSortingLayer":false,"tag":"Untagged","layer":0,"sortingLayerId":0,"sortingOrder":0}'
   assetBundleName: 
   assetBundleVariant: 

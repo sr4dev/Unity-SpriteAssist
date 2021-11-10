@@ -23,4 +23,4 @@ MonoBehaviour:
   defaultSortingLayerId: 0
   defaultSortingOrder: 0
   maxThumbnailPreviewCount: 10
-  enableRenameMeshPrefabAutomatically: 1
+  enableRenameMeshPrefabAutomatically: 0
