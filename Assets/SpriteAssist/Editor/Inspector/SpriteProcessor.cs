@@ -278,26 +278,26 @@ namespace SpriteAssist
                 }
             }
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                using (new EditorGUILayout.HorizontalScope("box"))
-                {
-                    _isOpenTools = EditorGUILayout.Foldout(_isOpenTools, "Tools");
-                }
+            //using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            //{
+            //    using (new EditorGUILayout.HorizontalScope("box"))
+            //    {
+            //        _isOpenTools = EditorGUILayout.Foldout(_isOpenTools, "Tools");
+            //    }
 
-                if (_isOpenTools)
-                {
-                    if (GUILayout.Button("Resize to Power of Two"))
-                    {
-                        if (_isDataChanged)
-                        {
-                            Apply();
-                        }
+            //    if (_isOpenTools)
+            //    {
+            //        if (GUILayout.Button("Resize to Power of Two"))
+            //        {
+            //            if (_isDataChanged)
+            //            {
+            //                Apply();
+            //            }
 
-                        Resize();
-                    }
-                }
-            }
+            //            Resize();
+            //        }
+            //    }
+            //}
 
 
             EditorGUILayout.Space();
@@ -446,16 +446,16 @@ namespace SpriteAssist
             _isDataChanged = false;
         }
 
-        private void Resize()
-        {
-            foreach (var selectedTarget in _targets)
-            {
-                if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
-                {
-                    SpriteUtil.AddAlphaArea(importData.dummySprite, importData.assetPath);
-                }
-            }
-        }
+        //private void Resize()
+        //{
+        //    foreach (var selectedTarget in _targets)
+        //    {
+        //        if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
+        //        {
+        //            SpriteUtil.AddAlphaArea(importData.dummySprite, importData.assetPath);
+        //        }
+        //    }
+        //}
 
         private void SetMeshPrefabContainer(SpriteImportData importData, bool hasMeshPrefab)
         {
