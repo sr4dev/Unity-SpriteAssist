@@ -25,6 +25,12 @@ namespace SpriteAssist
             PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
         }
 
+        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        {
+            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Transparent);
+            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo);
+        }
+
         public override List<SpritePreviewWireframe> GetMeshWireframes()
         {
             return new List<SpritePreviewWireframe>()

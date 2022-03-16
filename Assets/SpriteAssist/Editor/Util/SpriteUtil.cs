@@ -182,8 +182,11 @@ namespace SpriteAssist
                     }
                     else if (go.TryGetComponent<MeshRenderer>(out var meshRenderer))
                     {
-                        var path = AssetDatabase.GetAssetPath(meshRenderer.sharedMaterial.mainTexture);
-                        return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                        if (meshRenderer.sharedMaterial != null && meshRenderer.sharedMaterial.mainTexture != null)
+                        {
+                            var path = AssetDatabase.GetAssetPath(meshRenderer.sharedMaterial.mainTexture);
+                            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                        }
                     }
                     break;
             }

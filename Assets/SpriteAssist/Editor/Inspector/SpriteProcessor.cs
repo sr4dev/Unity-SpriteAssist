@@ -367,6 +367,15 @@ namespace SpriteAssist
             _meshCreator.OverrideGeometry(_mainImportData.sprite, _mainImportData.dummySprite, textureInfo, _configData);
         }
 
+        public void UpdateMeshInMeshPrefab()
+        {
+            if (_mainImportData.HasMeshPrefab)
+            {
+                TextureInfo textureInfo = new TextureInfo(_mainImportData.sprite, _mainImportData.assetPath);
+                _meshCreator.UpdateMeshInMeshPrefab(_mainImportData.MeshPrefab, _mainImportData.sprite, _mainImportData.dummySprite, textureInfo, _configData);
+            }
+        }
+
         private void ShowSaveOrRevertUI()
         {
             if (_isDataChanged)

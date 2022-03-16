@@ -15,6 +15,19 @@ namespace SpriteAssist
             EditorUtility.DisplayDialog("SpriteAssist", "Done", "OK");
         }
 
+
+        [MenuItem("Assets/SpriteAssist/Scale Textures to Multiple of 4", false, 2000)]
+        private static void ScaleTextureToMultipleOf4()
+        {
+            ResizeUtil.ResizeSelected(ResizeUtil.ResizeMethod.Scale);
+        }
+
+        [MenuItem("Assets/SpriteAssist/Add Alpha to Textures as Multiple of 4", false, 2000)]
+        private static void AddAlphaTextureToMultipleOf4()
+        {
+            ResizeUtil.ResizeSelected(ResizeUtil.ResizeMethod.AddAlphaOrCropArea);
+        }
+
         [MenuItem("GameObject/SpriteAssist/Swap Sprite Renderer to Mesh Prefab", priority = 21)]
         private static void SwapInHierarchySelected()
         {
