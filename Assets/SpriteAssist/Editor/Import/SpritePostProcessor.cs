@@ -16,6 +16,7 @@ namespace SpriteAssist
             {
                 SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
                 spriteProcessor.OverrideGeometry();
+                spriteProcessor.UpdateMeshInMeshPrefab();
             }
 
             //auto rename

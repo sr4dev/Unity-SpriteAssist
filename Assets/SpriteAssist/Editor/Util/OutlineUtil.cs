@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -36,6 +37,48 @@ namespace SpriteAssist
                 default:
                     return Array.Empty<Vector2[]>();
             }
+        }
+
+        public static void Resize(TextureImporter textureImporter, string path, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod)
+        {
+            var serializedObject = new SerializedObject(textureImporter);
+            var outlineSP = GetOutlineProperty(serializedObject, SpriteImportMode.Single, 0);
+            var outlines = GetOutlines(outlineSP);
+
+            switch (resizeMethod)
+            {
+                case ResizeUtil.ResizeMethod.Scale:
+                    var diffScale = new Vector2((float)newWidth / originalWidth, (float)newHeight / originalHeight);
+
+                    foreach (var outline in outlines)
+                    {
+                        for (int i = 0; i < outline.Length; i++)
+                        {
+                            outline[i] *= diffScale;
+                        }
+                    }
+                    break;
+
+                case ResizeUtil.ResizeMethod.AddAlphaOrCropArea:
+                    var diff = new Vector2(newWidth - originalWidth, newHeight - originalHeight) * 0.5f;
+
+                    foreach (var outline in outlines)
+                    {
+                        for (int i = 0; i < outline.Length; i++)
+                        {
+                            outline[i] -= diff;
+                        }
+                    }
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(resizeMethod), resizeMethod, null);
+            }
+
+            SetOutlines(outlineSP, outlines);
+            serializedObject.ApplyModifiedProperties();
+
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.DontDownloadFromCacheServer);
         }
 
         private static Vector2[][] GenerateGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
@@ -189,6 +232,58 @@ namespace SpriteAssist
             }
 
             return outPaths;
+        }
+
+        private static SerializedProperty GetOutlineProperty(SerializedObject importer, SpriteImportMode mode, int index)
+        {
+            return mode == SpriteImportMode.Multiple ? importer.FindProperty("m_SpriteSheet.m_Sprites").GetArrayElementAtIndex(index).FindPropertyRelative("m_Outline") : importer.FindProperty("m_SpriteSheet.m_Outline");
+        }
+
+        private static List<Vector2[]> GetOutlines(SerializedProperty outlineSP)
+        {
+            var outline = new List<Vector2[]>();
+            if (outlineSP.arraySize > 0)
+            {
+                var outlinePathSP = outlineSP.GetArrayElementAtIndex(0);
+                for (int j = 0; j < outlineSP.arraySize; ++j, outlinePathSP.Next(false))
+                {
+                    var o = new Vector2[outlinePathSP.arraySize];
+                    if (o.Length > 0)
+                    {
+                        var psp = outlinePathSP.GetArrayElementAtIndex(0);
+                        for (int k = 0; k < outlinePathSP.arraySize; ++k, psp.Next(false))
+                        {
+                            o[k] = psp.vector2Value;
+                        }
+                    }
+
+                    outline.Add(o);
+                }
+            }
+
+            return outline;
+        }
+
+        public static void SetOutlines(SerializedProperty outlineSP, List<Vector2[]> outline)
+        {
+            outlineSP.arraySize = outline.Count;
+            if (outline.Count > 0)
+            {
+                var outlinePathSP = outlineSP.GetArrayElementAtIndex(0);
+                for (int j = 0; j < outline.Count; ++j, outlinePathSP.Next(false))
+                {
+                    var o = outline[j];
+                    outlinePathSP.arraySize = o.Length;
+                    if (o.Length > 0)
+                    {
+                        var psp = outlinePathSP.GetArrayElementAtIndex(0);
+                        for (int k = 0; k < o.Length; ++k, psp.Next(false))
+                        {
+                            psp.vector2Value = o[k];
+                        }
+                    }
+                }
+            }
         }
     }
 }
