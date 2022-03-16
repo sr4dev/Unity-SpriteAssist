@@ -13,22 +13,24 @@ namespace SpriteAssist
 {
     public static class PrefabUtil
     {
-        public class EditPrefabAssetScope : IDisposable {
-        
+        public class EditPrefabAssetScope : IDisposable
+        {
             public readonly string assetPath;
             public readonly GameObject prefabRoot;
-        
-            public EditPrefabAssetScope(string assetPath) {
+
+            public EditPrefabAssetScope(string assetPath)
+            {
                 this.assetPath = assetPath;
                 prefabRoot = PrefabUtility.LoadPrefabContents(assetPath);
             }
-        
-            public void Dispose() {
+
+            public void Dispose()
+            {
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, assetPath);
                 PrefabUtility.UnloadPrefabContents(prefabRoot);
             }
         }
-        
+
         public static GameObject CreateMeshPrefab(TextureInfo textureInfo, bool hasSubObject)
         {
             string prefix = SpriteAssistSettings.Settings.prefabNamePrefix;
@@ -148,6 +150,12 @@ namespace SpriteAssist
             AssetDatabase.AddObjectToAsset(material, prefab);
             AssetDatabase.AddObjectToAsset(mesh, prefab);
             //AssetDatabase.SaveAssets();
+        }
+
+        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo)
+        {
+            MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
+            meshFilter.sharedMesh.Update(v, t, textureInfo);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
