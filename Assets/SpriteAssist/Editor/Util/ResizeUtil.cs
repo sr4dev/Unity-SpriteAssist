@@ -121,11 +121,11 @@ namespace SpriteAssist
             {
                 try
                 {
-                    var dummyTexture = SpriteAssist.TextureUtil.GetRawTexture(texture);
                     var assetImporter = AssetImporter.GetAtPath(assetPath);
                     var textureImporter = (TextureImporter)assetImporter;
                     var textureImporterSettings = new TextureImporterSettings();
                     textureImporter.ReadTextureSettings(textureImporterSettings);
+                    var dummyTexture = TextureUtil.GetRawTexture(texture, textureImporter);
                     var pivot = GetPivotValue((SpriteAlignment)textureImporterSettings.spriteAlignment, textureImporter.spritePivot);
 
                     int newWidth;
@@ -173,7 +173,7 @@ namespace SpriteAssist
             return false;
         }
 
-        private static Texture2D ScaleTexture(Texture2D source, int newWidth, int newHeight)
+        public static Texture2D ScaleTexture(this Texture2D source, int newWidth, int newHeight)
         {
             var texColors = source.GetPixels();
             var newColors = new Color[newWidth * newHeight];

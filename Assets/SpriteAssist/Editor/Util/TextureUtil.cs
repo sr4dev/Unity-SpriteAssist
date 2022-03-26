@@ -7,45 +7,46 @@ namespace SpriteAssist
 {
     public static class TextureUtil
     {
-        public static bool GetOriginalImageSize(this Texture2D asset, out int width, out int height)
+        public static bool TryGetRawImageSize(this Texture2D asset, TextureImporter importer, out int width, out int height)
         {
             if (asset != null)
             {
-                string assetPath = AssetDatabase.GetAssetPath(asset);
-                TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                object[] args = new object[] { 0, 0 };
+                MethodInfo mi = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
+                mi.Invoke(importer, args);
 
-                if (importer != null)
-                {
-                    object[] args = new object[] { 0, 0 };
-                    MethodInfo mi = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
-                    mi.Invoke(importer, args);
+                width = (int)args[0];
+                height = (int)args[1];
 
-                    width = (int)args[0];
-                    height = (int)args[1];
-
-                    return true;
-                }
+                return true;
             }
 
             height = width = 0;
             return false;
         }
 
-        public static Texture2D GetRawTexture(Texture2D texture)
+        public static Texture2D GetRawTexture(Texture2D texture, TextureImporter textureImporter)
         {
             string assetPath = AssetDatabase.GetAssetPath(texture);
-            return GetRawTexture(assetPath, texture.name, texture.width, texture.height);
+            
+            if (texture.TryGetRawImageSize(textureImporter, out int rawWidth, out int rawHeight))
+            {
+                return GetRawTexture(assetPath, texture.name, texture.width, texture.height, rawWidth, rawHeight);
+            }
+
+            Debug.LogError("Original Image Size is wrong. Path: " + assetPath);
+            return null;
         }
 
-        public static Texture2D GetRawTexture(string assetPath, string name, int width, int height)
+        public static Texture2D GetRawTexture(string assetPath, string name, int originalWidth, int originalHeight, int rawWidth, int rawHeight)
         {
             string projectPath = Path.GetDirectoryName(Application.dataPath);
             string fullPath = Path.Combine(projectPath, assetPath);
             byte[] bytes = File.ReadAllBytes(fullPath);
-            Texture2D originalTexture = new Texture2D(width, height);
+            Texture2D originalTexture = new Texture2D(rawWidth, rawHeight);
             originalTexture.name = name;
             originalTexture.LoadImage(bytes);
-            return originalTexture;
+            return originalTexture.ScaleTexture(originalWidth, originalHeight);
         }
     }
 }

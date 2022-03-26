@@ -40,6 +40,17 @@ namespace SpriteAssist
             triangles = (tess.Elements ?? Array.Empty<int>()).Select(t => (ushort)t).ToArray();
         }
 
+        public static void TriangulateGrid(Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)
+        {
+            vertices = paths[0];
+            triangles = new ushort[vertices.Length];
+
+            for (var i = 0; i < triangles.Length; i++)
+            {
+                triangles[i] = (ushort)i;
+            }
+        }
+        
         public static void ExpandMeshThickness(ref Vector3[] v, ref int[] t, float thickness)
         {
             Vector3[] v2 = new Vector3[v.Length * 2];

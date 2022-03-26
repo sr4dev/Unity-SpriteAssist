@@ -56,13 +56,7 @@ namespace SpriteAssist
 
             if (meshRenderType == MeshRenderType.Grid)
             {
-                vertices = paths[0];
-                triangles = new ushort[vertices.Length];
-
-                for (var i = 0; i < triangles.Length; i++)
-                {
-                    triangles[i] = (ushort)i;
-                }
+                TriangulationUtil.TriangulateGrid(paths, out vertices, out triangles);
             }
             else
             {
@@ -79,19 +73,24 @@ namespace SpriteAssist
             return true;
         }
         
-        public static Sprite CreateDummySprite(Sprite originalSprite, string assetPath)
+        public static Sprite CreateDummySprite(Sprite originalSprite, TextureImporter textureImporter, string assetPath)
         {
-            string name = originalSprite.texture.name;
-            int width = originalSprite.texture.width;
-            int height = originalSprite.texture.height;
-            Vector2 pivot = originalSprite.GetNormalizedPivot();
-            Rect rect = new Rect(0, 0, width, height);
-            float pixelsPerUnit = originalSprite.pixelsPerUnit;
+            if (originalSprite.texture.TryGetRawImageSize(textureImporter, out int rawWidth, out int rawHeight))
+            {
+                string name = originalSprite.texture.name;
+                float pixelsPerUnit = originalSprite.pixelsPerUnit;
+                int originalWidth = originalSprite.texture.width;
+                int originalHeight = originalSprite.texture.height;
+                Vector2 pivot = originalSprite.GetNormalizedPivot();
+                Rect rect = new Rect(0, 0, originalWidth, originalHeight);
+                Texture2D rawTexture = TextureUtil.GetRawTexture(assetPath, name, originalWidth, originalHeight, rawWidth, rawHeight);
+                Sprite newSprite = Sprite.Create(rawTexture, rect, pivot, pixelsPerUnit);
+                newSprite.name = name + "(Dummy Sprite)";
+                return newSprite;
+            }
 
-            Texture2D rawTexture = TextureUtil.GetRawTexture(assetPath, name, width, height);
-            Sprite newSprite = Sprite.Create(rawTexture, rect, pivot, pixelsPerUnit);
-            newSprite.name = name + "(Dummy Sprite)";
-            return newSprite;
+            Debug.LogError("Fail to create dummy Sprite. Path: " + assetPath);
+            return null;
         }
 
         public static void AddAlphaArea(Sprite source, string assetPath)

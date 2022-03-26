@@ -54,11 +54,11 @@ namespace SpriteAssist
         {
             this.sprite = sprite;
             this.assetPath = assetPath;
-            dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
 
             textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
+            dummySprite = SpriteUtil.CreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }
@@ -67,12 +67,11 @@ namespace SpriteAssist
         {
             this.sprite = sprite;
             this.assetPath = assetPath;
-            dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
 
             textureImporter = importer;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-
+            dummySprite = SpriteUtil.CreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }

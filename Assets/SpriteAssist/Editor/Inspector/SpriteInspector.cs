@@ -66,7 +66,7 @@ namespace SpriteAssist
                 if (isTargetChanged)
                 {
                     string assetPath = AssetDatabase.GetAssetPath(sprite);
-                    _dummySprite = SpriteUtil.CreateDummySprite(sprite, assetPath);
+                    _dummySprite = SpriteUtil.CreateDummySprite(sprite, SpriteProcessor.TextureImporter, assetPath);
                     _textureInfo = new TextureInfo(_dummySprite, assetPath);
                 }
 
