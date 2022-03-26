@@ -10,7 +10,6 @@ namespace SpriteAssist
     {
         private static bool _isOpenMeshSettings = true;
         private static bool _isOpenMeshPrefab = true;
-        private static bool _isOpenTools = true;
 
         private readonly SpriteImportData _mainImportData;
         private readonly SpritePreview _preview;
@@ -21,6 +20,8 @@ namespace SpriteAssist
         private SpriteConfigData _configData;
         private MeshCreatorBase _meshCreator;
         private Object[] _targets;
+
+        public TextureImporter TextureImporter => _mainImportData.textureImporter;
 
         public SpriteProcessor(Sprite sprite, string assetPath)
         {
