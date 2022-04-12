@@ -31,7 +31,10 @@ namespace SpriteAssist
 
         public override void OnInspectorGUI()
         {
-            _editor.OnInspectorGUI();
+            if (_editor != null)
+            {
+                _editor.OnInspectorGUI();
+            }
             
             CreateSpriteAssistEditor();
 
