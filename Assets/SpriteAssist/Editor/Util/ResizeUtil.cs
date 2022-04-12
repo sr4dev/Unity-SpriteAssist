@@ -159,7 +159,6 @@ namespace SpriteAssist
                     File.WriteAllBytes(assetPath, newTexture.EncodeToPNG());
                     OutlineUtil.Resize(textureImporter, assetPath, originalWidth, originalHeight, newWidth, newHeight, resizeMethod);
                     Debug.Log("Resized: " + assetPath, texture);
-
                     return true;
                 }
                 catch (Exception e)
