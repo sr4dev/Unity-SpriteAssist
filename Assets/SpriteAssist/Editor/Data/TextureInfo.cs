@@ -9,7 +9,6 @@ namespace SpriteAssist
         public string spriteName;
         public float pixelPerUnit;
         public Vector2 pivot;
-        public Vector2 normalizedPivot;
         public Rect rect;
 
         public TextureInfo(Sprite sprite, string originalAssetPath)
@@ -19,7 +18,6 @@ namespace SpriteAssist
             spriteName = sprite.name;
             pixelPerUnit = sprite.pixelsPerUnit;
             pivot = sprite.pivot;
-            normalizedPivot = sprite.GetNormalizedPivot();
             rect = sprite.rect;
         }
     }
