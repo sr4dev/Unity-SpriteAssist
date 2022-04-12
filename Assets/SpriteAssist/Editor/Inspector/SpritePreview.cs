@@ -20,6 +20,11 @@ namespace SpriteAssist
 
         public void Update(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData)
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
             Rect = rect;
 
             _textureInfo = textureInfo;
@@ -34,6 +39,11 @@ namespace SpriteAssist
 
         public void Show(bool hasMultipleTargets)
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
             foreach (var wireframe in _wireframes)
             {
                 wireframe.Draw(Rect, _textureInfo);
@@ -48,6 +58,11 @@ namespace SpriteAssist
 
         public void SetWireframes(List<SpritePreviewWireframe> wireframes)
         {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
             Dispose();
 
             _wireframes = wireframes;
