@@ -136,7 +136,7 @@ namespace SpriteAssist
                 name = renderType,
             };
 
-            mesh.Update(v, t, textureInfo);
+            mesh.Update(v, t, textureInfo, spriteConfigData.isCorrectNormal);
             meshFilter.mesh = mesh;
 
             //create new material
@@ -152,10 +152,10 @@ namespace SpriteAssist
             //AssetDatabase.SaveAssets();
         }
 
-        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo)
+        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
         {
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
-            meshFilter.sharedMesh.Update(v, t, textureInfo);
+            meshFilter.sharedMesh.Update(v, t, textureInfo, splitVertices);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
