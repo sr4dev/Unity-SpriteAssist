@@ -26,7 +26,7 @@ namespace SpriteAssist
         public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.OpaqueWithoutExtrude);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices3D, triangles3D, textureInfo);
+            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices3D, triangles3D, textureInfo, data.isCorrectNormal);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

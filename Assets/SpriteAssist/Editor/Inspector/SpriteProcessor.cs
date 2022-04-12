@@ -198,6 +198,7 @@ namespace SpriteAssist
 
                         _configData.thickness = EditorGUILayout.FloatField("Thickness", _configData.thickness);
                         _configData.thickness = Mathf.Max(0, _configData.thickness);
+                        _configData.isCorrectNormal = EditorGUILayout.Popup("Normal", _configData.isCorrectNormal ? 1 : 0, new string[] { "Optimized Normal", "Correct Normal" }) == 1;
 
                         EditorGUILayout.Space();
 
