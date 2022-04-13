@@ -72,8 +72,13 @@ namespace SpriteAssist
             return true;
         }
         
-        public static Sprite CreateDummySprite(Sprite originalSprite, TextureImporter textureImporter, string assetPath)
+        public static Sprite TryCreateDummySprite(Sprite originalSprite, TextureImporter textureImporter, string assetPath)
         {
+            if (Application.isPlaying)
+            {
+                return originalSprite;
+            }
+
             if (originalSprite.texture.TryGetRawImageSize(textureImporter, out int rawWidth, out int rawHeight))
             {
                 string name = originalSprite.texture.name;

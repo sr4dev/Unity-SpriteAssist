@@ -174,30 +174,32 @@ namespace SpriteAssist
 
         public static Texture2D ScaleTexture(this Texture2D source, int newWidth, int newHeight)
         {
-            var texColors = source.GetPixels();
-            var newColors = new Color[newWidth * newHeight];
+            var texColors = source.GetPixels32();
+            var newColors = new Color32[newWidth * newHeight];
             var ratioX = 1.0f / ((float)newWidth / (source.width - 1));
             var ratioY = 1.0f / ((float)newHeight / (source.height - 1));
 
             for (var y = 0; y < newHeight; y++)
             {
-                var yFloor = (int)Mathf.Floor(y * ratioY);
+                var yFloor = (int)(y * ratioY);
                 var y1 = yFloor * source.width;
                 var y2 = (yFloor + 1) * source.width;
                 var yw = y * newWidth;
 
                 for (var x = 0; x < newWidth; x++)
                 {
-                    int xFloor = (int)Mathf.Floor(x * ratioX);
+                    int xFloor = (int)(x * ratioX);
                     var xLerp = x * ratioX - xFloor;
-                    var a = Color.LerpUnclamped(texColors[y1 + xFloor], texColors[y1 + xFloor + 1], xLerp);
-                    var b = Color.LerpUnclamped(texColors[y2 + xFloor], texColors[y2 + xFloor + 1], xLerp);
-                    newColors[yw + x] = Color.LerpUnclamped(a, b, y * ratioY - yFloor);
+                    var y1XFloor = y1 + xFloor;
+                    var y2XFloor = y2 + xFloor;
+                    var a = Color32.LerpUnclamped(texColors[y1XFloor], texColors[y1XFloor + 1], xLerp);
+                    var b = Color32.LerpUnclamped(texColors[y2XFloor], texColors[y2XFloor + 1], xLerp);
+                    newColors[yw + x] = Color32.LerpUnclamped(a, b, y * ratioY - yFloor);
                 }
             }
 
             source.Resize(newWidth, newHeight);
-            source.SetPixels(newColors);
+            source.SetPixels32(newColors);
             source.Apply();
             return source;
         }
