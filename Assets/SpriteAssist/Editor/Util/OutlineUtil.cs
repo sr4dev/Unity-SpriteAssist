@@ -83,11 +83,11 @@ namespace SpriteAssist
 
         private static Vector2[][] GenerateGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
         {
-            float pixelsPerUnit = sprite.pixelsPerUnit;
             Texture2D texture = sprite.texture;
+            Vector2 offset = new Vector2(texture.width, texture.height) * -sprite.GetNormalizedPivot();
+            float pixelsPerUnit = sprite.pixelsPerUnit;
             int unitCountX = Mathf.CeilToInt((float)texture.width / gridSize);
             int unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
-            var offset = new Vector2(texture.width, texture.height) * -0.5f;
 
             List<Vector2> res = new List<Vector2>();
             
