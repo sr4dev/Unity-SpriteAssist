@@ -58,7 +58,7 @@ namespace SpriteAssist
             textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            dummySprite = SpriteUtil.CreateDummySprite(sprite, textureImporter, assetPath);
+            dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }
@@ -71,7 +71,7 @@ namespace SpriteAssist
             textureImporter = importer;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            dummySprite = SpriteUtil.CreateDummySprite(sprite, textureImporter, assetPath);
+            dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
         }
