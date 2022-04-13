@@ -25,6 +25,16 @@ namespace SpriteAssist
             return false;
         }
 
+        public static bool IsSingleSprite(this TextureImporterSettings textureImporterSettings)
+        {
+            return textureImporterSettings.spriteMode == 1;
+        }
+
+        public static void FixToSingleSprite(this TextureImporterSettings textureImporterSettings)
+        {
+            textureImporterSettings.spriteMode = 1;
+        }
+
         public static Texture2D GetRawTexture(Texture2D texture, TextureImporter textureImporter)
         {
             string assetPath = AssetDatabase.GetAssetPath(texture);

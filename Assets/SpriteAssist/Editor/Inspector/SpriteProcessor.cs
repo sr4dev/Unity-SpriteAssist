@@ -41,6 +41,33 @@ namespace SpriteAssist
             _isPreviewChanged |= _targets == null || _targets.Length != Selection.objects.Length;
             _targets = Selection.objects;
 
+            if (_mainImportData.textureImporterSettings.IsSingleSprite() == false)
+            {
+                EditorGUILayout.HelpBox("'Sprite Mode' is not Single. Sprite Assist supports only 'Sprite Mode: Single'.", MessageType.Warning);
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Fix to Single"))
+                    {
+                        foreach (var selectedTarget in _targets)
+                        {
+                            if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
+                            {
+                                importData.textureImporterSettings.FixToSingleSprite();
+                                importData.textureImporter.SetTextureSettings(importData.textureImporterSettings);
+                                EditorUtility.SetDirty(importData.textureImporter);
+                                AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                                importData.textureImporter.SaveAndReimport();
+                            }
+                        }
+
+                        AssetDatabase.SaveAssets();
+                    }
+                }
+
+                return;
+            }
+
             if (!disableBaseGUI)
             {
                 EditorGUILayout.Space();
@@ -338,7 +365,7 @@ namespace SpriteAssist
         public void OnPreviewGUI(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo)
         {
             //skip 'rect (0, 0, 1, 1)' issue
-            if (rect.width <= 1 || rect.height <= 1)
+            if (rect.width <= 1 || rect.height <= 1 || _mainImportData.textureImporterSettings.IsSingleSprite() == false)
             {
                 return;
             }

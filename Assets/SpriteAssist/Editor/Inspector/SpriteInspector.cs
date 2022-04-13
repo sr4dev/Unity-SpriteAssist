@@ -33,17 +33,19 @@ namespace SpriteAssist
         
         public override void OnInspectorGUI()
         {
-            using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPosition))
+            using (new EditorGUI.DisabledGroupScope(Application.isPlaying))
             {
-                _scrollPosition = scroll.scrollPosition;
-
-                SpriteProcessor?.OnInspectorGUI(disableBaseGUI);
-
-                if (!disableBaseGUI)
+                using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPosition))
                 {
-                    base.OnInspectorGUI();
-                }
+                    _scrollPosition = scroll.scrollPosition;
 
+                    SpriteProcessor?.OnInspectorGUI(disableBaseGUI);
+
+                    if (!disableBaseGUI)
+                    {
+                        base.OnInspectorGUI();
+                    }
+                }
             }
         }
 
