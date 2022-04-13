@@ -11,12 +11,16 @@ namespace SpriteAssist
             TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
 
-            //override mesh
-            foreach (var sprite in sprites)
+            if (textureImporterSettings.IsSingleSprite())
             {
-                SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
-                spriteProcessor.OverrideGeometry();
-                spriteProcessor.UpdateMeshInMeshPrefab();
+                //override mesh(support first sprite only)
+                foreach (var sprite in sprites)
+                {
+                    SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
+                    spriteProcessor.OverrideGeometry();
+                    spriteProcessor.UpdateMeshInMeshPrefab();
+                    break;
+                }
             }
 
             //auto rename
