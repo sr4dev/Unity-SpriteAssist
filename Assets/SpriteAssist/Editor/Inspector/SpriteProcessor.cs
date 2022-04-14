@@ -178,9 +178,22 @@ namespace SpriteAssist
                             using (new EditorGUI.IndentLevelScope())
                             {
                                 _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 8, 128);
-                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 1f);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
                                 _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 
+                                EditorGUILayout.Space();
+                            }
+                        }
+
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.PixelMesh))
+                        {
+                            EditorGUILayout.LabelField("Pixel Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
+                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
+
                                 EditorGUILayout.Space();
                             }
                         }
