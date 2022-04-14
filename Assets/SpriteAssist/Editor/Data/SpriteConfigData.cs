@@ -22,7 +22,9 @@ namespace SpriteAssist
             TransparentMesh = 1 << 0,
             OpaqueMesh = 1 << 1,
             ComplexMesh = TransparentMesh | OpaqueMesh,
-            GridMesh = 1 << 3
+            GridMesh = 1 << 3,
+            OpaqueEdgeGridMesh = OpaqueMesh | GridMesh,
+            PixelMesh = 1 << 4,
         }
         
         public Mode mode = Mode.UnityDefaultForTransparent;
