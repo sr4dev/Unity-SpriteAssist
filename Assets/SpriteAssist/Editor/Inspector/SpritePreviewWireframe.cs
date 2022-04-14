@@ -73,8 +73,10 @@ namespace SpriteAssist
                     icon = "<color=blue>" + icon + "</color>";
                     break;
 
+                case MeshRenderType.Pixel:
                 case MeshRenderType.Opaque:
                 case MeshRenderType.OpaqueWithoutExtrude:
+                case MeshRenderType.TightGrid:
                     icon = "<color=red>" + icon + "</color>";
                     break;
             }

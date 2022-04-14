@@ -15,7 +15,9 @@ namespace SpriteAssist
             { SpriteConfigData.Mode.TransparentMesh, new TransparentMeshCreator() },
             { SpriteConfigData.Mode.OpaqueMesh, new OpaqueMeshCreator() },
             { SpriteConfigData.Mode.ComplexMesh, new ComplexMeshCreator() },
-            { SpriteConfigData.Mode.GridMesh, new GridMeshCreator() }
+            { SpriteConfigData.Mode.GridMesh, new GridMeshCreator() },
+            { SpriteConfigData.Mode.OpaqueEdgeGridMesh, new OpaqueEdgeGridMeshCreator() },
+            { SpriteConfigData.Mode.PixelMesh, new PixelMeshCreator() }
         };
 
         public static MeshCreatorBase GetInstance(SpriteConfigData.Mode mode)
@@ -23,7 +25,7 @@ namespace SpriteAssist
             return _creator[mode];
         }
 
-        public abstract void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData configData);
+        public abstract void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
 

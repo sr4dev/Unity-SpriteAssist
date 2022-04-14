@@ -52,7 +52,7 @@ namespace SpriteAssist
             return $"{vertices2D.Length} verts, {triangles2D.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
-        public static void Update(this Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        public static void Update(ref Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
         {
             Vector2[] uv = new Vector2[v.Length];
 
