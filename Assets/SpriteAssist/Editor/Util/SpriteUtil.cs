@@ -30,8 +30,8 @@ namespace SpriteAssist
                 triangles2D = sprite.triangles;
             }
 
-            vertices3D = Array.ConvertAll(vertices2D, i => new Vector3(i.x, i.y, 0));
-            triangles3D = Array.ConvertAll(triangles2D, i => (int)i);
+            vertices3D = vertices2D.ToVector3();
+            triangles3D = triangles2D.ToInt();
 
             if (configData.thickness > 0)
             {
