@@ -7,9 +7,8 @@ namespace SpriteAssist
     {
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
-            baseSprite.OverrideGeometry(vertices, triangles);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            baseSprite.OverrideGeometry(combinedMesh.vertices.ToVector2(), combinedMesh.triangles.ToUShort());
         }
 
         public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
@@ -20,24 +19,44 @@ namespace SpriteAssist
         public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-
-            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
         public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo, data.isCorrectNormal);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            PrefabUtil.UpdateMeshFiltersMesh(externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, data.isCorrectNormal);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
         {
             return new List<SpritePreviewWireframe>()
             {
-                new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.Opaque),
+                new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.OpaqueWithoutTightGrid),
                 new SpritePreviewWireframe(SpritePreviewWireframe.opaqueColor, MeshRenderType.TightGrid)
             };
+        }
+
+        private Mesh GetCombinedMesh(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        {
+            dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.OpaqueWithoutTightGrid);
+            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
+            Mesh opaqueMesh = MeshUtil.Create(vertices.ToVector3(), triangles.ToInt(), textureInfo, false);
+
+            dummySprite.GetVertexAndTriangle2D(data, out var verticesGrid, out var trianglesGrid, MeshRenderType.TightGrid);
+            verticesGrid = MeshUtil.GetScaledVertices(verticesGrid, textureInfo, isClamped: true);
+            Mesh gridMesh = MeshUtil.Create(verticesGrid.ToVector3(), trianglesGrid.ToInt(), textureInfo, false);
+
+            var combinedMesh = new Mesh();
+
+            combinedMesh.CombineMeshes(new[]
+            {
+                new CombineInstance { mesh = opaqueMesh, transform = Matrix4x4.identity },
+                new CombineInstance { mesh = gridMesh, transform = Matrix4x4.identity, }
+            }, true);
+
+            return combinedMesh;
         }
     }
 }
