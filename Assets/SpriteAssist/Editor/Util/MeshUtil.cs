@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -33,6 +34,26 @@ namespace SpriteAssist
             return vertices;
         }
 
+        public static Vector3[] ToVector3(this Vector2[] vertices2D)
+        {
+            return Array.ConvertAll(vertices2D, i => new Vector3(i.x, i.y, 0));
+        }
+
+        public static Vector2[] ToVector2(this Vector3[] vertices3D)
+        {
+            return Array.ConvertAll(vertices3D, i => new Vector2(i.x, i.y));
+        }
+
+        public static int[] ToInt(this ushort[] triangles2D)
+        {
+            return Array.ConvertAll(triangles2D, i => (int)i);
+        }
+        
+        public static ushort[] ToUShort(this int[] triangles3D)
+        {
+            return Array.ConvertAll(triangles3D, i => (ushort)i);
+        }
+
         public static string GetAreaInfo(Vector2[] vertices2D, ushort[] triangles2D, TextureInfo textureInfo)
         {
             float area = 0;
@@ -52,7 +73,14 @@ namespace SpriteAssist
             return $"{vertices2D.Length} verts, {triangles2D.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
-        public static void Update(ref Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        public static Mesh Create(Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        {
+            Mesh mesh = new Mesh();
+            Update(mesh, v, t, textureInfo, splitVertices);
+            return mesh;
+        }
+
+        public static void Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
         {
             Vector2[] uv = new Vector2[v.Length];
 

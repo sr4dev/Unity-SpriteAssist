@@ -6,6 +6,7 @@
         Opaque,
         SeparatedTransparent,
         OpaqueWithoutExtrude,
+        OpaqueWithoutTightGrid,
         Grid,
         TightGrid,
         Pixel,
