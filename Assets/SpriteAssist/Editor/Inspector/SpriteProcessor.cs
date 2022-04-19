@@ -31,8 +31,6 @@ namespace SpriteAssist
             _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
 
-            Undo.undoRedoPerformed += UndoReimport;
-
             _isPreviewChanged = true;
         }
         
@@ -353,30 +351,30 @@ namespace SpriteAssist
             }
         }
 
-        public void OnPreviewGUI(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo)
+        public bool OnPreviewGUI(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, bool isForce)
         {
             //skip 'rect (0, 0, 1, 1)' issue
             if (rect.width <= 1 || rect.height <= 1 || _mainImportData.textureImporterSettings.IsSingleSprite() == false)
             {
-                return;
+                return false;
             }
 
             //for multiple preview
             bool hasMultipleTargets = Selection.objects.Length > 1;
             
-            if (_isPreviewChanged || _preview.Rect != rect || hasMultipleTargets)
+            if (_isPreviewChanged || _preview.Rect != rect || hasMultipleTargets || isForce)
             {
                 _preview.Update(rect, baseSprite, dummySprite, textureInfo, _configData);
                 _isPreviewChanged = false;
             }
 
             _preview.Show(hasMultipleTargets);
+            return true;
         }
 
         public void Dispose()
         {
             _preview.Dispose();
-            Undo.undoRedoPerformed -= UndoReimport;
 
             ShowSaveOrRevertUI();
         }
@@ -489,25 +487,6 @@ namespace SpriteAssist
                 PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
                 _meshCreator.UpdateExternalObject(importData.MeshPrefab, importData.sprite, importData.dummySprite, textureInfo, _configData);
                 importData.RemapExternalObject(importData.MeshPrefab);
-            }
-        }
-
-        private void UndoReimport()
-        {
-            _configData = SpriteConfigData.GetData(_mainImportData.textureImporter.userData);
-            _isDataChanged = true;
-
-            if (_targets == null)
-                return;
-
-            foreach (var t in _targets)
-            {
-                string path = AssetDatabase.GetAssetPath(t);
-
-                if (!string.IsNullOrEmpty(path))
-                {
-                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
-                }
             }
         }
     }
