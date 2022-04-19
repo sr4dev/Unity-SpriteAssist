@@ -22,6 +22,7 @@ namespace SpriteAssist
             base.OnEnable();
             
             SetSpriteProcessor(target, AssetDatabase.GetAssetPath(target));
+            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
         }
 
         protected override void OnDisable()
@@ -29,6 +30,7 @@ namespace SpriteAssist
             base.OnDisable();
 
             SpriteProcessor?.Dispose();
+            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
         }
         
         public override void OnInspectorGUI()
@@ -82,6 +84,11 @@ namespace SpriteAssist
             {
                 SpriteProcessor = new SpriteProcessor(sprite, assetPath);
             }
+        }
+
+        private void OnAfterAssemblyReload()
+        {
+            _oldSprite = null;
         }
     }
 }
