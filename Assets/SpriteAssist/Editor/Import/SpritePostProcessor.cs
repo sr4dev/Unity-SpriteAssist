@@ -7,6 +7,8 @@ namespace SpriteAssist
     {
         private void OnPostprocessSprites(Texture2D _, Sprite[] sprites)
         {
+            SpriteInspector.isSpriteReloaded = true;
+
             TextureImporter textureImporter = assetImporter as TextureImporter;
             TextureImporterSettings textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
@@ -22,7 +24,7 @@ namespace SpriteAssist
                     break;
                 }
             }
-
+            
             //auto rename
             if (SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)
             {

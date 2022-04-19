@@ -7,15 +7,16 @@ namespace SpriteAssist
     [CanEditMultipleObjects]
     public class SpriteInspector : UnityInternalEditor<Sprite>
     {
+        public static bool isSpriteReloaded;
+        public bool disableBaseGUI = false;
+
+        private Sprite _oldSprite;
+        private Sprite _dummySprite;
+
+        private TextureInfo _textureInfo;
         private Vector2 _scrollPosition;
 
         public SpriteProcessor SpriteProcessor { get; private set; }
-
-        public bool disableBaseGUI = false;
-
-        public Sprite _oldSprite;
-        private Sprite _dummySprite;
-        private TextureInfo _textureInfo;
 
         protected override void OnEnable()
         {
@@ -62,20 +63,22 @@ namespace SpriteAssist
                 return;
             }
 
-            bool isTargetChanged = _oldSprite != sprite;
-            _oldSprite = sprite;
-            
             if (Selection.objects.Length <= SpriteAssistSettings.Settings.maxThumbnailPreviewCount)
             {
-                if (isTargetChanged)
+                if (_oldSprite != sprite || isSpriteReloaded)
                 {
                     string assetPath = AssetDatabase.GetAssetPath(sprite);
                     _dummySprite = SpriteUtil.TryCreateDummySprite(sprite, SpriteProcessor.TextureImporter, assetPath);
                     _textureInfo = new TextureInfo(_dummySprite, assetPath);
                 }
-
-                SpriteProcessor?.OnPreviewGUI(rect, sprite, _dummySprite, _textureInfo);
+                
+                if (SpriteProcessor != null && SpriteProcessor.OnPreviewGUI(rect, sprite, _dummySprite, _textureInfo, isSpriteReloaded))
+                {
+                    isSpriteReloaded = false;
+                }
             }
+
+            _oldSprite = sprite;
         }
 
         public void SetSpriteProcessor(Object t, string assetPath)
