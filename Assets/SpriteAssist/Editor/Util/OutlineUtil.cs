@@ -41,7 +41,7 @@ namespace SpriteAssist
                     return GenerateTightGridOutline(sprite, data.gridSize, data.gridTolerance, data.detectHoles);
                     
                 case MeshRenderType.Pixel:
-                    return GeneratePixelEdgeOutline2(sprite, data.gridSize, data.gridTolerance);
+                    return GeneratePixelEdgeOutline(sprite, data.gridSize, data.gridTolerance, false);
 
                 default:
                     return Array.Empty<Vector2[]>();
@@ -129,7 +129,7 @@ namespace SpriteAssist
         private static Vector2[][] GenerateOpaqueWithoutTightGridOutline(Sprite sprite, SpriteConfigData data)
         {
             Vector2[][] opaquePaths = GenerateOpaqueOutline(sprite, data.opaqueDetail, data.opaqueAlphaTolerance, data.opaqueExtrude);
-            Vector2[][] tightGridPaths = GenerateSimplifiedTightGridOutline(sprite, data.gridSize, data.gridTolerance, data.detectHoles);
+            Vector2[][] tightGridPaths = GeneratePixelEdgeOutline(sprite, data.gridSize, data.gridTolerance, true);
             List<List<IntPoint>> convertedOpaquePaths = ConvertToIntPointList(opaquePaths, FLOAT_TO_INT_SCALE);
             List<List<IntPoint>> convertedTightGridPaths = ConvertToIntPointList(tightGridPaths, FLOAT_TO_INT_SCALE);
             List<List<IntPoint>> intersectionPaths = new List<List<IntPoint>>();
@@ -175,8 +175,8 @@ namespace SpriteAssist
 
             return new[] { gridOutline.ToArray() };
         }
-        
-        private static Vector2[][] GeneratePixelEdgeOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
+
+        private static Vector2[][] GeneratePixelEdgeOutline(Sprite sprite, int gridSize, float tolerance, bool isTightGrid)
         {
             Texture2D texture = sprite.texture;
             Vector2 offset = new Vector2(texture.width, texture.height) * -sprite.GetNormalizedPivot();
@@ -185,101 +185,16 @@ namespace SpriteAssist
             int unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
 
             List<List<IntPoint>> pixelEdges = new List<List<IntPoint>>(unitCountX * unitCountY);
+            Func<Texture2D, RectInt, float, bool> hasGrid;
 
-            for (int unitX = 0; unitX < unitCountX; unitX++)
+            if (isTightGrid)
             {
-                for (int unitY = 0; unitY < unitCountY; unitY++)
-                {
-                    RectInt rect = new RectInt(unitX * gridSize, unitY * gridSize, gridSize, gridSize);
-                    rect.width = Mathf.Min(rect.width, texture.width - rect.x);
-                    rect.height = Mathf.Min(rect.height, texture.height - rect.y);
-
-                    if (dataDetectHoles && !HasGrid(texture, rect, tolerance))
-                    {
-                        continue;
-                    }
-
-                    pixelEdges.Add(new List<IntPoint>(4)
-                    {
-                        new IntPoint(rect.xMax, rect.yMin),
-                        new IntPoint(rect.xMin, rect.yMin),
-                        new IntPoint(rect.xMin, rect.yMax),
-                        new IntPoint(rect.xMax, rect.yMax),
-                    });
-                }
+                hasGrid = HasTightGrid;
             }
-
-            List<List<IntPoint>> unionPixelEdges = new List<List<IntPoint>>(pixelEdges.Count);
-            Clipper clipper = new Clipper();
-            clipper.AddPaths(pixelEdges, PolyType.ptSubject, true);
-            clipper.Execute(ClipType.ctUnion, unionPixelEdges, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
-            unionPixelEdges.TrimExcess();
-
-            var res = ConvertToVector2Array(unionPixelEdges);
-
-            for (var i = 0; i < res.Length; i++)
+            else
             {
-                for (var j = 0; j < res[i].Length; j++)
-                {
-                    res[i][j] = (res[i][j] + offset) / pixelsPerUnit;
-                }
+                hasGrid = HasGrid;
             }
-
-            return res;
-        }
-
-        private static Vector2[][] GenerateSimplifiedTightGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
-        {
-            Texture2D texture = sprite.texture;
-            Vector2 offset = new Vector2(texture.width, texture.height) * -sprite.GetNormalizedPivot();
-            float pixelsPerUnit = sprite.pixelsPerUnit;
-            int unitCountX = Mathf.CeilToInt((float)texture.width / gridSize);
-            int unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
-
-            List<List<Vector2>> gridOutline = new List<List<Vector2>>(unitCountX * unitCountY);
-
-            for (int unitX = 0; unitX < unitCountX; unitX++)
-            {
-                for (int unitY = 0; unitY < unitCountY; unitY++)
-                {
-                    RectInt rect = new RectInt(unitX * gridSize, unitY * gridSize, gridSize, gridSize);
-                    rect.width = Mathf.Min(rect.width, texture.width - rect.x);
-                    rect.height = Mathf.Min(rect.height, texture.height - rect.y);
-
-                    if (dataDetectHoles && !HasTightGrid(texture, rect, tolerance))
-                    {
-                        continue;
-                    }
-
-                    gridOutline.Add(new List<Vector2>(4)
-                    {
-                        (new Vector2(rect.xMin, rect.yMin) + offset) / pixelsPerUnit,
-                        (new Vector2(rect.xMin, rect.yMax) + offset) / pixelsPerUnit,
-                        (new Vector2(rect.xMax, rect.yMax) + offset) / pixelsPerUnit,
-                        (new Vector2(rect.xMax, rect.yMin) + offset) / pixelsPerUnit
-                    });
-                }
-            }
-
-            List<List<IntPoint>> pixelEdges = ConvertToIntPointList(ConvertToArray(gridOutline), FLOAT_TO_INT_SCALE);
-            List<List<IntPoint>> unionPixelEdges = new List<List<IntPoint>>(pixelEdges.Count);
-            Clipper clipper = new Clipper();
-            clipper.AddPaths(pixelEdges, PolyType.ptSubject, true);
-            clipper.Execute(ClipType.ctUnion, unionPixelEdges, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
-            unionPixelEdges.TrimExcess();
-
-            return ConvertToVector2Array(unionPixelEdges, INT_TO_FLOAT_SCALE);
-        }
-
-        private static Vector2[][] GeneratePixelEdgeOutline2(Sprite sprite, int gridSize, float tolerance)
-        {
-            Texture2D texture = sprite.texture;
-            Vector2 offset = new Vector2(texture.width, texture.height) * -sprite.GetNormalizedPivot();
-            float pixelsPerUnit = sprite.pixelsPerUnit;
-            int unitCountX = Mathf.CeilToInt((float)texture.width / gridSize);
-            int unitCountY = Mathf.CeilToInt((float)texture.height / gridSize);
-
-            List<List<IntPoint>> pixelEdges = new List<List<IntPoint>>(unitCountX * unitCountY);
 
             for (int unitX = 0; unitX < unitCountX; unitX++)
             {
@@ -289,38 +204,41 @@ namespace SpriteAssist
                 for (int unitY = 0; unitY < unitCountY; unitY++)
                 {
                     RectInt rect = new RectInt(unitX * gridSize, unitY * gridSize, gridSize, gridSize);
-                    rect.width = Mathf.Min(rect.width, texture.width - rect.x);
-                    rect.height = Mathf.Min(rect.height, texture.height - rect.y);
+                    rect.width = Mathf.Min(rect.width, texture.width - rect.x);//crop
+                    rect.height = Mathf.Min(rect.height, texture.height - rect.y);//crop
 
-                    var hasGrid = HasGrid(texture, rect, tolerance);
-
-                    //open
-                    if (hasGrid)
+                    if (hasGrid(texture, rect, tolerance))
                     {
                         if (intPoints == null)
                         {
+                            //open
                             intPoints = new List<IntPoint>(4);
                             intPoints.Add(new IntPoint(rect.xMax, rect.yMin));
                             intPoints.Add(new IntPoint(rect.xMin, rect.yMin));
                             pixelEdges.Add(intPoints);
                         }
-                    }
 
-                    //close
-                    if (!hasGrid || unitY == unitCountY - 1)//non-connected grid or last vertical grid 
+                        if (unitY == unitCountY - 1)
+                        {
+                            //force close
+                            intPoints.Add(new IntPoint(rect.xMin, rect.yMax));
+                            intPoints.Add(new IntPoint(rect.xMax, rect.yMax));
+                            intPoints = null;
+                        }
+                    }
+                    else
                     {
                         if (intPoints != null)
                         {
-                            var y = lastRect.Equals(rect) ? lastRect.yMin : rect.yMax;
-                            intPoints.Add(new IntPoint(intPoints[1].X, y));
-                            intPoints.Add(new IntPoint(intPoints[0].X, y));
+                            //close
+                            intPoints.Add(new IntPoint(rect.xMin, lastRect.yMax));
+                            intPoints.Add(new IntPoint(rect.xMax, lastRect.yMax));
+                            intPoints = null;
                         }
                     }
 
-                    lastRect = rect;//bug!
+                    lastRect = rect;
                 }
-                
-                lastRect = default;//bug!!
             }
 
             List<List<IntPoint>> unionPixelEdges = new List<List<IntPoint>>(pixelEdges.Count);
@@ -328,18 +246,7 @@ namespace SpriteAssist
             clipper.AddPaths(pixelEdges, PolyType.ptSubject, true);
             clipper.Execute(ClipType.ctUnion, unionPixelEdges, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
             unionPixelEdges.TrimExcess();
-
-            var res = ConvertToVector2Array(unionPixelEdges);
-
-            for (var i = 0; i < res.Length; i++)
-            {
-                for (var j = 0; j < res[i].Length; j++)
-                {
-                    res[i][j] = (res[i][j] + offset) / pixelsPerUnit;
-                }
-            }
-
-            return res;
+            return ConvertToVector2Array(unionPixelEdges, 1 / pixelsPerUnit, offset);
         }
 
         private static bool HasGrid(Texture2D texture, RectInt rect, float tolerance)
@@ -429,7 +336,7 @@ namespace SpriteAssist
             return intPointPaths;
         }
 
-        private static List<List<IntPoint>> ConvertToIntPointList(Vector2[][] paths, float scale = 1)
+        private static List<List<IntPoint>> ConvertToIntPointList(Vector2[][] paths, float scale = 1, Vector2 offset = default)
         {
             List<List<IntPoint>> intPointPaths = new List<List<IntPoint>>(paths.Length);
 
@@ -440,7 +347,7 @@ namespace SpriteAssist
 
                 for (int j = 0; j < path.Length; j++)
                 {
-                    Vector2 point = path[j] * scale;
+                    Vector2 point = (path[j] + offset) * scale;
                     intPointPath.Add(new IntPoint(Mathf.RoundToInt(point.x), Mathf.RoundToInt(point.y)));
                 }
 
@@ -449,28 +356,8 @@ namespace SpriteAssist
 
             return intPointPaths;
         }
-
-        private static Vector2[][] ConvertToArray(List<List<Vector2>> listPaths)
-        {
-            Vector2[][] arrayPaths = new Vector2[listPaths.Count][];
-
-            for (int i = 0; i < listPaths.Count; i++)
-            {
-                List<Vector2> listPoint = listPaths[i];
-                Vector2[] arrayPoints = new Vector2[listPoint.Count];
-
-                for (int j = 0; j < listPoint.Count; j++)
-                {
-                    arrayPoints[j] = listPoint[j];
-                }
-
-                arrayPaths[i] = arrayPoints;
-            }
-
-            return arrayPaths;
-        }
-
-        private static Vector2[][] ConvertToVector2Array(List<List<IntPoint>> intPointPaths, float scale = 1)
+        
+        private static Vector2[][] ConvertToVector2Array(List<List<IntPoint>> intPointPaths, float scale = 1, Vector2 offset = default)
         {
             Vector2[][] outPaths = new Vector2[intPointPaths.Count][];
 
@@ -482,7 +369,7 @@ namespace SpriteAssist
                 for (int j = 0; j < intPointPath.Count; j++)
                 {
                     IntPoint intPoint = intPointPath[j];
-                    points[j] = new Vector2(intPoint.X, intPoint.Y) * scale;
+                    points[j] = (new Vector2(intPoint.X, intPoint.Y) + offset) * scale;
                 }
 
                 outPaths[i] = points;

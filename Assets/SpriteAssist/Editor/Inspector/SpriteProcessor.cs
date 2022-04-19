@@ -177,7 +177,7 @@ namespace SpriteAssist
                             EditorGUILayout.LabelField("Grid Mesh");
                             using (new EditorGUI.IndentLevelScope())
                             {
-                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 8, 128);
+                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
                                 _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
                                 _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 
