@@ -7,7 +7,7 @@ namespace SpriteAssist
     {
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, true);
             baseSprite.OverrideGeometry(combinedMesh.vertices.ToVector2(), combinedMesh.triangles.ToUShort());
         }
 
@@ -19,13 +19,13 @@ namespace SpriteAssist
         public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, false);
             PrefabUtil.AddComponentsAssets(baseSprite, externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
         public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data);
+            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, false);
             PrefabUtil.UpdateMeshFiltersMesh(externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, data.isCorrectNormal);
         }
 
@@ -38,14 +38,14 @@ namespace SpriteAssist
             };
         }
 
-        private Mesh GetCombinedMesh(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        private Mesh GetCombinedMesh(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, bool applyPixelPerUnitScale)
         {
             dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.OpaqueWithoutTightGrid);
-            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
+            if (applyPixelPerUnitScale) vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
             Mesh opaqueMesh = MeshUtil.Create(vertices.ToVector3(), triangles.ToInt(), textureInfo, false);
 
             dummySprite.GetVertexAndTriangle2D(data, out var verticesGrid, out var trianglesGrid, MeshRenderType.TightGrid);
-            verticesGrid = MeshUtil.GetScaledVertices(verticesGrid, textureInfo, isClamped: true);
+            if (applyPixelPerUnitScale) verticesGrid = MeshUtil.GetScaledVertices(verticesGrid, textureInfo, isClamped: true);
             Mesh gridMesh = MeshUtil.Create(verticesGrid.ToVector3(), trianglesGrid.ToInt(), textureInfo, false);
 
             var combinedMesh = new Mesh();
