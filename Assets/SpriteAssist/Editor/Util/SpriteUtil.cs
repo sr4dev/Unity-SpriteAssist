@@ -79,7 +79,7 @@ namespace SpriteAssist
                 return originalSprite;
             }
 
-            if (originalSprite.texture.TryGetRawImageSize(textureImporter, out int rawWidth, out int rawHeight))
+            if (textureImporter.TryGetRawImageSize(out int rawWidth, out int rawHeight))
             {
                 string name = originalSprite.texture.name;
                 float pixelsPerUnit = originalSprite.pixelsPerUnit;

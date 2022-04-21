@@ -9,60 +9,12 @@ namespace SpriteAssist
     public static class ResizeUtil
     {
         private const int MULTIPLE_OF_4 = 4;
-        private const int SINGLE_LINE = 1;
 
         public enum ResizeMethod
         {
             Scale,
             AddAlphaOrCropArea
         }
-
-        //public static void FindResizeTargetTexture()
-        //{
-        //    var targets = AssetDatabase.FindAssets(TextureAssetImporter.TEXTURE_TYPE, new[] { TextureAssetImporter.TARGET_DIRECTORY }).Select(AssetDatabase.GUIDToAssetPath).ToArray();
-
-        //    foreach (var path in targets)
-        //    {
-        //        var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-
-        //        if (texture != null)
-        //        {
-        //            if (texture.width % MULTIPLE_OF_4 != 0 || texture.height % MULTIPLE_OF_4 != 0)
-        //            {
-        //                Debug.Log($"Wrong Size! {path}, Width: {texture.width}, Height:{texture.height}", texture);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            Debug.LogWarning($"Wrong Path! {path}");
-        //        }
-        //    }
-        //}
-
-        //public static void FindResizeTargetTextureForSingleLine()
-        //{
-        //    var targets = AssetDatabase.FindAssets(TextureAssetImporter.TEXTURE_TYPE, new[] { TextureAssetImporter.TARGET_DIRECTORY }).Select(AssetDatabase.GUIDToAssetPath).ToArray();
-
-        //    foreach (var path in targets)
-        //    {
-        //        var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-
-        //        if (texture != null)
-        //        {
-        //            if (texture.width % MULTIPLE_OF_4 != 0 || texture.height % MULTIPLE_OF_4 != 0)
-        //            {
-        //                if (texture.width == 1 || texture.height == 1)
-        //                {
-        //                    Debug.Log($"Wrong Size + Single Line! {path}, Width: {texture.width}, Height:{texture.height}", texture);
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            Debug.LogWarning($"Wrong Path! {path}");
-        //        }
-        //    }
-        //}
 
         public static void ResizeSelected(ResizeMethod method)
         {
@@ -157,7 +109,7 @@ namespace SpriteAssist
                     }
 
                     File.WriteAllBytes(assetPath, newTexture.EncodeToPNG());
-                    OutlineUtil.Resize(textureImporter, assetPath, originalWidth, originalHeight, newWidth, newHeight, resizeMethod);
+                    OutlineUtil.Resize(textureImporter, originalWidth, originalHeight, newWidth, newHeight, resizeMethod);
                     Debug.Log("Resized: " + assetPath, texture);
                     return true;
                 }
@@ -172,36 +124,27 @@ namespace SpriteAssist
             return false;
         }
 
-        public static Texture2D ScaleTexture(this Texture2D source, int newWidth, int newHeight)
+        //https://github.com/ababilinski/unity-gpu-texture-resize/blob/master/ResizeTool.cs
+        public static Texture2D ScaleTexture(this Texture2D texture2D, int targetX, int targetY, bool mipmap = false, FilterMode filter = FilterMode.Bilinear)
         {
-            var texColors = source.GetPixels32();
-            var newColors = new Color32[newWidth * newHeight];
-            var ratioX = 1.0f / ((float)newWidth / (source.width - 1));
-            var ratioY = 1.0f / ((float)newHeight / (source.height - 1));
+            RenderTexture rt = RenderTexture.GetTemporary(targetX, targetY, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            RenderTexture.active = rt;
+            Graphics.Blit(texture2D, rt);
+            texture2D.Resize(targetX, targetY, texture2D.format, mipmap);
+            texture2D.filterMode = filter;
 
-            for (var y = 0; y < newHeight; y++)
+            try
             {
-                var yFloor = (int)(y * ratioY);
-                var y1 = yFloor * source.width;
-                var y2 = (yFloor + 1) * source.width;
-                var yw = y * newWidth;
-
-                for (var x = 0; x < newWidth; x++)
-                {
-                    int xFloor = (int)(x * ratioX);
-                    var xLerp = x * ratioX - xFloor;
-                    var y1XFloor = y1 + xFloor;
-                    var y2XFloor = y2 + xFloor;
-                    var a = Color32.LerpUnclamped(texColors[y1XFloor], texColors[y1XFloor + 1], xLerp);
-                    var b = Color32.LerpUnclamped(texColors[y2XFloor], texColors[y2XFloor + 1], xLerp);
-                    newColors[yw + x] = Color32.LerpUnclamped(a, b, y * ratioY - yFloor);
-                }
+                texture2D.ReadPixels(new Rect(0.0f, 0.0f, targetX, targetY), 0, 0);
+                texture2D.Apply();
+            }
+            catch
+            {
+                Debug.LogError("Read/Write is not enabled on texture " + texture2D.name);
             }
 
-            source.Resize(newWidth, newHeight);
-            source.SetPixels32(newColors);
-            source.Apply();
-            return source;
+            RenderTexture.ReleaseTemporary(rt);
+            return texture2D;
         }
 
         private static Texture2D AddAlphaAreaToTexture(Texture2D source, Vector2 pivot, int newWidth, int newHeight)
@@ -264,6 +207,60 @@ namespace SpriteAssist
             }
 
             return Vector2.zero;
+        }
+
+        [MenuItem("Assets/Replace Texture", true)]
+        private static bool ReplaceTextureValidate()
+        {
+            var path = AssetDatabase.GetAssetPath(Selection.activeObject);
+
+            if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null)
+                return false;
+
+            return true;
+        }
+
+        private static string sourcePath;
+
+        [MenuItem("Assets/Replace Texture")]
+        //https://hacchi-man.hatenablog.com/entry/2020/01/28/220000
+        private static void ReplaceTexture()
+        {
+            string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+
+            if (string.IsNullOrEmpty(path) || AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null)
+                return;
+            
+            string fullPath = Application.dataPath.Replace("/Assets", "/" + path);
+            string fileName = Path.GetFileName(path);
+            string ext = Path.GetExtension(path).Substring(1);
+            sourcePath = EditorUtility.OpenFilePanel($"Select Replace Texture '{fileName}'", sourcePath, ext);
+
+            if (string.IsNullOrEmpty(sourcePath))
+                return;
+
+            TextureImporter textureImporter =  (TextureImporter)AssetImporter.GetAtPath(path);
+            if (textureImporter.TryGetRawImageSize(out int rawWidth, out int rawHeight) == false)
+                return;
+
+            if (TextureUtil.TryGetRawImageSize(sourcePath, out int newWidth, out int newHeight) == false)
+                return;
+
+            File.Copy(sourcePath, fullPath, true);
+            AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+
+            if (OutlineUtil.HasOutline(textureImporter) == false)
+                return;
+
+            if (rawWidth == newWidth && rawHeight == newHeight)
+                return;
+            
+            TextureImporter newTextureImporter = (TextureImporter)AssetImporter.GetAtPath(path);
+
+            if (EditorUtility.DisplayDialog("Resize Sprite Outline", "Source Texture has Sprite Outline.", "Scale Sprite Outline", "Do Nothing") == false)
+                return;
+
+            OutlineUtil.Resize(newTextureImporter, rawWidth, rawHeight, newWidth, newHeight, ResizeMethod.Scale);
         }
     }
 }

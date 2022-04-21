@@ -1,19 +1,22 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
     public static class TextureUtil
     {
-        public static bool TryGetRawImageSize(this Texture2D asset, TextureImporter importer, out int width, out int height)
+        private static readonly MethodInfo _getWidthAndHeight = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static bool TryGetRawImageSize(this TextureImporter importer, out int width, out int height)
         {
-            if (asset != null)
+            if (_getWidthAndHeight != null)
             {
                 object[] args = new object[] { 0, 0 };
-                MethodInfo mi = typeof(TextureImporter).GetMethod("GetWidthAndHeight", BindingFlags.NonPublic | BindingFlags.Instance);
-                mi.Invoke(importer, args);
+                _getWidthAndHeight.Invoke(importer, args);
 
                 width = (int)args[0];
                 height = (int)args[1];
@@ -23,6 +26,28 @@ namespace SpriteAssist
 
             height = width = 0;
             return false;
+        }
+
+        public static bool TryGetRawImageSize(string externalPath, out int width, out int height)
+        {
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(externalPath);
+                Texture2D newTexture = new Texture2D(2, 2);
+                newTexture.LoadImage(bytes);
+                width = newTexture.width;
+                height = newTexture.height;
+                Object.DestroyImmediate(newTexture);
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                width = 0;
+                height = 0;
+                Debug.LogException(e);
+                return false;
+            }
         }
 
         public static bool IsSingleSprite(this TextureImporterSettings textureImporterSettings)
@@ -39,7 +64,7 @@ namespace SpriteAssist
         {
             string assetPath = AssetDatabase.GetAssetPath(texture);
             
-            if (texture.TryGetRawImageSize(textureImporter, out int rawWidth, out int rawHeight))
+            if (textureImporter.TryGetRawImageSize(out int rawWidth, out int rawHeight))
             {
                 return GetRawTexture(assetPath, texture.name, texture.width, texture.height, rawWidth, rawHeight);
             }
