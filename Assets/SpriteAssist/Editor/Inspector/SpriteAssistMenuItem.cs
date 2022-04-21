@@ -5,6 +5,18 @@ namespace SpriteAssist
 {
     public static class SpriteAssistMenuItem
     {
+        [MenuItem("Assets/SpriteAssist/Replace Texture", priority = 0, validate = true)]
+        private static bool ReplaceTextureValidate()
+        {
+            return ResizeUtil.ReplaceTextureValidate();
+        }
+
+        [MenuItem("Assets/SpriteAssist/Replace Texture", priority = 0)]
+        private static void ReplaceTexture()
+        {
+            ResizeUtil.ReplaceTexture();
+        }
+
         [MenuItem("Assets/SpriteAssist/Swap Sprite Renderer to Mesh Prefab", priority = 700)]
         private static void SwapInProject()
         {
@@ -14,7 +26,6 @@ namespace SpriteAssist
             RendererUtil.SwapAllRecursively(s);
             EditorUtility.DisplayDialog("SpriteAssist", "Done", "OK");
         }
-
 
         [MenuItem("Assets/SpriteAssist/Scale Textures to Multiple of 4", false, 2000)]
         private static void ScaleTextureToMultipleOf4()
