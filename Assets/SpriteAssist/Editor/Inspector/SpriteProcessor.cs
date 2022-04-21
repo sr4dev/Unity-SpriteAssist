@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Codice.Client.Common.GameUI;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -187,18 +186,15 @@ namespace SpriteAssist
                             EditorGUILayout.Space();
                         }
 
-
                         if (_configData.mode == SpriteConfigData.Mode.ComplexMesh)
                         {
                             using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
                                 EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
                         }
 
-
                         _isPreviewChanged |= checkChangedMeshSettings.changed;
                         _isDataChanged |= checkChangedMeshSettings.changed;
                     }
-
 
                     if (_configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent || _configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
                     {
@@ -223,101 +219,104 @@ namespace SpriteAssist
                             }
                         }
 
-                        EditorGUILayout.LabelField("Sprite Outline");
-
-                        using (new EditorGUI.IndentLevelScope())
+                        if (_mainImportData.HasSpriteOutline)
                         {
-                            EditorGUILayout.LabelField("Translate");
-
-                            using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 5) }))
-                            {
-                                if (GUILayout.RepeatButton("←"))
-                                {
-                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Left);
-                                }
-
-                                if (GUILayout.RepeatButton("↑"))
-                                {
-                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Up);
-                                }
-
-                                if (GUILayout.RepeatButton("↓"))
-                                {
-                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Down);
-                                }
-
-                                if (GUILayout.RepeatButton("→"))
-                                {
-                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Right);
-                                }
-                            }
-
-                            EditorGUILayout.LabelField("Scale");
-                            var offsetX = _scaleMethod == 0 ? 45 : 0;
+                            EditorGUILayout.LabelField("Sprite Outline");
 
                             using (new EditorGUI.IndentLevelScope())
                             {
-                                _scaleMethod = EditorGUILayout.Popup("Method", _scaleMethod, new string[] { "Step", "Input" });
+                                EditorGUILayout.LabelField("Translate");
 
-                                using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
+                                using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 5) }))
                                 {
-                                    if (_scaleMethod == 0)
+                                    if (GUILayout.RepeatButton("←"))
                                     {
-                                        if (GUILayout.Button("Width +1%"))
-                                        {
-                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
-                                        }
-
-                                        if (GUILayout.Button("Width -1%"))
-                                        {
-                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
-                                        }
+                                        OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Left);
                                     }
-                                    else
+
+                                    if (GUILayout.RepeatButton("↑"))
                                     {
-                                        _spriteOutlineScaleWidth = EditorGUILayout.FloatField("Width", _spriteOutlineScaleWidth);
-                                        GUILayout.Space(-45);
-                                        EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
+                                        OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Up);
+                                    }
+
+                                    if (GUILayout.RepeatButton("↓"))
+                                    {
+                                        OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Down);
+                                    }
+
+                                    if (GUILayout.RepeatButton("→"))
+                                    {
+                                        OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Right);
                                     }
                                 }
 
-                                using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
+                                EditorGUILayout.LabelField("Scale");
+                                var offsetX = _scaleMethod == 0 ? 45 : 0;
+
+                                using (new EditorGUI.IndentLevelScope())
                                 {
-                                    if (_scaleMethod == 0)
+                                    _scaleMethod = EditorGUILayout.Popup("Method", _scaleMethod, new string[] { "Step", "Input" });
+
+                                    using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
                                     {
-                                        if (GUILayout.Button("Height +1%"))
+                                        if (_scaleMethod == 0)
                                         {
-                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, ResizeUtil.ResizeMethod.Scale);
+                                            if (GUILayout.Button("Width +1%"))
+                                            {
+                                                OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
+                                            }
+
+                                            if (GUILayout.Button("Width -1%"))
+                                            {
+                                                OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
+                                            }
                                         }
-
-                                        if (GUILayout.Button("Height -1%"))
+                                        else
                                         {
-                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, ResizeUtil.ResizeMethod.Scale);
+                                            _spriteOutlineScaleWidth = EditorGUILayout.FloatField("Width", _spriteOutlineScaleWidth);
+                                            GUILayout.Space(-45);
+                                            EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
                                         }
-                                        //GUILayout.FlexibleSpace();
                                     }
-                                    else
-                                    {
-                                        _spriteOutlineScaleHeight = EditorGUILayout.FloatField("Height", _spriteOutlineScaleHeight);
-                                        GUILayout.Space(-45);
-                                        EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
-                                    }
-                                }
 
-                                if (_scaleMethod != 0)
-                                {
-                                    using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 0) }))
+                                    using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
                                     {
-                                        if (GUILayout.Button("Set Scale"))
+                                        if (_scaleMethod == 0)
                                         {
-                                            const int additionalScale = 100;
-                                            const int baseScale = (int)(DEFAULT_PERCENTAGE * additionalScale);
-                                            int floatToIntWidth = (int)(_spriteOutlineScaleWidth * additionalScale);
-                                            int floatToIntHeight = (int)(_spriteOutlineScaleHeight * additionalScale);
-                                            OutlineUtil.Resize(_mainImportData.textureImporter, baseScale, baseScale, floatToIntWidth, floatToIntHeight, ResizeUtil.ResizeMethod.Scale);
+                                            if (GUILayout.Button("Height +1%"))
+                                            {
+                                                OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, ResizeUtil.ResizeMethod.Scale);
+                                            }
 
-                                            _spriteOutlineScaleWidth = DEFAULT_PERCENTAGE;
-                                            _spriteOutlineScaleHeight = DEFAULT_PERCENTAGE;
+                                            if (GUILayout.Button("Height -1%"))
+                                            {
+                                                OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, ResizeUtil.ResizeMethod.Scale);
+                                            }
+                                            //GUILayout.FlexibleSpace();
+                                        }
+                                        else
+                                        {
+                                            _spriteOutlineScaleHeight = EditorGUILayout.FloatField("Height", _spriteOutlineScaleHeight);
+                                            GUILayout.Space(-45);
+                                            EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
+                                        }
+                                    }
+
+                                    if (_scaleMethod != 0)
+                                    {
+                                        using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 0) }))
+                                        {
+                                            if (GUILayout.Button("Set Scale"))
+                                            {
+                                                const int additionalScale = 100;
+                                                const int baseScale = (int)(DEFAULT_PERCENTAGE * additionalScale);
+                                                int floatToIntWidth = (int)(_spriteOutlineScaleWidth * additionalScale);
+                                                int floatToIntHeight = (int)(_spriteOutlineScaleHeight * additionalScale);
+                                                OutlineUtil.Resize(_mainImportData.textureImporter, baseScale, baseScale, floatToIntWidth, floatToIntHeight, ResizeUtil.ResizeMethod.Scale);
+
+                                                _spriteOutlineScaleWidth = DEFAULT_PERCENTAGE;
+                                                _spriteOutlineScaleHeight = DEFAULT_PERCENTAGE;
+                                            }
                                         }
                                     }
                                 }

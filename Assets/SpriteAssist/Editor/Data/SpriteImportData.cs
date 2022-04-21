@@ -27,6 +27,8 @@ namespace SpriteAssist
 
         public GameObject MeshPrefab { get { return FindExternalObject() as GameObject; } }
 
+        public bool HasSpriteOutline { get; private set; }
+
         public static bool TryGetSpriteImportData(Object obj, out SpriteImportData spriteImportData)
         {
             spriteImportData = null;
@@ -61,6 +63,7 @@ namespace SpriteAssist
             dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
+            HasSpriteOutline = OutlineUtil.HasOutline(textureImporter);
         }
 
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)

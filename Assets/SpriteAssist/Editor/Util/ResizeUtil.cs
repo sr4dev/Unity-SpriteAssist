@@ -209,8 +209,7 @@ namespace SpriteAssist
             return Vector2.zero;
         }
 
-        [MenuItem("Assets/Replace Texture", true)]
-        private static bool ReplaceTextureValidate()
+        public static bool ReplaceTextureValidate()
         {
             var path = AssetDatabase.GetAssetPath(Selection.activeObject);
 
@@ -221,10 +220,9 @@ namespace SpriteAssist
         }
 
         private static string sourcePath;
-
-        [MenuItem("Assets/Replace Texture")]
+        
         //https://hacchi-man.hatenablog.com/entry/2020/01/28/220000
-        private static void ReplaceTexture()
+        public static void ReplaceTexture()
         {
             string path = AssetDatabase.GetAssetPath(Selection.activeObject);
 
