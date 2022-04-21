@@ -33,7 +33,13 @@ namespace SpriteAssist
             foreach (var wireframe in _wireframes)
             {
                 wireframe.UpdateAndResize(this.Rect, baseSprite, dummySprite, _textureInfo, configData);
-                _infoText += wireframe.GetInfo(textureInfo) + "\n";
+
+                var info = wireframe.GetInfo(textureInfo);
+                
+                if (string.IsNullOrEmpty(info) == false)
+                {
+                    _infoText += info + "\n";
+                }
             }
         }
 

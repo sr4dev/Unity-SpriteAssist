@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Codice.Client.Common.GameUI;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -8,8 +9,11 @@ namespace SpriteAssist
 {
     public class SpriteProcessor : IDisposable
     {
+        private const int DEFAULT_PERCENTAGE = 100;
+
         private static bool _isOpenMeshSettings = true;
         private static bool _isOpenMeshPrefab = true;
+        private static int _scaleMethod = 0;
 
         private readonly SpriteImportData _mainImportData;
         private readonly SpritePreview _preview;
@@ -20,6 +24,9 @@ namespace SpriteAssist
         private SpriteConfigData _configData;
         private MeshCreatorBase _meshCreator;
         private Object[] _targets;
+
+        private float _spriteOutlineScaleWidth = DEFAULT_PERCENTAGE;
+        private float _spriteOutlineScaleHeight = DEFAULT_PERCENTAGE;
 
         public TextureImporter TextureImporter => _mainImportData.textureImporter;
 
@@ -140,12 +147,34 @@ namespace SpriteAssist
                                 _configData.opaqueDetail = EditorGUILayout.Slider("Detail", _configData.opaqueDetail, 0.001f, 1f);
                                 _configData.opaqueAlphaTolerance = (byte)EditorGUILayout.Slider("Alpha Tolerance", _configData.opaqueAlphaTolerance, 0, 254);
                                 _configData.opaqueExtrude = EditorGUILayout.Slider("Extrude", _configData.opaqueExtrude, 0, 1);
+                                EditorGUILayout.Space();
+                            }
+                        }
 
-                                using (new EditorGUI.DisabledScope(true))
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.GridMesh))
+                        {
+                            EditorGUILayout.LabelField("Grid Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
+
+                                if (_configData.mode != SpriteConfigData.Mode.OpaqueEdgeGridMesh)
                                 {
-                                    //force true
-                                    EditorGUILayout.Toggle("Detect Holes (forced)", true);
+                                    _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
                                 }
+
+                                EditorGUILayout.Space();
+                            }
+                        }
+
+                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.PixelMesh))
+                        {
+                            EditorGUILayout.LabelField("Pixel Mesh");
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
+                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
 
                                 EditorGUILayout.Space();
                             }
@@ -158,11 +187,6 @@ namespace SpriteAssist
                             EditorGUILayout.Space();
                         }
 
-                        if (_configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent || _configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
-                        {
-                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
-                                EditorGUILayout.HelpBox("Select other mode to use SpriteAssist.", MessageType.Info);
-                        }
 
                         if (_configData.mode == SpriteConfigData.Mode.ComplexMesh)
                         {
@@ -170,34 +194,135 @@ namespace SpriteAssist
                                 EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
                         }
 
-                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.GridMesh))
-                        {
-                            EditorGUILayout.LabelField("Grid Mesh");
-                            using (new EditorGUI.IndentLevelScope())
-                            {
-                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
-                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
-                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
-                                
-                                EditorGUILayout.Space();
-                            }
-                        }
-
-                        if (_configData.mode.HasFlag(SpriteConfigData.Mode.PixelMesh))
-                        {
-                            EditorGUILayout.LabelField("Pixel Mesh");
-                            using (new EditorGUI.IndentLevelScope())
-                            {
-                                _configData.gridSize = EditorGUILayout.IntSlider("Size", _configData.gridSize, 1, 128);
-                                _configData.gridTolerance = EditorGUILayout.Slider("Alpha Tolerance", _configData.gridTolerance, 0, 0.999f);
-                                _configData.detectHoles = EditorGUILayout.Toggle("Detect Holes", _configData.detectHoles);
-
-                                EditorGUILayout.Space();
-                            }
-                        }
 
                         _isPreviewChanged |= checkChangedMeshSettings.changed;
                         _isDataChanged |= checkChangedMeshSettings.changed;
+                    }
+
+
+                    if (_configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent || _configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            EditorGUILayout.LabelField("Unity Default");
+
+                            GUILayout.FlexibleSpace();
+
+                            if (GUILayout.Button("Sprite Editor"))
+                            {
+                                var t = Type.GetType("UnityEditor.U2D.Sprites.SpriteEditorWindow,Unity.2D.Sprite.Editor");
+
+                                if (t != null)
+                                {
+                                    EditorWindow.GetWindow(t);
+                                }
+                                else
+                                {
+                                    Debug.LogError("Sprite Editor Type name changed.");
+                                }
+                            }
+                        }
+
+                        EditorGUILayout.LabelField("Sprite Outline");
+
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            EditorGUILayout.LabelField("Translate");
+
+                            using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 5) }))
+                            {
+                                if (GUILayout.RepeatButton("←"))
+                                {
+                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Left);
+                                }
+
+                                if (GUILayout.RepeatButton("↑"))
+                                {
+                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Up);
+                                }
+
+                                if (GUILayout.RepeatButton("↓"))
+                                {
+                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Down);
+                                }
+
+                                if (GUILayout.RepeatButton("→"))
+                                {
+                                    OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Right);
+                                }
+                            }
+
+                            EditorGUILayout.LabelField("Scale");
+                            var offsetX = _scaleMethod == 0 ? 45 : 0;
+
+                            using (new EditorGUI.IndentLevelScope())
+                            {
+                                _scaleMethod = EditorGUILayout.Popup("Method", _scaleMethod, new string[] { "Step", "Input" });
+
+                                using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
+                                {
+                                    if (_scaleMethod == 0)
+                                    {
+                                        if (GUILayout.Button("Width +1%"))
+                                        {
+                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
+                                        }
+
+                                        if (GUILayout.Button("Width -1%"))
+                                        {
+                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, DEFAULT_PERCENTAGE, ResizeUtil.ResizeMethod.Scale);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _spriteOutlineScaleWidth = EditorGUILayout.FloatField("Width", _spriteOutlineScaleWidth);
+                                        GUILayout.Space(-45);
+                                        EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
+                                    }
+                                }
+
+                                using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(offsetX, 0, 0, 0) }))
+                                {
+                                    if (_scaleMethod == 0)
+                                    {
+                                        if (GUILayout.Button("Height +1%"))
+                                        {
+                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE + 1, ResizeUtil.ResizeMethod.Scale);
+                                        }
+
+                                        if (GUILayout.Button("Height -1%"))
+                                        {
+                                            OutlineUtil.Resize(_mainImportData.textureImporter, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE, DEFAULT_PERCENTAGE - 1, ResizeUtil.ResizeMethod.Scale);
+                                        }
+                                        //GUILayout.FlexibleSpace();
+                                    }
+                                    else
+                                    {
+                                        _spriteOutlineScaleHeight = EditorGUILayout.FloatField("Height", _spriteOutlineScaleHeight);
+                                        GUILayout.Space(-45);
+                                        EditorGUILayout.LabelField("%", GUILayout.Width(65), GUILayout.ExpandWidth(false));
+                                    }
+                                }
+
+                                if (_scaleMethod != 0)
+                                {
+                                    using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 0) }))
+                                    {
+                                        if (GUILayout.Button("Set Scale"))
+                                        {
+                                            const int additionalScale = 100;
+                                            const int baseScale = (int)(DEFAULT_PERCENTAGE * additionalScale);
+                                            int floatToIntWidth = (int)(_spriteOutlineScaleWidth * additionalScale);
+                                            int floatToIntHeight = (int)(_spriteOutlineScaleHeight * additionalScale);
+                                            OutlineUtil.Resize(_mainImportData.textureImporter, baseScale, baseScale, floatToIntWidth, floatToIntHeight, ResizeUtil.ResizeMethod.Scale);
+
+                                            _spriteOutlineScaleWidth = DEFAULT_PERCENTAGE;
+                                            _spriteOutlineScaleHeight = DEFAULT_PERCENTAGE;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -15,6 +15,14 @@ namespace SpriteAssist
         private const float INT_TO_FLOAT_SCALE = 1 / FLOAT_TO_INT_SCALE;
         private const float EXTRUDE_SCALE = -500;
 
+        public enum TranslateDirection
+        {
+            Left,
+            Up,
+            Down,
+            Right
+        }
+
         public static Vector2[][] GenerateOutline(Sprite sprite, SpriteConfigData data, MeshRenderType meshRenderType)
         {
             switch (meshRenderType)
@@ -38,7 +46,7 @@ namespace SpriteAssist
                     return GenerateGridOutline(sprite, data.gridSize, data.gridTolerance, data.detectHoles);
 
                 case MeshRenderType.TightGrid:
-                    return GenerateTightGridOutline(sprite, data.gridSize, data.gridTolerance, data.detectHoles);
+                    return GenerateTightGridOutline(sprite, data.gridSize, data.gridTolerance);
                     
                 case MeshRenderType.Pixel:
                     return GeneratePixelEdgeOutline(sprite, data.gridSize, data.gridTolerance, false);
@@ -48,11 +56,59 @@ namespace SpriteAssist
             }
         }
 
-        public static void Resize(TextureImporter textureImporter, string path, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod)
+        public static void Translate(TextureImporter textureImporter, TranslateDirection direction)
         {
             var serializedObject = new SerializedObject(textureImporter);
             var outlineSP = GetOutlineProperty(serializedObject, SpriteImportMode.Single, 0);
             var outlines = GetOutlines(outlineSP);
+
+            if (outlines.Count == 0)
+            {
+                return;
+            }
+
+            var offset = new Vector2();
+
+            switch (direction)
+            {
+                case TranslateDirection.Left:
+                    offset.x--;
+                    break;
+                case TranslateDirection.Up:
+                    offset.y++;
+                    break;
+                case TranslateDirection.Down:
+                    offset.y--;
+                    break;
+                case TranslateDirection.Right:
+                    offset.x++;
+                    break;
+            }
+            
+            foreach (var outline in outlines)
+            {
+                for (int i = 0; i < outline.Length; i++)
+                {
+                    outline[i] += offset;
+                }
+            }
+
+            SetOutlines(outlineSP, outlines);
+            serializedObject.ApplyModifiedProperties();
+
+            AssetDatabase.ImportAsset(textureImporter.assetPath, ImportAssetOptions.DontDownloadFromCacheServer);
+        }
+
+        public static void Resize(TextureImporter textureImporter, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod)
+        {
+            var serializedObject = new SerializedObject(textureImporter);
+            var outlineSP = GetOutlineProperty(serializedObject, SpriteImportMode.Single, 0);
+            var outlines = GetOutlines(outlineSP);
+
+            if (outlines.Count == 0)
+            {
+                return;
+            }
 
             switch (resizeMethod)
             {
@@ -87,7 +143,7 @@ namespace SpriteAssist
             SetOutlines(outlineSP, outlines);
             serializedObject.ApplyModifiedProperties();
 
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.DontDownloadFromCacheServer);
+            AssetDatabase.ImportAsset(textureImporter.assetPath, ImportAssetOptions.DontDownloadFromCacheServer);
         }
 
         private static Vector2[][] GenerateGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
@@ -140,7 +196,7 @@ namespace SpriteAssist
             return ConvertToVector2Array(intersectionPaths, INT_TO_FLOAT_SCALE);
         }
 
-        private static Vector2[][] GenerateTightGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
+        private static Vector2[][] GenerateTightGridOutline(Sprite sprite, int gridSize, float tolerance)
         {
             Texture2D texture = sprite.texture;
             Vector2 offset = new Vector2(texture.width, texture.height) * -sprite.GetNormalizedPivot();
@@ -158,7 +214,7 @@ namespace SpriteAssist
                     rect.width = Mathf.Min(rect.width, texture.width - rect.x);
                     rect.height = Mathf.Min(rect.height, texture.height - rect.y);
 
-                    if (dataDetectHoles && !HasTightGrid(texture, rect, tolerance))
+                    if (!HasTightGrid(texture, rect, tolerance))
                     {
                         continue;
                     }
@@ -383,6 +439,14 @@ namespace SpriteAssist
             return mode == SpriteImportMode.Multiple ? importer.FindProperty("m_SpriteSheet.m_Sprites").GetArrayElementAtIndex(index).FindPropertyRelative("m_Outline") : importer.FindProperty("m_SpriteSheet.m_Outline");
         }
 
+        public static bool HasOutline(TextureImporter textureImporter)
+        {
+            var serializedObject = new SerializedObject(textureImporter);
+            var outlineSP = GetOutlineProperty(serializedObject, SpriteImportMode.Single, 0);
+            var outlines = GetOutlines(outlineSP);
+            return outlines.Count != 0;
+        }
+
         private static List<Vector2[]> GetOutlines(SerializedProperty outlineSP)
         {
             var outline = new List<Vector2[]>();
@@ -408,7 +472,7 @@ namespace SpriteAssist
             return outline;
         }
 
-        public static void SetOutlines(SerializedProperty outlineSP, List<Vector2[]> outline)
+        private static void SetOutlines(SerializedProperty outlineSP, List<Vector2[]> outline)
         {
             outlineSP.arraySize = outline.Count;
             if (outline.Count > 0)
