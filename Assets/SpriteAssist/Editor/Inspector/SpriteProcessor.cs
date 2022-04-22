@@ -229,22 +229,22 @@ namespace SpriteAssist
 
                                 using (new EditorGUILayout.HorizontalScope(new GUIStyle { margin = new RectOffset(45, 0, 0, 5) }))
                                 {
-                                    if (GUILayout.RepeatButton("←"))
+                                    if (GUILayout.Button("←"))
                                     {
                                         OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Left);
                                     }
 
-                                    if (GUILayout.RepeatButton("↑"))
+                                    if (GUILayout.Button("↑"))
                                     {
                                         OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Up);
                                     }
 
-                                    if (GUILayout.RepeatButton("↓"))
+                                    if (GUILayout.Button("↓"))
                                     {
                                         OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Down);
                                     }
 
-                                    if (GUILayout.RepeatButton("→"))
+                                    if (GUILayout.Button("→"))
                                     {
                                         OutlineUtil.Translate(_mainImportData.textureImporter, OutlineUtil.TranslateDirection.Right);
                                     }
