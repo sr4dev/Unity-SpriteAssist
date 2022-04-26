@@ -72,6 +72,13 @@ This extension uses AssetImporter.userData of Texture asset. If your project alr
 
 Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReference/AssetImporter-userData.html)
 
+## Roadmap
+- Support pre-packed Sprite.
+- Support Sprite Mode: Multiple.
+- Add Sprite Animation example.
+- Add tutorial(pdf, movies...).
+- Release to the Asset Store.
+
 ## License
 MIT License
 
