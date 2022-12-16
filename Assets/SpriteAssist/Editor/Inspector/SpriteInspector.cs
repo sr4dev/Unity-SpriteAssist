@@ -63,7 +63,7 @@ namespace SpriteAssist
                 return;
             }
 
-            if (Selection.objects.Length <= SpriteAssistSettings.Settings.maxThumbnailPreviewCount)
+            if (Selection.objects.Length <= SpriteAssistSettings.instance.maxThumbnailPreviewCount)
             {
                 if (_oldSprite != sprite || isSpriteReloaded)
                 {
