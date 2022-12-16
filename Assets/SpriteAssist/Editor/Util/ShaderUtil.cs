@@ -23,12 +23,12 @@ namespace SpriteAssist
 
         public static Shader FindOpaqueShader(string name)
         {
-            return FindShader(name, SpriteAssistSettings.Settings.defaultOpaqueShaderName);
+            return FindShader(name, SpriteAssistSettings.instance.defaultOpaqueShaderName);
         }
 
         public static Shader FindTransparentShader(string name)
         {
-            return FindShader(name, SpriteAssistSettings.Settings.defaultTransparentShaderName);
+            return FindShader(name, SpriteAssistSettings.instance.defaultTransparentShaderName);
         }
     }
 }

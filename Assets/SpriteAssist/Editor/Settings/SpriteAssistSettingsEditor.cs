@@ -15,8 +15,9 @@ namespace SpriteAssist
                 label = "SpriteAssist",
                 guiHandler = (_) =>
                 {
-                    SerializedObject settings = SpriteAssistSettings.GetSerializedSettings();
+                    SerializedObject settings = new SerializedObject(SpriteAssistSettings.instance);
                     EditorGUILayout.Space();
+
                     using (new EditorGUI.IndentLevelScope())
                     {
                         EditorGUILayout.LabelField("Mesh Prefab", EditorStyles.boldLabel);
@@ -24,28 +25,28 @@ namespace SpriteAssist
                         EditorGUILayout.LabelField("Prefab File");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabNamePrefix)), new GUIContent("File Name Prefix"));
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabNameSuffix)), new GUIContent("File Name Suffix"));
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.prefabRelativePath)), new GUIContent("Relative Path"));
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)), new GUIContent("Auto Rename", "Rename prefab when renamed texture asset"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.prefabNamePrefix)), new GUIContent("File Name Prefix"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.prefabNameSuffix)), new GUIContent("File Name Suffix"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.prefabRelativePath)), new GUIContent("Relative Path"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically)), new GUIContent("Auto Rename", "Rename prefab when renamed texture asset"));
                             EditorGUILayout.Space();
                         }
 
                         EditorGUILayout.LabelField("Default Shader");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultTransparentShaderName)), new GUIContent("Transparent"));
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultOpaqueShaderName)), new GUIContent("Opaque"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultTransparentShaderName)), new GUIContent("Transparent"));
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultOpaqueShaderName)), new GUIContent("Opaque"));
                             EditorGUILayout.Space();
                         }
 
                         EditorGUILayout.LabelField("Tags and Layers");
                         using (new EditorGUI.IndentLevelScope())
                         {
-                            var tagProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultTag));
-                            var layerProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultLayer));
-                            var sortingLayerProperty = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultSortingLayerId));
-                            var sortingOrder = settings.FindProperty(nameof(SpriteAssistSettings.Settings.defaultSortingOrder));
+                            var tagProperty = settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultTag));
+                            var layerProperty = settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultLayer));
+                            var sortingLayerProperty = settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultSortingLayerId));
+                            var sortingOrder = settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultSortingOrder));
 
                             tagProperty.stringValue = EditorGUILayout.TagField("Tag", tagProperty.stringValue);
                             layerProperty.intValue = EditorGUILayout.LayerField("Layer", layerProperty.intValue);
@@ -63,7 +64,7 @@ namespace SpriteAssist
                         }
 
                         EditorGUILayout.LabelField("Preview thumbnail", EditorStyles.boldLabel);
-                        EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.Settings.maxThumbnailPreviewCount)), new GUIContent("Max count"));
+                        EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.maxThumbnailPreviewCount)), new GUIContent("Max count"));
                         EditorGUILayout.Space();
                     }
                     

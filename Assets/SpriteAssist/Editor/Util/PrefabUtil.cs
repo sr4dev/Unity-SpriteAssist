@@ -33,12 +33,12 @@ namespace SpriteAssist
 
         public static GameObject CreateMeshPrefab(TextureInfo textureInfo, bool hasSubObject)
         {
-            string prefix = SpriteAssistSettings.Settings.prefabNamePrefix;
-            string suffix = SpriteAssistSettings.Settings.prefabNameSuffix;
+            string prefix = SpriteAssistSettings.instance.prefabNamePrefix;
+            string suffix = SpriteAssistSettings.instance.prefabNameSuffix;
             string objectName = $"{prefix}{textureInfo.textureName}{suffix}";
 
             string currentDirectory = Path.GetDirectoryName(textureInfo.textureAssetPath);
-            string relativePath = SpriteAssistSettings.Settings.prefabRelativePath;
+            string relativePath = SpriteAssistSettings.instance.prefabRelativePath;
             string fileName = $"{objectName}.prefab";
 
             if (!string.IsNullOrEmpty(relativePath))
@@ -97,8 +97,8 @@ namespace SpriteAssist
 
         public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
-            prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.Settings.defaultLayer;
-            string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.Settings.defaultTag;
+            prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.instance.defaultLayer;
+            string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.instance.defaultTag;
 
             if (string.IsNullOrEmpty(tag))
             {
@@ -126,8 +126,8 @@ namespace SpriteAssist
             }
             else
             {
-                meshRenderer.sortingLayerID = SpriteAssistSettings.Settings.defaultSortingLayerId;
-                meshRenderer.sortingOrder = SpriteAssistSettings.Settings.defaultSortingOrder;
+                meshRenderer.sortingLayerID = SpriteAssistSettings.instance.defaultSortingLayerId;
+                meshRenderer.sortingOrder = SpriteAssistSettings.instance.defaultSortingOrder;
             }
 
             //create new mesh
