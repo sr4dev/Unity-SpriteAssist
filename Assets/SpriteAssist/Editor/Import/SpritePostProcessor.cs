@@ -26,7 +26,7 @@ namespace SpriteAssist
             }
             
             //auto rename
-            if (SpriteAssistSettings.Settings.enableRenameMeshPrefabAutomatically)
+            if (SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically)
             {
                 EditorApplication.delayCall += () =>
                 {

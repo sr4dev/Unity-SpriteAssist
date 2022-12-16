@@ -130,7 +130,7 @@ namespace SpriteAssist
             RenderTexture rt = RenderTexture.GetTemporary(targetX, targetY, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
             RenderTexture.active = rt;
             Graphics.Blit(texture2D, rt);
-            texture2D.Resize(targetX, targetY, texture2D.format, mipmap);
+            texture2D.Reinitialize(targetX, targetY, texture2D.format, mipmap);
             texture2D.filterMode = filter;
 
             try
