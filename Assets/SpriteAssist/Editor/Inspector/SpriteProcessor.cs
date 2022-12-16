@@ -377,7 +377,7 @@ namespace SpriteAssist
                                 }
                                 else
                                 {
-                                    EditorGUILayout.TagField("Tag", SpriteAssistSettings.Settings.defaultTag);
+                                    EditorGUILayout.TagField("Tag", SpriteAssistSettings.instance.defaultTag);
                                 }
                             }
                         }
@@ -395,7 +395,7 @@ namespace SpriteAssist
                                 }
                                 else
                                 {
-                                    EditorGUILayout.LayerField("Layer", SpriteAssistSettings.Settings.defaultLayer);
+                                    EditorGUILayout.LayerField("Layer", SpriteAssistSettings.instance.defaultLayer);
                                 }
                             }
                         }
@@ -416,9 +416,9 @@ namespace SpriteAssist
                                 }
                                 else
                                 {
-                                    int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == SpriteAssistSettings.Settings.defaultSortingLayerId);
+                                    int index = Array.FindIndex(SortingLayer.layers, layer => layer.id == SpriteAssistSettings.instance.defaultSortingLayerId);
                                     EditorGUILayout.Popup("Sorting Layer", index, (from layer in SortingLayer.layers select layer.name).ToArray());
-                                    EditorGUILayout.IntField(SpriteAssistSettings.Settings.defaultSortingOrder, GUILayout.Width(60));
+                                    EditorGUILayout.IntField(SpriteAssistSettings.instance.defaultSortingOrder, GUILayout.Width(60));
                                 }
                             }
                         }
