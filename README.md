@@ -84,12 +84,12 @@ This extension uses AssetImporter.userData of Texture asset. If your project alr
 Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReference/AssetImporter-userData.html)
 
 ## ⚡Known Issues
-In Unity 2022.2.x when using the Sprite Atlas V2, the following issues may occur:
+In Unity 2022.2.x when using the **Sprite Atlas V2 - Enabled**, the following issues may occur:
 
 - Preview is not displayed correctly.
 - Mesh Prefab is not generated.
 - sprites are displayed upside-down.
-It is expected that resolving this issue may take some time, so it is recommended to use Sprite Atlas V1 for stable usage.
+It is expected that resolving this issue may take some time, so it is recommended to use **Sprite Atlas V2 - Enabled For Builds** or **Sprite Atlas V1** for stable usage.
 
 Unity Document: [Sprite Atlas v2](https://docs.unity3d.com/2022.2/Documentation/Manual/SpriteAtlasV2.html)
 
