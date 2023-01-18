@@ -6,9 +6,6 @@
 <img src="https://user-images.githubusercontent.com/9159336/213104399-26e02766-dd83-467c-a486-37b17b4a5081.png" width="250">
 <img src="https://user-images.githubusercontent.com/9159336/213102784-29a08fcf-7a0f-46b3-a1b5-f3d2f3be3422.png" width="250">
 <img src="https://user-images.githubusercontent.com/9159336/213102924-89149b98-49de-488b-9437-9a7bf9a2da48.png" width="250">
-</p>
-
-<p>
 <img src="https://user-images.githubusercontent.com/9159336/213102642-ce282867-8a45-47d9-a426-dbc32a733483.png" width="250">
 <img src="https://user-images.githubusercontent.com/9159336/213103066-fbfbf2fe-56b5-4f08-b0c3-f30d19b93fa1.png" width="250">
 <img src="https://user-images.githubusercontent.com/9159336/213104230-d421c911-4441-4b3a-a2a2-928884cc753e.png" width="250">
