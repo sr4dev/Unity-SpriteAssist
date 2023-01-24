@@ -35,11 +35,11 @@ namespace SpriteAssist
         {
             string prefix = SpriteAssistSettings.instance.prefabNamePrefix;
             string suffix = SpriteAssistSettings.instance.prefabNameSuffix;
-            string objectName = $"{prefix}{textureInfo.textureName}{suffix}";
-
+            string textureFileName = Path.GetFileNameWithoutExtension(textureInfo.textureAssetPath);
+            string objectName = $"{prefix}{textureFileName}{suffix}";
             string currentDirectory = Path.GetDirectoryName(textureInfo.textureAssetPath);
             string relativePath = SpriteAssistSettings.instance.prefabRelativePath;
-            string fileName = $"{objectName}.prefab";
+            string path = Path.Combine(currentDirectory, $"{textureFileName}.prefab");
 
             if (!string.IsNullOrEmpty(relativePath))
             {
@@ -54,7 +54,6 @@ namespace SpriteAssist
                 }
             }
 
-            string path = Path.Combine(currentDirectory, fileName);
             GameObject instance = new GameObject(objectName);
 
             if (hasSubObject)
