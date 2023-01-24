@@ -62,10 +62,17 @@ namespace SpriteAssist
                 TriangulationUtil.Triangulate(paths, configData.edgeSmoothing, configData.useNonZero, out vertices, out triangles);
             }
 
-            //validate
+            //validate max
             if (vertices.Length >= ushort.MaxValue)
             {
                 Debug.LogErrorFormat($"Too many vertices! Sprite '{sprite.name}' has {vertices.Length} vertices.");
+                return false;
+            }
+
+            // validate empty
+            if (vertices.Length <= 0)
+            {
+                Debug.LogErrorFormat($"No vertex found! Sprite '{sprite.name}' has something wrong.");
                 return false;
             }
 
