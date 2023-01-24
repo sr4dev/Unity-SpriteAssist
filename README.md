@@ -18,9 +18,9 @@ Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more
 Unity 2019.4 or later versions
 
 ## 📝Features
-- **Dynamic preview**
-- **Make a transparent, opaque, complex(transparent + opaque) mesh**
-- **Convert Sprite to MeshRenderer Prefab**
+- Control Vertex Easily with a Sliderbar.
+- Make a transparent, opaque, complex(transparent + opaque) mesh
+- Convert Sprite to MeshRenderer Prefab
 
 ## 📦Installation
 ### Unity Package Manager
