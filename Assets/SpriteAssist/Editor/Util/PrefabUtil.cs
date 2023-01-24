@@ -35,7 +35,7 @@ namespace SpriteAssist
         {
             string prefix = SpriteAssistSettings.instance.prefabNamePrefix;
             string suffix = SpriteAssistSettings.instance.prefabNameSuffix;
-            string textureFileName = Path.GetFileName(textureInfo.textureAssetPath);
+            string textureFileName = Path.GetFileNameWithoutExtension(textureInfo.textureAssetPath);
             string objectName = $"{prefix}{textureFileName}{suffix}";
             string currentDirectory = Path.GetDirectoryName(textureInfo.textureAssetPath);
             string relativePath = SpriteAssistSettings.instance.prefabRelativePath;
