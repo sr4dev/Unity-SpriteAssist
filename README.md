@@ -43,8 +43,7 @@ Clone or download this repository and copy `Assets/SpriteAssist` folder to your 
 
 ## ✏️How to use
 - Select a Sprite asset in the Project window.
-- Check the `Enable SpriteAssist` on the Inspector window.
-- Adjust Mode and parameters.
+- Select a Mode and adjust parameters.
 
 ### Mode
 ![image](https://user-images.githubusercontent.com/9159336/97450951-9ca7a580-1976-11eb-86f7-4e18775dd9b0.png)
