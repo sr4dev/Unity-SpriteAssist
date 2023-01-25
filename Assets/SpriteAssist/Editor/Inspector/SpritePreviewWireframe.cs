@@ -11,11 +11,14 @@ namespace SpriteAssist
 
         private const string SHADER_NAME = "Unlit/Transparent";
         private static readonly int _mainTex = Shader.PropertyToID("_MainTex");
-        private Material _material;
-        private Vector2[] _vertices = new Vector2[0];
-        private Vector2[] _scaledVertices = new Vector2[0];
-        private ushort[] _triangles = new ushort[0];
+        
+        private readonly Material _material;
         private readonly MeshRenderType _meshRenderType;
+        
+        private Vector2[] _vertices = Array.Empty<Vector2>();
+        private Vector2[] _scaledVertices = Array.Empty<Vector2>();
+        private ushort[] _triangles = Array.Empty<ushort>();
+        
 
         public SpritePreviewWireframe(Color color, MeshRenderType meshRenderType)
         {
