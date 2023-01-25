@@ -88,10 +88,10 @@ namespace SpriteAssist
 
             if (textureImporter.TryGetRawImageSize(out int rawWidth, out int rawHeight))
             {
-                string name = originalSprite.texture.name;
+                string name = originalSprite.name;
                 float pixelsPerUnit = originalSprite.pixelsPerUnit;
-                int originalWidth = originalSprite.texture.width;
-                int originalHeight = originalSprite.texture.height;
+                int originalWidth = Mathf.RoundToInt(originalSprite.rect.size.x);
+                int originalHeight = Mathf.RoundToInt(originalSprite.rect.size.y);
                 Vector2 pivot = originalSprite.GetNormalizedPivot();
                 Rect rect = new Rect(0, 0, originalWidth, originalHeight);
                 Texture2D rawTexture = TextureUtil.GetRawTexture(assetPath, name, originalWidth, originalHeight, rawWidth, rawHeight);
