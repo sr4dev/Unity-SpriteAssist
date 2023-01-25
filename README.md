@@ -6,7 +6,7 @@
 Unity-SpriteAssist is an Unity extension that assist Sprite's mesh creation more conveniently.
 
 ## 🖥️System Requirements
-Unity 2019.4 or later versions
+Unity 2021.3 LTS or later versions
 
 ## 📝Features
 - Control Vertex Easily with a Sliderbar.
@@ -77,22 +77,12 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 - **Default Transparent Shader**
 - **Default Opaque Shader**
 
-## ⚠️Warning!
+## ⚠️Caution!
 
-### userData
+### AssetImporter.userData
 This extension uses AssetImporter.userData of Texture asset. If your project already uses userData, it will be overridden.
 
 Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReference/AssetImporter-userData.html)
-
-## ⚡Known Issues
-In Unity 2022.2.x when using the **Sprite Atlas V2 - Enabled**, the following issues may occur:
-
-- Preview is not displayed correctly.
-- Mesh Prefab is not generated.
-- sprites are displayed upside-down.
-It is expected that resolving this issue may take some time, so it is recommended to use **Sprite Atlas V2 - Enabled For Builds** or **Sprite Atlas V1** for stable usage.
-
-Unity Document: [Sprite Atlas v2](https://docs.unity3d.com/2022.2/Documentation/Manual/SpriteAtlasV2.html)
 
 ## 🗺️Roadmap
 - Support pre-packed Sprite.
