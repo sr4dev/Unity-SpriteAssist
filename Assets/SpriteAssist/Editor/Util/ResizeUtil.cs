@@ -62,6 +62,7 @@ namespace SpriteAssist
 
         private static bool TryResizeForMultipleOf4(ResizeMethod resizeMethod, Texture2D texture, string assetPath)
         {
+            int oldGlobalMipMapLimit = QualitySettings.globalTextureMipmapLimit;
             int originalWidth = texture.width;
             int originalHeight = texture.height;
             int additionalWidth = originalWidth % MULTIPLE_OF_4;
@@ -73,6 +74,9 @@ namespace SpriteAssist
             {
                 try
                 {
+                    //force quality up global mipmap 
+                    QualitySettings.globalTextureMipmapLimit = 0;
+
                     var assetImporter = AssetImporter.GetAtPath(assetPath);
                     var textureImporter = (TextureImporter)assetImporter;
                     var textureImporterSettings = new TextureImporterSettings();
@@ -87,22 +91,22 @@ namespace SpriteAssist
                     switch (resizeMethod)
                     {
                         case ResizeMethod.Scale:
-                        {
-                            additionalWidth = reversedAdditionalWidth <= additionalWidth ? -reversedAdditionalWidth : additionalWidth;
-                            additionalHeight = reversedAdditionalHeight <= additionalHeight ? -reversedAdditionalHeight : additionalHeight;
-                            newWidth = additionalWidth == 0 ? originalWidth : Mathf.Max(MULTIPLE_OF_4, originalWidth - additionalWidth);
-                            newHeight = additionalHeight == 0 ? originalHeight : Mathf.Max(MULTIPLE_OF_4, originalHeight - additionalHeight);
-                            newTexture = ScaleTexture(dummyTexture, newWidth, newHeight);
-                            break;
-                        }
+                            {
+                                additionalWidth = reversedAdditionalWidth <= additionalWidth ? -reversedAdditionalWidth : additionalWidth;
+                                additionalHeight = reversedAdditionalHeight <= additionalHeight ? -reversedAdditionalHeight : additionalHeight;
+                                newWidth = additionalWidth == 0 ? originalWidth : Mathf.Max(MULTIPLE_OF_4, originalWidth - additionalWidth);
+                                newHeight = additionalHeight == 0 ? originalHeight : Mathf.Max(MULTIPLE_OF_4, originalHeight - additionalHeight);
+                                newTexture = ScaleTexture(dummyTexture, newWidth, newHeight);
+                                break;
+                            }
 
                         case ResizeMethod.AddAlphaOrCropArea:
-                        {
-                            newWidth = additionalWidth == 0 ? originalWidth : Mathf.Max(MULTIPLE_OF_4, originalWidth + reversedAdditionalWidth);
-                            newHeight = additionalHeight == 0 ? originalHeight : Mathf.Max(MULTIPLE_OF_4, originalHeight + reversedAdditionalHeight);
-                            newTexture = AddAlphaAreaToTexture(dummyTexture, pivot, newWidth, newHeight);
-                            break;
-                        }
+                            {
+                                newWidth = additionalWidth == 0 ? originalWidth : Mathf.Max(MULTIPLE_OF_4, originalWidth + reversedAdditionalWidth);
+                                newHeight = additionalHeight == 0 ? originalHeight : Mathf.Max(MULTIPLE_OF_4, originalHeight + reversedAdditionalHeight);
+                                newTexture = AddAlphaAreaToTexture(dummyTexture, pivot, newWidth, newHeight);
+                                break;
+                            }
 
                         default:
                             throw new ArgumentOutOfRangeException(nameof(resizeMethod), resizeMethod, null);
@@ -118,6 +122,11 @@ namespace SpriteAssist
                     Debug.LogError("Resize Error: " + assetPath, texture);
                     Debug.LogException(e);
                     return false;
+                }
+                finally
+                {
+                    //rollback global mipmap
+                    QualitySettings.globalTextureMipmapLimit = oldGlobalMipMapLimit;
                 }
             }
 
