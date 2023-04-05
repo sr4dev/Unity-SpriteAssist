@@ -10,6 +10,21 @@ namespace SpriteAssist
     {
         private const int MULTIPLE_OF_4 = 4;
 
+        /// <summary>
+        /// https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-globalTextureMipmapLimit.html
+        /// 'Global Mipmap Limit' affect to Resize Quality.
+        private static int GlobalMipmap
+        {
+#if UNITY_2022_2_OR_NEWER
+
+            get => QualitySettings.globalTextureMipmapLimit;
+            set => QualitySettings.globalTextureMipmapLimit = value;
+#else
+            get => QualitySettings.masterTextureLimit;
+            set => QualitySettings.masterTextureLimit = value;
+#endif
+        }
+
         public enum ResizeMethod
         {
             Scale,
@@ -62,7 +77,7 @@ namespace SpriteAssist
 
         private static bool TryResizeForMultipleOf4(ResizeMethod resizeMethod, Texture2D texture, string assetPath)
         {
-            int oldGlobalMipMapLimit = QualitySettings.globalTextureMipmapLimit;
+            int oldGlobalMipMapLimit = GlobalMipmap;
             int originalWidth = texture.width;
             int originalHeight = texture.height;
             int additionalWidth = originalWidth % MULTIPLE_OF_4;
@@ -75,7 +90,7 @@ namespace SpriteAssist
                 try
                 {
                     //force quality up global mipmap 
-                    QualitySettings.globalTextureMipmapLimit = 0;
+                    GlobalMipmap = 0;
 
                     var assetImporter = AssetImporter.GetAtPath(assetPath);
                     var textureImporter = (TextureImporter)assetImporter;
@@ -126,7 +141,7 @@ namespace SpriteAssist
                 finally
                 {
                     //rollback global mipmap
-                    QualitySettings.globalTextureMipmapLimit = oldGlobalMipMapLimit;
+                    GlobalMipmap = oldGlobalMipMapLimit;
                 }
             }
 
