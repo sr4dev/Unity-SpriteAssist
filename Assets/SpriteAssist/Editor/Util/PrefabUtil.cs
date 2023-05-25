@@ -141,7 +141,7 @@ namespace SpriteAssist
             //create new material
             Material material = new Material(Shader.Find(shaderName));
             material.name = renderType;
-            material.mainTexture = sprite.texture;
+            material.SetMainTexture(sprite.texture);
 
             meshRenderer.sharedMaterial = material;
 
