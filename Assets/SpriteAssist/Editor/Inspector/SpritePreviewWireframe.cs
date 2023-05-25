@@ -60,7 +60,7 @@ namespace SpriteAssist
         {
             if (_material != null)
             {
-                UnityEngine.Object.DestroyImmediate(_material.mainTexture);
+                UnityEngine.Object.DestroyImmediate(_material.GetMainTexture());
                 UnityEngine.Object.DestroyImmediate(_material);
             }
         }

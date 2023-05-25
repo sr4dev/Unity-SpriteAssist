@@ -14,7 +14,8 @@ namespace SpriteAssist
                 return null;
             }
 
-            var path = AssetDatabase.GetAssetPath(Renderer.sharedMaterial.mainTexture);
+            var mainTexture = Renderer.sharedMaterial.GetMainTexture();
+            var path = AssetDatabase.GetAssetPath(mainTexture);
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
     }
