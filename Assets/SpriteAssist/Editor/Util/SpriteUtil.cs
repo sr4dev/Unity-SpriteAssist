@@ -116,12 +116,17 @@ namespace SpriteAssist
                     {
                         return spriteRenderer.sprite;
                     }
-                    else if (go.TryGetComponent<MeshRenderer>(out var meshRenderer))
+                    
+                    if (go.TryGetComponent<MeshRenderer>(out var meshRenderer))
                     {
-                        if (meshRenderer.sharedMaterial != null && meshRenderer.sharedMaterial.mainTexture != null)
+                        if (meshRenderer.sharedMaterial != null)
                         {
-                            var path = AssetDatabase.GetAssetPath(meshRenderer.sharedMaterial.mainTexture);
-                            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                            var mainTexture = meshRenderer.sharedMaterial.GetMainTexture();
+                            if (mainTexture != null)
+                            {
+                                var path = AssetDatabase.GetAssetPath(mainTexture);
+                                return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                            }
                         }
                     }
                     break;
