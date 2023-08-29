@@ -92,9 +92,9 @@ namespace SpriteAssist
             return null;
         }
 
-        public void SetPrefabAsExternalObject(GameObject prefab)
+        public void SetPrefabAsExternalObject(GameObject prefab, bool removeAssetToo)
         {
-            if (MeshPrefab != null)
+            if (removeAssetToo && MeshPrefab != null)
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
             RemapExternalObject(prefab);
         }
@@ -107,9 +107,9 @@ namespace SpriteAssist
             //textureImporter.SaveAndReimport();
         }
 
-        public void RemoveExternalPrefab()
+        public void RemoveExternalPrefab(bool removeAssetToo)
         {
-            if (MeshPrefab != null)
+            if (removeAssetToo && MeshPrefab != null)
                 AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(MeshPrefab));
             textureImporter.RemoveRemap(_oldSourceAssetIdentifier);
             textureImporter.RemoveRemap(_newSourceAssetIdentifier);

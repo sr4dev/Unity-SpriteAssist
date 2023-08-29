@@ -339,7 +339,10 @@ namespace SpriteAssist
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            EditorGUILayout.ObjectField("Prefab", _mainImportData.MeshPrefab, typeof(GameObject), false);
+                            using (new EditorGUI.DisabledScope(true))
+                            {
+                                EditorGUILayout.ObjectField(_mainImportData.MeshPrefab, typeof(GameObject), false);
+                            }
                             string buttonText = _mainImportData.HasMeshPrefab ? "Remove" : "Create";
                             if (GUILayout.Button(buttonText, GUILayout.Width(60)))
                             {
@@ -561,7 +564,7 @@ namespace SpriteAssist
 
                     if (withMeshPrefabProcess)
                     {
-                        SetMeshPrefabContainer(importData, hasMeshPrefab);
+                        SetMeshPrefabContainer(importData, hasMeshPrefab, true);
                     }
 
                     UpdateSubAssetsInMeshPrefab(importData);
@@ -588,19 +591,21 @@ namespace SpriteAssist
             _isDataChanged = false;
         }
         
-        private void SetMeshPrefabContainer(SpriteImportData importData, bool hasMeshPrefab)
+        private void SetMeshPrefabContainer(SpriteImportData importData, bool hasMeshPrefab, bool removeAssetToo)
         {
-            if (hasMeshPrefab)
+            importData.RemoveExternalPrefab(removeAssetToo);
+
+            if (hasMeshPrefab == false)
             {
-                importData.RemoveExternalPrefab();
-            }
-            else
-            {
-                importData.RemoveExternalPrefab();
                 TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
                 GameObject prefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
-                importData.SetPrefabAsExternalObject(prefab);
+                importData.SetPrefabAsExternalObject(prefab, removeAssetToo);
             }
+        }
+
+        public void ClearOldMeshPrefabIfFound()
+        {
+            SetMeshPrefabContainer(_mainImportData, _mainImportData.HasMeshPrefab, false);
         }
 
         private void UpdateSubAssetsInMeshPrefab(SpriteImportData importData)
