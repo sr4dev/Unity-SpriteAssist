@@ -7,9 +7,6 @@ namespace SpriteAssist
     {
         private void OnPostprocessSprites(Texture2D _, Sprite[] sprites)
         {
-            bool isFirstAdded = AssetCreationChecker.currentAssetPath == assetPath;
-            AssetCreationChecker.currentAssetPath = null;
-
             SpriteInspector.isSpriteReloaded = true;
 
             TextureImporter textureImporter = assetImporter as TextureImporter;
@@ -24,11 +21,6 @@ namespace SpriteAssist
                     SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
                     spriteProcessor.OverrideGeometry();
                     spriteProcessor.UpdateMeshInMeshPrefab();
-
-                    if (isFirstAdded)
-                    {
-                        spriteProcessor.ClearOldMeshPrefabIfFound();
-                    }
                     break;
                 }
             }
@@ -47,19 +39,6 @@ namespace SpriteAssist
                     }
                 };
             }
-        }
-    }
-
-    public class AssetCreationChecker : AssetModificationProcessor
-    {
-        public static string currentAssetPath;
-
-        static void OnWillCreateAsset(string assetPath)
-        {
-            if (assetPath.EndsWith(".meta"))
-                return;
-
-            currentAssetPath = assetPath;
         }
     }
 }

@@ -24,6 +24,8 @@ namespace SpriteAssist
         private MeshCreatorBase _meshCreator;
         private Object[] _targets;
 
+        private Object _meshPrefab;
+
         private float _spriteOutlineScaleWidth = DEFAULT_PERCENTAGE;
         private float _spriteOutlineScaleHeight = DEFAULT_PERCENTAGE;
 
@@ -36,6 +38,7 @@ namespace SpriteAssist
             _configData = SpriteConfigData.GetData(_originalUserData);
             _meshCreator = MeshCreatorBase.GetInstance(_configData.mode);
             _preview = new SpritePreview(_meshCreator.GetMeshWireframes());
+            _meshPrefab = _mainImportData.MeshPrefab;
 
             _isPreviewChanged = true;
         }
@@ -339,16 +342,31 @@ namespace SpriteAssist
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            using (new EditorGUI.DisabledScope(true))
+                            _meshPrefab = EditorGUILayout.ObjectField("Mesh Prefab", _meshPrefab, typeof(GameObject), false);
+
+                            using (new EditorGUI.DisabledScope(_meshPrefab != _mainImportData.MeshPrefab))
                             {
-                                EditorGUILayout.ObjectField(_mainImportData.MeshPrefab, typeof(GameObject), false);
+                                string buttonText = _meshPrefab != null ? "Unlink" : "Create";
+                                if (GUILayout.Button(buttonText, GUILayout.Width(60)))
+                                {
+                                    //display dialog
+                                    var res = _meshPrefab != null ? EditorUtility.DisplayDialogComplex("Mesh Prefab", "Do you want to remove Prefab asset too?", "Remove and Unlink", "Just Unlink", "Cancel") : 0;
+                                    switch (res)
+                                    {
+                                        case 0:
+                                            Apply(true, _mainImportData.HasMeshPrefab, true);
+                                            break;
+
+                                        case 1:
+                                            Apply(true, _mainImportData.HasMeshPrefab, false);
+                                            break;
+                                    }
+
+                                    GUIUtility.ExitGUI();
+                                    return;
+                                }
                             }
-                            string buttonText = _mainImportData.HasMeshPrefab ? "Remove" : "Create";
-                            if (GUILayout.Button(buttonText, GUILayout.Width(60)))
-                            {
-                                Apply(true, _mainImportData.HasMeshPrefab);
-                                return;
-                            }
+                            
                         }
 
                         if (!_mainImportData.HasMeshPrefab)
@@ -459,7 +477,14 @@ namespace SpriteAssist
 
                 if (GUILayout.Button("Apply", GUILayout.Width(50)))
                 {
-                    Apply();
+                    if (_meshPrefab != _mainImportData.MeshPrefab)
+                    {
+                        Apply(true, _meshPrefab == null, false, (GameObject)_meshPrefab);
+                    }
+                    else
+                    {
+                        Apply();
+                    }
                 }
             }
 
@@ -545,7 +570,7 @@ namespace SpriteAssist
             _isDataChanged = false;
         }
 
-        private void Apply(bool withMeshPrefabProcess = false, bool hasMeshPrefab = false, bool withCopyFromSprite = false)
+        private void Apply(bool withMeshPrefabProcess = false, bool hasMeshPrefab = false, bool removeMeshPrefab = true, GameObject attachedMeshPrefab = null, bool withCopyFromSprite = false)
         {
             if (_targets == null)
             {
@@ -564,7 +589,14 @@ namespace SpriteAssist
 
                     if (withMeshPrefabProcess)
                     {
-                        SetMeshPrefabContainer(importData, hasMeshPrefab, true);
+                        if (hasMeshPrefab)
+                        {
+                            RemoveMeshPrefabContainer(importData, removeMeshPrefab);
+                        }
+                        else
+                        {
+                            SetMeshPrefabContainer(importData, removeMeshPrefab, attachedMeshPrefab);
+                        }
                     }
 
                     UpdateSubAssetsInMeshPrefab(importData);
@@ -589,23 +621,21 @@ namespace SpriteAssist
             AssetDatabase.SaveAssets();
 
             _isDataChanged = false;
+            _meshPrefab = _mainImportData.MeshPrefab;
         }
         
-        private void SetMeshPrefabContainer(SpriteImportData importData, bool hasMeshPrefab, bool removeAssetToo)
+        private void SetMeshPrefabContainer(SpriteImportData importData, bool removeOldMeshPrefab, GameObject attachedMeshPrefab)
         {
-            importData.RemoveExternalPrefab(removeAssetToo);
+            importData.RemoveExternalPrefab(removeOldMeshPrefab);
 
-            if (hasMeshPrefab == false)
-            {
-                TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
-                GameObject prefab = _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
-                importData.SetPrefabAsExternalObject(prefab, removeAssetToo);
-            }
+            TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
+            GameObject prefab = attachedMeshPrefab != null ? attachedMeshPrefab : _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
+            importData.SetPrefabAsExternalObject(prefab, removeOldMeshPrefab);
         }
 
-        public void ClearOldMeshPrefabIfFound()
+        private void RemoveMeshPrefabContainer(SpriteImportData importData, bool removeOldMeshPrefabToo)
         {
-            SetMeshPrefabContainer(_mainImportData, _mainImportData.HasMeshPrefab, false);
+            importData.RemoveExternalPrefab(removeOldMeshPrefabToo);
         }
 
         private void UpdateSubAssetsInMeshPrefab(SpriteImportData importData)
