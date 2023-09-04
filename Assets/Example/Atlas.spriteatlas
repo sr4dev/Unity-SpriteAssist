@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Atlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: fe7d38a3315fc7247ab8551f5e9c4f1e, type: 3}
+    totalSpriteSurfaceArea: 817850
+    bindAsDefault: 1
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: adcc8250367187e44bcf2b145ca12522, type: 3}
+  - {fileID: 21300000, guid: e3705575bb82b484e9084d6010a74527, type: 3}
+  - {fileID: 21300000, guid: 1ccf3cb8ebccff74291cffcdf8a7891b, type: 3}
+  - {fileID: 21300000, guid: b6bd2b2a44548504a8d31cd0c74afdcc, type: 3}
+  - {fileID: 21300000, guid: 00c4910e9109b56449300a6b01acf8fe, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - kodai_mammoth_tatakau
+  - fashion_gunpuku_onepiece
+  - kaizoku_viking
+  - monban_heitai_seiyou
+  - nigaoe_ned_kelly
+  m_Tag: Atlas
+  m_IsVariant: 0
