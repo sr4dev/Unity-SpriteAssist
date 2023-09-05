@@ -42,11 +42,11 @@ namespace SpriteAssist
         {
             dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.OpaqueWithoutTightGrid);
             if (applyPixelPerUnitScale) vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
-            Mesh opaqueMesh = MeshUtil.Create(vertices.ToVector3(), triangles.ToInt(), textureInfo, false);
+            Mesh opaqueMesh = MeshUtil.Update(null, vertices.ToVector3(), triangles.ToInt(), textureInfo, false);
 
             dummySprite.GetVertexAndTriangle2D(data, out var verticesGrid, out var trianglesGrid, MeshRenderType.TightGrid);
             if (applyPixelPerUnitScale) verticesGrid = MeshUtil.GetScaledVertices(verticesGrid, textureInfo, isClamped: true);
-            Mesh gridMesh = MeshUtil.Create(verticesGrid.ToVector3(), trianglesGrid.ToInt(), textureInfo, false);
+            Mesh gridMesh = MeshUtil.Update(null, verticesGrid.ToVector3(), trianglesGrid.ToInt(), textureInfo, false);
 
             var combinedMesh = new Mesh();
 
