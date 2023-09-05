@@ -5,6 +5,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 #if UNITY_2021_2_OR_NEWER
 using UnityEditor.SceneManagement;
+
 #else
 using UnityEditor.Experimental.SceneManagement;
 #endif
@@ -48,8 +49,7 @@ namespace SpriteAssist
 
                 string countText = count > 1 ? $"_{count}" : string.Empty;
                 path = Path.Combine(currentDirectory, $"{textureFileName}{countText}.prefab");
-            }
-            while (File.Exists(path));
+            } while (File.Exists(path));
 
             if (!string.IsNullOrEmpty(relativePath))
             {
@@ -146,12 +146,8 @@ namespace SpriteAssist
             }
 
             //create new mesh
-            Mesh mesh = new Mesh()
-            {
-                name = renderType,
-            };
-
-            MeshUtil.Update(mesh, v, t, textureInfo, spriteConfigData.isCorrectNormal);
+            Mesh mesh = MeshUtil.Update(null, v, t, textureInfo, spriteConfigData.isCorrectNormal);
+            mesh.name = renderType;
             meshFilter.mesh = mesh;
 
             //create new material
@@ -170,9 +166,7 @@ namespace SpriteAssist
         public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
         {
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
-            Mesh mesh = meshFilter.sharedMesh;
-            MeshUtil.Update(mesh, v, t, textureInfo, splitVertices);
-            meshFilter.sharedMesh = mesh;
+            meshFilter.sharedMesh = MeshUtil.Update(meshFilter.sharedMesh, v, t, textureInfo, splitVertices);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
@@ -211,7 +205,7 @@ namespace SpriteAssist
         public static bool TryGetSpriteRendererWithSprite(GameObject gameObject, out SpriteRenderer spriteRenderer)
         {
             spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-            
+
             if (spriteRenderer != null && spriteRenderer.sprite != null)
             {
                 return true;

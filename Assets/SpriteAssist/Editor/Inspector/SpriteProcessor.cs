@@ -466,27 +466,27 @@ namespace SpriteAssist
             EditorGUILayout.Space();
 
             using (new EditorGUILayout.HorizontalScope())
-            using (new EditorGUI.DisabledScope(!_isDataChanged))
-            {
-                GUILayout.FlexibleSpace();
-
-                if (GUILayout.Button("Revert", GUILayout.Width(50)))
+                using (new EditorGUI.DisabledScope(!_isDataChanged))
                 {
-                    Revert();
-                }
+                    GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button("Apply", GUILayout.Width(50)))
-                {
-                    if (_meshPrefab != _mainImportData.MeshPrefab)
+                    if (GUILayout.Button("Revert", GUILayout.Width(50)))
                     {
-                        Apply(true, _meshPrefab == null, false, (GameObject)_meshPrefab);
+                        Revert();
                     }
-                    else
+
+                    if (GUILayout.Button("Apply", GUILayout.Width(50)))
                     {
-                        Apply();
+                        if (_meshPrefab != _mainImportData.MeshPrefab)
+                        {
+                            Apply(true, _meshPrefab == null, false, (GameObject)_meshPrefab);
+                        }
+                        else
+                        {
+                            Apply();
+                        }
                     }
                 }
-            }
 
             if (!_mainImportData.IsTightMesh)
             {
@@ -513,7 +513,7 @@ namespace SpriteAssist
 
             //for multiple preview
             bool hasMultipleTargets = Selection.objects.Length > 1;
-            
+
             if (_isPreviewChanged || _preview.Rect != rect || hasMultipleTargets || isForce)
             {
                 _preview.Update(rect, baseSprite, dummySprite, textureInfo, _configData);
@@ -579,7 +579,11 @@ namespace SpriteAssist
 
             Undo.RegisterCompleteObjectUndo(_targets, "SpriteAssist Texture");
 
+            _isDataChanged = false;
+            _meshPrefab = _mainImportData.MeshPrefab;
             _originalUserData = JsonUtility.ToJson(_configData);
+
+            var oldSelection = Selection.objects;
 
             foreach (var selectedTarget in _targets)
             {
@@ -620,10 +624,9 @@ namespace SpriteAssist
 
             AssetDatabase.SaveAssets();
 
-            _isDataChanged = false;
-            _meshPrefab = _mainImportData.MeshPrefab;
+            Selection.objects = oldSelection;
         }
-        
+
         private void SetMeshPrefabContainer(SpriteImportData importData, bool removeOldMeshPrefab, GameObject attachedMeshPrefab)
         {
             importData.RemoveExternalPrefab(removeOldMeshPrefab);

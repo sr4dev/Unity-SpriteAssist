@@ -48,7 +48,7 @@ namespace SpriteAssist
         {
             return Array.ConvertAll(triangles2D, i => (int)i);
         }
-        
+
         public static ushort[] ToUShort(this int[] triangles3D)
         {
             return Array.ConvertAll(triangles3D, i => (ushort)i);
@@ -63,7 +63,7 @@ namespace SpriteAssist
                 Vector2 a = vertices2D[triangles2D[i]];
                 Vector2 b = vertices2D[triangles2D[i + 1]];
                 Vector2 c = vertices2D[triangles2D[i + 2]];
-                area += (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+                area += a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
             }
 
             area *= 0.5f * textureInfo.pixelPerUnit * textureInfo.pixelPerUnit;
@@ -73,14 +73,7 @@ namespace SpriteAssist
             return $"{vertices2D.Length} verts, {triangles2D.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
-        public static Mesh Create(Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
-        {
-            Mesh mesh = new Mesh();
-            Update(mesh, v, t, textureInfo, splitVertices);
-            return mesh;
-        }
-
-        public static void Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        public static Mesh Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
         {
             Vector2[] uv = new Vector2[v.Length];
 
@@ -89,6 +82,11 @@ namespace SpriteAssist
                 uv[i] = new Vector2(v[i].x, v[i].y) * textureInfo.pixelPerUnit + textureInfo.pivot;
                 uv[i].x /= textureInfo.rect.size.x;
                 uv[i].y /= textureInfo.rect.size.y;
+            }
+
+            if (mesh == null)
+            {
+                mesh = new Mesh();
             }
 
             mesh.Clear();
@@ -102,6 +100,8 @@ namespace SpriteAssist
             {
                 mesh.SplitVertices();
             }
+
+            return mesh;
         }
 
         //reference 'https://github.com/sr4dev/Unity-SpriteAssist/issues/38 by MateuszRe'
@@ -129,7 +129,7 @@ namespace SpriteAssist
             {
                 var triangles = mesh.GetTriangles(s);
                 int tCnt = triangles.Length;
-                
+
                 for (int t = 0; t < tCnt; t++)
                 {
                     int index = triangles[t];
@@ -138,8 +138,10 @@ namespace SpriteAssist
                         vertices.Add(vertices[index]);
                         if (hasUvs)
                             uvs.Add(uvs[index]);
+
                         if (hasColors)
                             colors.Add(colors[index]);
+
                         if (hasTangents)
                             tangents.Add(tangents[index]);
 
@@ -158,8 +160,10 @@ namespace SpriteAssist
 
             if (hasUvs)
                 mesh.SetUVs(0, uvs);
+
             if (hasColors)
                 mesh.SetColors(colors);
+
             if (hasTangents)
                 mesh.SetTangents(tangents);
 
@@ -228,9 +232,9 @@ namespace SpriteAssist
                 {
                     tempIndex = tempList[j];
                     if (Vector3.SqrMagnitude(vertBuffer[tempIndex] - vertices[i]) < threshold
-                                            && (!hasUVs || uvs[i] == uvsBuffer[tempIndex])
-                                            && (!hasColors || colors[i] == colorBuffer[tempIndex])
-                                            && (ignoreNormals || normals[i] == normalBuffer[tempIndex]))
+                        && (!hasUVs || uvs[i] == uvsBuffer[tempIndex])
+                        && (!hasColors || colors[i] == colorBuffer[tempIndex])
+                        && (ignoreNormals || normals[i] == normalBuffer[tempIndex]))
                     {
                         indexBuffer.Add(tempList[j]);
                         goto skip;
@@ -240,8 +244,10 @@ namespace SpriteAssist
                 vertBuffer.Add(vertices[i]);
                 if (hasColors)
                     colorBuffer.Add(colors[i]);
+
                 if (hasUVs)
                     uvsBuffer.Add(uvs[i]);
+
                 if (!ignoreNormals)
                     normalBuffer.Add(normals[i]);
 
@@ -249,7 +255,7 @@ namespace SpriteAssist
                 indexBuffer.Add(newSize);
                 newSize++;
 
-                skip:;
+                skip: ;
             }
 
             for (int i = 0; i < triangles.Length; i++)
@@ -263,6 +269,7 @@ namespace SpriteAssist
 
             if (hasColors)
                 mesh.SetColors(colorBuffer);
+
             if (hasUVs)
                 mesh.SetUVs(0, uvsBuffer);
 
@@ -273,6 +280,5 @@ namespace SpriteAssist
 
             if (printResults) Debug.Log("Reduced " + mesh.name + " from " + vertices.Length + " to " + vertBuffer.Count);
         }
-
     }
 }
