@@ -96,7 +96,9 @@ namespace SpriteAssist
             SetOutlines(outlineSP, outlines);
             serializedObject.ApplyModifiedProperties();
 
+            var selection = Selection.activeObject;
             AssetDatabase.ImportAsset(textureImporter.assetPath, ImportAssetOptions.DontDownloadFromCacheServer);
+            Selection.activeObject = selection;
         }
 
         public static void Resize(TextureImporter textureImporter, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod)
@@ -143,7 +145,9 @@ namespace SpriteAssist
             SetOutlines(outlineSP, outlines);
             serializedObject.ApplyModifiedProperties();
 
+            var selection = Selection.activeObject;
             AssetDatabase.ImportAsset(textureImporter.assetPath, ImportAssetOptions.DontDownloadFromCacheServer);
+            Selection.activeObject = selection;
         }
 
         private static Vector2[][] GenerateGridOutline(Sprite sprite, int gridSize, float tolerance, bool dataDetectHoles)
