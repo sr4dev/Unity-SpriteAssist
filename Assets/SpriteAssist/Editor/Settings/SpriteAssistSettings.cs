@@ -45,8 +45,12 @@ namespace SpriteAssist
             {
                 return false;
             }
-                
             string path = AssetDatabase.GetAssetPath(s);
+            return ShouldProcessSprite(path);
+        }
+        
+        public bool ShouldProcessSprite(string path)
+        {
             if(string.IsNullOrEmpty(path) || !path.StartsWith("Assets"))
             {
                 return false;
@@ -57,17 +61,17 @@ namespace SpriteAssist
                 Regex r = GetRegex(glob);
                 if(r.IsMatch(path))
                 {
-                    Debug.Log($"[SpriteAssistSettings] {path} matches {glob}!");
+                    // Debug.Log($"[SpriteAssistSettings] {path} matches {glob}!");
                     // return true if explicit inclusion is selected, otherwise false for explicit exclusion
                     return inclusionMode == SpriteAssistInclusionMode.Include;
                 }
                 else
                 {
-                    Debug.Log($"[SpriteAssistSettings] {path} does not match {glob}");
+                    // Debug.Log($"[SpriteAssistSettings] {path} does not match {glob}");
                 }
             }
             // fallthru: return true if "include by default", otherwise false
-            Debug.Log($"[SpriteAssistSettings] No match for {path} found");
+            // Debug.Log($"[SpriteAssistSettings] No match for {path} found");
             return inclusionMode == SpriteAssistInclusionMode.Exclude;
         }
 
@@ -92,7 +96,7 @@ namespace SpriteAssist
         private Regex CompileGlob(string glob)
         {
             glob = "Assets/" + glob;
-            Debug.Log($"[SpriteAssistSettings] compiling `${glob}`");
+            // Debug.Log($"[SpriteAssistSettings] compiling `${glob}`");
             return new Regex(
                 "^" + Regex.Escape(glob).Replace(@"\*", ".*").Replace(@"\?", ".") + "$",
                 RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled
