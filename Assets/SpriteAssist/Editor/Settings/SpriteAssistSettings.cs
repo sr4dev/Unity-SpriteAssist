@@ -2,7 +2,7 @@
 
 namespace SpriteAssist
 {
-    [FilePath(SETTINGS_PATH, FilePathAttribute.Location.PreferencesFolder)]
+    [FilePath(SETTINGS_PATH, FilePathAttribute.Location.ProjectFolder)]
     public class SpriteAssistSettings : ScriptableSingleton<SpriteAssistSettings>
     {
         private const string SETTINGS_PATH = "Assets/Editor/SpriteAssistSettings.asset";
