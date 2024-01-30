@@ -5,8 +5,11 @@ namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {
-        private void OnPostprocessSprites(Texture2D _, Sprite[] sprites)
+        private void OnPostprocessSprites(Texture2D tex, Sprite[] sprites)
         {
+            string path = AssetDatabase.GetAssetPath(tex);
+            if(!SpriteAssistSettings.instance.ShouldProcessSprite(path)) return;
+
             SpriteInspector.isSpriteReloaded = true;
 
             TextureImporter textureImporter = assetImporter as TextureImporter;
