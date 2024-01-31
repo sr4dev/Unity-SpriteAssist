@@ -17,10 +17,12 @@ MonoBehaviour:
   prefabRelativePath: 
   defaultTransparentShaderName: Unlit/Transparent
   defaultOpaqueShaderName: Unlit/Texture
-  defaultThickness: 0
   defaultTag: Untagged
   defaultLayer: 0
   defaultSortingLayerId: 0
   defaultSortingOrder: 0
   maxThumbnailPreviewCount: 10
   enableRenameMeshPrefabAutomatically: 0
+  inclusionMode: 0
+  inclusionGlobs:
+  - Example/Excluded/*
