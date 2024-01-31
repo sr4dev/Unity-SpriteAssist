@@ -21,21 +21,32 @@ namespace SpriteAssist
         protected override void OnEnable()
         {
             base.OnEnable();
-            
-            SetSpriteProcessor(target, AssetDatabase.GetAssetPath(target));
-            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+            if(SpriteAssistSettings.instance.ShouldProcessSprite(target as Sprite))
+            {
+                SetSpriteProcessor(target, AssetDatabase.GetAssetPath(target));
+                AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+            }
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
 
-            SpriteProcessor?.Dispose();
-            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+            if(SpriteProcessor != null)
+            {
+                SpriteProcessor?.Dispose();
+                AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+            }
         }
         
         public override void OnInspectorGUI()
         {
+            if(SpriteProcessor == null)
+            {
+                base.OnInspectorGUI();
+                return;
+            }
+
             using (new EditorGUI.DisabledGroupScope(Application.isPlaying))
             {
                 using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPosition))
@@ -58,7 +69,7 @@ namespace SpriteAssist
             base.OnPreviewGUI(rect, background);
 
             Sprite sprite = target as Sprite;
-            if (sprite == null)
+            if (SpriteProcessor == null || sprite == null)
             {
                 return;
             }
