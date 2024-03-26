@@ -83,6 +83,13 @@ This extension uses AssetImporter.userData of Texture asset. If your project alr
 
 Unity Document: [AssetImporter.userData](https://docs.unity3d.com/ScriptReference/AssetImporter-userData.html)
 
+### Known Issues
+- Does not support PSD file.
+- Import time may be significantly longer or may not complete in Unity 6.
+
+For other issues, please refer to the link.
+https://github.com/sr4dev/Unity-SpriteAssist/issues
+
 ## 🗺️Roadmap
 - Support pre-packed Sprite.
 - Support Sprite Mode: Multiple.
