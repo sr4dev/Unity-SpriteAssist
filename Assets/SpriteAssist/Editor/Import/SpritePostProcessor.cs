@@ -7,8 +7,7 @@ namespace SpriteAssist
     {
         private void OnPostprocessSprites(Texture2D tex, Sprite[] sprites)
         {
-            string path = AssetDatabase.GetAssetPath(tex);
-            if(!SpriteAssistSettings.instance.ShouldProcessSprite(path)) return;
+            if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;
 
             SpriteInspector.isSpriteReloaded = true;
 
