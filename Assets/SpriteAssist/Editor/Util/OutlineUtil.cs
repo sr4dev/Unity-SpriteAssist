@@ -101,7 +101,7 @@ namespace SpriteAssist
             Selection.activeObject = selection;
         }
 
-        public static void Resize(TextureImporter textureImporter, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod)
+        public static void Resize(TextureImporter textureImporter, int originalWidth, int originalHeight, int newWidth, int newHeight, ResizeUtil.ResizeMethod resizeMethod, Vector2 pivot = default)
         {
             var serializedObject = new SerializedObject(textureImporter);
             var outlineSP = GetOutlineProperty(serializedObject, SpriteImportMode.Single, 0);
@@ -126,14 +126,14 @@ namespace SpriteAssist
                     }
                     break;
 
-                case ResizeUtil.ResizeMethod.AddAlphaOrCropArea:
-                    var diff = new Vector2(newWidth - originalWidth, newHeight - originalHeight) * 0.5f;
+                case ResizeUtil.ResizeMethod.ExpandOrCrop:
+                    var offset = new Vector2((newWidth - originalWidth) * (pivot.x - 0.5f), (newHeight - originalHeight) * (pivot.y - 0.5f));
 
                     foreach (var outline in outlines)
                     {
                         for (int i = 0; i < outline.Length; i++)
                         {
-                            outline[i] -= diff;
+                            outline[i] += offset;
                         }
                     }
                     break;
