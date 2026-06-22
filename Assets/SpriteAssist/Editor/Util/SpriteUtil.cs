@@ -59,7 +59,7 @@ namespace SpriteAssist
             }
             else
             {
-                TriangulationUtil.Triangulate(paths, configData.edgeSmoothing, configData.useNonZero, out vertices, out triangles);
+                TriangulationUtil.Triangulate(configData, paths, out vertices, out triangles);
             }
 
             //validate max
