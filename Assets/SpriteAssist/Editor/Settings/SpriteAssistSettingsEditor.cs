@@ -40,6 +40,13 @@ namespace SpriteAssist
                             EditorGUILayout.Space();
                         }
 
+                        EditorGUILayout.LabelField("Default Triangulation");
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultTriangulationLibrary)), new GUIContent("Library"));
+                            EditorGUILayout.Space();
+                        }
+
                         EditorGUILayout.LabelField("Tags and Layers");
                         using (new EditorGUI.IndentLevelScope())
                         {

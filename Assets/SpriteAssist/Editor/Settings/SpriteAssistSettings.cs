@@ -20,6 +20,7 @@ namespace SpriteAssist
 
         public string defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
         public string defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
+        public TriangulationLibrary defaultTriangulationLibrary = TriangulationLibrary.LibTessDotNet;
         //public int defaultThickness;
 
         public string defaultTag = DEFAULT_TAG;
