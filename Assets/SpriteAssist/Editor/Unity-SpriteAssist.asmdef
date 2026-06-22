@@ -2,7 +2,8 @@
     "name": "Unity-SpriteAssist",
     "rootNamespace": "",
     "references": [
-        "GUID:8ac5e6bc43e00494eb7d41e6400839f2"
+        "GUID:8ac5e6bc43e00494eb7d41e6400839f2",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"
