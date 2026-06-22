@@ -144,7 +144,7 @@ TextureImporter:
       213: 2122327013686053670
     second: tree_46
   externalObjects: {}
-  serializedVersion: 11
+  serializedVersion: 13
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -161,10 +161,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -203,6 +205,8 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -214,6 +218,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -226,6 +231,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -430,9 +436,18 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-  spritePackingTag: 
+    nameFileIdTable:
+      tree_0: -8667466294985060184
+      tree_1: 5281997702118322174
+      tree_2: -3105659087322419395
+      tree_3: -25497680464327838
+      tree_4: -2187617102101193605
+      tree_5: 6962057269733102035
+      tree_6: -3386072866006247602
+      tree_7: 2374228815192248797
+      tree_8: -1328196128117911941
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
   userData: '{"mode":1,"transparentDetail":0.13300000131130219,"transparentAlphaTolerance":10,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":10,"opaqueExtrude":0.06400000303983689,"gridSize":8,"gridTolerance":0.4569999873638153,"detectHoles":true,"edgeSmoothing":1.0,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0,"overrideTag":false,"overrideLayer":false,"overrideSortingLayer":false,"tag":"Untagged","layer":0,"sortingLayerId":0,"sortingOrder":0,"isCorrectNormal":false}'
   assetBundleName: 
   assetBundleVariant: 
