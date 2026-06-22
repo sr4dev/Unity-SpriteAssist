@@ -4,7 +4,9 @@ namespace SpriteAssist
 {
     public enum TriangulationLibrary
     {
-        [InspectorName(nameof(LibTessDotNet))]
+        [InspectorName("LibTessDotNet")]
         LibTessDotNet = 0,
+        [InspectorName("iShapeTriangulation")]
+        IShape = 1,
     }
 }

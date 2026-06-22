@@ -8,6 +8,7 @@ namespace SpriteAssist
     public class TriangulationUtil
     {
         private static readonly ITriangulator _libTessDotNet = new TriangulatorLibTessDotNet();
+        private static readonly ITriangulator _iShape = new TriangulatorIShape();
 
         private static ITriangulator GetTriangulator(TriangulationLibrary library)
         {
@@ -15,6 +16,9 @@ namespace SpriteAssist
             {
                 case TriangulationLibrary.LibTessDotNet:
                     return _libTessDotNet;
+
+                case TriangulationLibrary.IShape:
+                    return _iShape;
 
                 default:
                     return _libTessDotNet;
