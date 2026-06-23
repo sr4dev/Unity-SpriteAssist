@@ -76,6 +76,23 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 - **Default Transparent Shader**
 - **Default Opaque Shader**
 
+### Triangulation Library
+Since v1.3.0, SpriteAssist supports `iShapeTriangulation` as an alternative triangulation library. You can select the default library in Project Settings.
+
+`LibTessDotNet` is the stable and lightweight default option. `iShapeTriangulation` can generate meshes with the same vertex count but fewer thin, elongated triangles, though it is heavier and may fall back to `LibTessDotNet` automatically when triangulation fails.
+
+<p>
+<img src="https://github.com/user-attachments/assets/76d8278f-5626-4af7-9ad0-83f2e41c9741" width="644">
+</p>
+
+**LibTessDotNet**
+
+<img src="https://github.com/user-attachments/assets/1a17976f-1a60-4407-953f-64e72678cef2" width="320">
+
+**iShapeTriangulation**
+
+<img src="https://github.com/user-attachments/assets/8f359afe-f420-4e80-8554-6dced723b445" width="320">
+
 ## ⚠️Caution!
 
 ### AssetImporter.userData
@@ -101,7 +118,7 @@ https://github.com/sr4dev/Unity-SpriteAssist/issues
 MIT License
 
 ## 📚Library
-* Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet)
+* Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet), iShapeTriangulation
 * Polygon Clipping: [Clipper v6.4.2](http://www.angusj.com/delphi/clipper.php)
 
 ## ☕Donation
