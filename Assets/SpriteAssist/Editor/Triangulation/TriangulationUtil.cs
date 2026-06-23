@@ -1,5 +1,4 @@
-﻿using LibTessDotNet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -8,36 +7,46 @@ namespace SpriteAssist
 {
     public class TriangulationUtil
     {
-        public static void Triangulate(Vector2[][] paths, float edgeSmoothing, bool nonzero, out Vector2[] vertices, out ushort[] triangles)
+        private static readonly ITriangulator _libTessDotNet = new TriangulatorLibTessDotNet();
+        private static readonly ITriangulator _iShape = new TriangulatorIShape();
+
+        internal static ITriangulator GetTriangulator(TriangulationLibrary library)
         {
-            Tess tess = new Tess();
-
-            foreach (Vector2[] path in paths)
+            switch (library)
             {
-                List<ContourVertex> contour = new List<ContourVertex>();
+                case TriangulationLibrary.LibTessDotNet:
+                    return _libTessDotNet;
 
-                for (var i = 0; i < path.Length; i++)
-                {
-                    Vector2 oldPos = path[(path.Length + i - 1) % path.Length];
-                    Vector2 currentPos = path[i];
-                    Vector2 nextPos = path[(i + 1) % path.Length];
+                case TriangulationLibrary.IShape:
+                    return _iShape;
 
-                    //edge smoothing
-                    if (Vector2.Dot((currentPos - oldPos).normalized, (nextPos - oldPos).normalized) >= 0.99f + Mathf.Pow(edgeSmoothing, 3) * 0.01)
-                    {
-                        continue;
-                    }
+                default:
+                    return _libTessDotNet;
+            }
+        }
 
-                    contour.Add(new ContourVertex(new Vec3(currentPos.x, currentPos.y, 0)));
-                }
+        public static void Triangulate(SpriteConfigData config, Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)
+        {
+            TriangulationLibrary library = SpriteAssistSettings.instance.defaultTriangulationLibrary;
+            ITriangulator triangulator = GetTriangulator(library);
 
-                tess.AddContour(contour, ContourOrientation.CounterClockwise);
+            if (triangulator.TryTriangulate(config, paths, out vertices, out triangles))
+            {
+                return;
             }
 
-            WindingRule windingRule = nonzero ? WindingRule.NonZero : WindingRule.EvenOdd;
-            tess.Tessellate(windingRule);
-            vertices = (tess.Vertices ?? Array.Empty<ContourVertex>()).Select(v => new Vector2(v.Position.X, v.Position.Y)).ToArray();
-            triangles = (tess.Elements ?? Array.Empty<int>()).Select(t => (ushort)t).ToArray();
+            if (library != TriangulationLibrary.LibTessDotNet)
+            {
+                Debug.LogWarning($"Triangulation failed with {library}. Falling back to LibTessDotNet.");
+
+                if (_libTessDotNet.TryTriangulate(config, paths, out vertices, out triangles))
+                {
+                    return;
+                }
+            }
+
+            vertices = Array.Empty<Vector2>();
+            triangles = Array.Empty<ushort>();
         }
 
         public static void TriangulateGrid(Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)
