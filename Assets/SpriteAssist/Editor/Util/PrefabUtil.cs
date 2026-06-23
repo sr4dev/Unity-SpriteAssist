@@ -32,6 +32,11 @@ namespace SpriteAssist
             }
         }
 
+        public static bool IsAssetImportWorkerProcess()
+        {
+            return AssetDatabase.IsAssetImportWorkerProcess();
+        }
+
         public static GameObject CreateMeshPrefab(TextureInfo textureInfo, bool hasSubObject)
         {
             string prefix = SpriteAssistSettings.instance.prefabNamePrefix;
