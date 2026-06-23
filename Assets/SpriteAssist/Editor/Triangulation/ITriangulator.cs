@@ -4,6 +4,10 @@ namespace SpriteAssist
 {
     internal interface ITriangulator
     {
+        string DisplayName { get; }
+
+        string Description { get; }
+
         bool TryTriangulate(
             SpriteConfigData config,
             Vector2[][] paths,

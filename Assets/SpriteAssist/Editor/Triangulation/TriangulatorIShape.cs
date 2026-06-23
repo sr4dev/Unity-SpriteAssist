@@ -15,6 +15,12 @@ namespace SpriteAssist
         private const int HighRetryPointLimit = 1800;
         private static readonly int[] RetryMinEdgeLengths = { 150, 250, 400, 600 };
 
+        public string DisplayName => "Quality: iShapeTriangulation";
+
+        public string Description =>
+            "Well-shaped (Delaunay) triangles with fewer slivers.\n" +
+            "May fall back to LibTessDotNet on some outlines, and can briefly freeze the Editor on complex meshes.";
+
         public bool TryTriangulate(
             SpriteConfigData config,
             Vector2[][] paths,

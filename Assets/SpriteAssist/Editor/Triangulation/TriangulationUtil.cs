@@ -10,7 +10,7 @@ namespace SpriteAssist
         private static readonly ITriangulator _libTessDotNet = new TriangulatorLibTessDotNet();
         private static readonly ITriangulator _iShape = new TriangulatorIShape();
 
-        private static ITriangulator GetTriangulator(TriangulationLibrary library)
+        internal static ITriangulator GetTriangulator(TriangulationLibrary library)
         {
             switch (library)
             {

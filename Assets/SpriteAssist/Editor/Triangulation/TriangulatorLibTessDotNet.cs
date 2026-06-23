@@ -8,6 +8,12 @@ namespace SpriteAssist
 {
     internal sealed class TriangulatorLibTessDotNet : ITriangulator
     {
+        public string DisplayName => "Stable: LibTessDotNet";
+
+        public string Description =>
+            "Robust and fast for any outline, no fallback.\n" +
+            "Tends to produce thin sliver triangles, which rasterize less efficiently on the GPU (wasted pixel quads, edge overdraw).";
+
         public bool TryTriangulate(
             SpriteConfigData config,
             Vector2[][] paths,
