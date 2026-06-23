@@ -1,33 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpriteAssist
 {
-    public class DefaultTransparentMeshCreator : MeshCreatorBase
+    public class DefaultTransparentMeshCreator : SingleMeshCreatorBase
     {
+        protected override MeshRenderType MeshRenderType3D => MeshRenderType.Transparent;
+
+        protected override string RenderType => RENDER_TYPE_TRANSPARENT;
+
+        protected override string GetShaderName(SpriteConfigData data) => data.transparentShaderName;
+
+        protected override Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
+        {
+            return baseSprite;
+        }
+
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             //use unity native mesh
-        }
-
-        public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
-        {
-            return PrefabUtil.CreateMeshPrefab(textureInfo, false);
-        }
-
-        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-
-            baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.Transparent);
-            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices3D, triangles3D, textureInfo, RENDER_TYPE_TRANSPARENT, data.transparentShaderName, data);
-        }
-
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.Transparent);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices3D, triangles3D, textureInfo, data.isCorrectNormal, data.isWeldVertices);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
