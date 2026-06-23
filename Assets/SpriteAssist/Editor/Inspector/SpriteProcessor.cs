@@ -538,17 +538,12 @@ namespace SpriteAssist
 
         public void OverrideGeometry()
         {
-            TextureInfo textureInfo = new TextureInfo(_mainImportData.sprite, _mainImportData.assetPath);
-            _meshCreator.OverrideGeometry(_mainImportData.sprite, _mainImportData.dummySprite, textureInfo, _configData);
+            MeshPrefabService.OverrideGeometry(_mainImportData, _meshCreator, _configData);
         }
 
         public void UpdateMeshInMeshPrefab()
         {
-            if (_mainImportData.HasMeshPrefab)
-            {
-                TextureInfo textureInfo = new TextureInfo(_mainImportData.sprite, _mainImportData.assetPath);
-                _meshCreator.UpdateMeshInMeshPrefab(_mainImportData.MeshPrefab, _mainImportData.sprite, _mainImportData.dummySprite, textureInfo, _configData);
-            }
+            MeshPrefabService.UpdateMeshInMeshPrefab(_mainImportData, _meshCreator, _configData);
         }
 
         private void ShowSaveOrRevertUI()
@@ -600,15 +595,15 @@ namespace SpriteAssist
                     {
                         if (hasMeshPrefab)
                         {
-                            RemoveMeshPrefabContainer(importData, removeMeshPrefab);
+                            MeshPrefabService.RemoveMeshPrefabContainer(importData, removeMeshPrefab);
                         }
                         else
                         {
-                            SetMeshPrefabContainer(importData, removeMeshPrefab, attachedMeshPrefab);
+                            MeshPrefabService.SetMeshPrefabContainer(importData, _meshCreator, _configData, removeMeshPrefab, attachedMeshPrefab);
                         }
                     }
 
-                    UpdateSubAssetsInMeshPrefab(importData);
+                    MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
 
                     if (withCopyFromSprite)
                     {
@@ -630,31 +625,6 @@ namespace SpriteAssist
             AssetDatabase.SaveAssets();
 
             Selection.objects = oldSelection;
-        }
-
-        private void SetMeshPrefabContainer(SpriteImportData importData, bool removeOldMeshPrefab, GameObject attachedMeshPrefab)
-        {
-            importData.RemoveExternalPrefab(removeOldMeshPrefab);
-
-            TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
-            GameObject prefab = attachedMeshPrefab != null ? attachedMeshPrefab : _meshCreator.CreateExternalObject(importData.sprite, textureInfo, _configData);
-            importData.SetPrefabAsExternalObject(prefab, removeOldMeshPrefab);
-        }
-
-        private void RemoveMeshPrefabContainer(SpriteImportData importData, bool removeOldMeshPrefabToo)
-        {
-            importData.RemoveExternalPrefab(removeOldMeshPrefabToo);
-        }
-
-        private void UpdateSubAssetsInMeshPrefab(SpriteImportData importData)
-        {
-            if (importData.HasMeshPrefab)
-            {
-                TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
-                PrefabUtil.CleanUpSubAssets(importData.MeshPrefab);
-                _meshCreator.UpdateExternalObject(importData.MeshPrefab, importData.sprite, importData.dummySprite, textureInfo, _configData);
-                importData.RemapExternalObject(importData.MeshPrefab);
-            }
         }
     }
 }
