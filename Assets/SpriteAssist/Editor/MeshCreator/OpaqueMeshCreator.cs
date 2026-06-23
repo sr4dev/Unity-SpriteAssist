@@ -1,35 +1,14 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 namespace SpriteAssist
 {
-    public class OpaqueMeshCreator : MeshCreatorBase
+    public class OpaqueMeshCreator : SingleMeshCreatorBase
     {
-        public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
-            baseSprite.OverrideGeometry(vertices, triangles);
-        }
+        protected override MeshRenderType MeshRenderType3D => MeshRenderType.Opaque;
 
-        public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
-        {
-            return PrefabUtil.CreateMeshPrefab(textureInfo, false);
-        }
+        protected override string RenderType => RENDER_TYPE_OPAQUE;
 
-        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-
-            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
-        }
-
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            dummySprite.GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType.Opaque);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
-        }
+        protected override string GetShaderName(SpriteConfigData data) => data.opaqueShaderName;
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
         {
@@ -39,5 +18,4 @@ namespace SpriteAssist
             };
         }
     }
-
 }

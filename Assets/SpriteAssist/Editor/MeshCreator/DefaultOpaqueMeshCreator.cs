@@ -3,30 +3,22 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    public class DefaultOpaqueMeshCreator : MeshCreatorBase
+    public class DefaultOpaqueMeshCreator : SingleMeshCreatorBase
     {
+        protected override MeshRenderType MeshRenderType3D => MeshRenderType.OpaqueWithoutExtrude;
+
+        protected override string RenderType => RENDER_TYPE_OPAQUE;
+
+        protected override string GetShaderName(SpriteConfigData data) => data.opaqueShaderName;
+
+        protected override Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
+        {
+            return baseSprite;
+        }
+
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             //use unity native mesh
-        }
-
-        public override GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null)
-        {
-            return PrefabUtil.CreateMeshPrefab(textureInfo, false);
-        }
-
-        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-
-            baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.OpaqueWithoutExtrude);
-            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices3D, triangles3D, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
-        }
-
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
-        {
-            baseSprite.GetVertexAndTriangle3D(data, out var vertices3D, out var triangles3D, MeshRenderType.OpaqueWithoutExtrude);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices3D, triangles3D, textureInfo, data.isCorrectNormal, data.isWeldVertices);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
