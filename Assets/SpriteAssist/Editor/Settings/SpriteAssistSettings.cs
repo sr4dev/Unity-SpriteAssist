@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -10,6 +11,8 @@ namespace SpriteAssist
     public class SpriteAssistSettings : ScriptableSingleton<SpriteAssistSettings>
     {
         private const string SETTINGS_PATH = "ProjectSettings/SpriteAssistSettings.asset";
+        // 旧バージョンはAssets/内にassetを保存していた
+        private const string LEGACY_SETTINGS_PATH = "Assets/Editor/SpriteAssistSettings.asset";
         private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
         public const string DEFAULT_TAG = "Untagged";
@@ -41,6 +44,37 @@ namespace SpriteAssist
 
         [System.NonSerialized]
         protected Dictionary<string,Regex> compiledRegexes = new Dictionary<string, Regex>();
+
+        // 旧バージョン互換: Assets/内に残ったassetをProjectSettings/へ移行し、二重インスタンス(警告の原因)を解消する
+        [InitializeOnLoadMethod]
+        private static void MigrateLegacySettings()
+        {
+            // File.Existsで判定することでassetのロード(=インスタンス生成)を避ける
+            if (!File.Exists(LEGACY_SETTINGS_PATH))
+            {
+                return;
+            }
+
+            // 移行先が未作成なら設定値を引き継ぐ
+            bool migratedValues = false;
+            if (!File.Exists(SETTINGS_PATH))
+            {
+                File.Copy(LEGACY_SETTINGS_PATH, SETTINGS_PATH);
+                migratedValues = true;
+            }
+
+            // 旧asset(.meta含む)をAssetDatabaseから削除
+            AssetDatabase.DeleteAsset(LEGACY_SETTINGS_PATH);
+
+            if (migratedValues)
+            {
+                Debug.Log($"[SpriteAssist] Migrated settings from '{LEGACY_SETTINGS_PATH}' to '{SETTINGS_PATH}'.");
+            }
+            else
+            {
+                Debug.Log($"[SpriteAssist] Removed leftover legacy settings asset '{LEGACY_SETTINGS_PATH}'.");
+            }
+        }
 
         public bool ShouldProcessSprite(Sprite s)
         {
