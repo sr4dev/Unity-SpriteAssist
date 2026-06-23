@@ -66,3 +66,6 @@ crashlytics-build.properties
 /Assets/AssetStoreTools
 /Assets/AssetStoreTools.meta
 .history
+
+# Local-only embedded packages
+/Packages/com.coplaydev.unity-mcp/
