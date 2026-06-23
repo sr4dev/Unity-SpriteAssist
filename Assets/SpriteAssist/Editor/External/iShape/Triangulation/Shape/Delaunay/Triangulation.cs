@@ -1,6 +1,7 @@
 ﻿using iShape.Triangulation.Util;
 using iShape.Geometry;
 using iShape.Geometry.Container;
+using System;
 using Unity.Collections;
 using UnityEngine;
 
@@ -114,8 +115,13 @@ namespace iShape.Triangulation.Shape.Delaunay {
 
             var a0 = links[c.next];
             var b0 = links[c.prev];
+            int guard = links.Length * links.Length;
 
             while(a0.self != b0.self) {
+                if (guard-- <= 0) {
+                    ThrowIterationLimit("Triangulate outer loop", links.Length, index);
+                }
+
                 var a1 = links[a0.next];
                 var b1 = links[b0.prev];
 
@@ -154,7 +160,12 @@ namespace iShape.Triangulation.Shape.Delaunay {
                         var ax0 = a0;
                         var ax1 = a1;
                         long ax1Bit;
+                        int scanGuard = links.Length * links.Length;
                         do {
+                            if (scanGuard-- <= 0) {
+                                ThrowIterationLimit("Triangulate forward scan", links.Length, index);
+                            }
+
                             var isCCW_or_Line = IntTriangle.IsCCW_or_Line(cx.vertex.point, ax0.vertex.point, ax1.vertex.point);
 
                             if(isCCW_or_Line) {
@@ -186,7 +197,12 @@ namespace iShape.Triangulation.Shape.Delaunay {
                         var bx0 = b0;
                         var bx1 = b1;
                         long bx1Bit;
+                        int scanGuard = links.Length * links.Length;
                         do {
+                            if (scanGuard-- <= 0) {
+                                ThrowIterationLimit("Triangulate backward scan", links.Length, index);
+                            }
+
                             bool isCCW_or_Line = IntTriangle.IsCCW_or_Line(cx.vertex.point, bx1.vertex.point, bx0.vertex.point);
                             if(isCCW_or_Line) {
                                 triangleStack.Add(bx0.vertex, cx.vertex, bx1.vertex);
@@ -238,6 +254,11 @@ namespace iShape.Triangulation.Shape.Delaunay {
 
                 }
             } // while
+        }
+
+        private static void ThrowIterationLimit(string stage, int linkCount, int index) {
+            string message = $"iShape Delaunay {stage} exceeded iteration limit. index={index}, links={linkCount}";
+            throw new InvalidOperationException(message);
         }
     }
 

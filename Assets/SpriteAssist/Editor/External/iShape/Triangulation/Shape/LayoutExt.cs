@@ -2,6 +2,7 @@ using Unity.Collections;
 using iShape.Geometry;
 using iShape.Collections;
 using iShape.Geometry.Container;
+using System;
 
 namespace iShape.Triangulation.Shape {
 
@@ -73,9 +74,14 @@ namespace iShape.Triangulation.Shape {
             var slices = new DynamicArray<Slice>(16, allocator);
 
             int i = 0;
+            int guard = Math.Max(1, n * n * 4);
 
             nextNode:
             while (i < n) {
+                if (guard-- <= 0) {
+                    ThrowIterationLimit("Split", n, i, subs.Count, dSubs.Count);
+                }
+
                 int sortIndex = sortIndices[i];
                 var node = links[sortIndex];
                 var nature = natures[sortIndex];
@@ -454,6 +460,8 @@ namespace iShape.Triangulation.Shape {
 
                         break;
                 } // switch
+
+                ThrowUnresolvedNode(n, i, sortIndex, nature, subs.Count, dSubs.Count);
             }
 
             subs.Dispose();
@@ -464,6 +472,16 @@ namespace iShape.Triangulation.Shape {
             int extraCount = navigator.extraCount;
 
             return new MonotoneLayout(pathCount, extraCount, links.Convert(), slices.Convert(), indices.Convert());
+        }
+
+        private static void ThrowIterationLimit(string stage, int total, int index, int subs, int dualSubs) {
+            string message = $"iShape Layout {stage} exceeded iteration limit. total={total}, index={index}, subs={subs}, dualSubs={dualSubs}";
+            throw new InvalidOperationException(message);
+        }
+
+        private static void ThrowUnresolvedNode(int total, int index, int sortIndex, LinkNature nature, int subs, int dualSubs) {
+            string message = $"iShape Layout Split could not resolve node. total={total}, index={index}, sortIndex={sortIndex}, nature={nature}, subs={subs}, dualSubs={dualSubs}";
+            throw new InvalidOperationException(message);
         }
 
         private static Bridge Connect(this ref DynamicArray<Link> links, int ai, int bi) {
