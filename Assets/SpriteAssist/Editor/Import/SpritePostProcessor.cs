@@ -17,30 +17,41 @@ namespace SpriteAssist
 
             if (textureImporterSettings.IsSingleSprite())
             {
-                //override mesh(support first sprite only)
-                foreach (var sprite in sprites)
-                {
-                    SpriteProcessor spriteProcessor = new SpriteProcessor(sprite, assetPath);
-                    spriteProcessor.OverrideGeometry();
-                    spriteProcessor.UpdateMeshInMeshPrefab();
-                    break;
-                }
+                UpdateMesh(sprites);
             }
-            
-            //auto rename
+
             if (SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically)
             {
-                EditorApplication.delayCall += () =>
-                {
-                    Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-                    SpriteImportData importData = new SpriteImportData(sprite, assetPath);
-
-                    if (importData.HasMeshPrefab)
-                    {
-                        PrefabUtil.TryRename(importData.assetPath, importData.MeshPrefab);
-                    }
-                };
+                RenameMeshPrefab(assetPath);
             }
+        }
+
+        private void UpdateMesh(Sprite[] sprites)
+        {
+            foreach (var sprite in sprites)
+            {
+                SpriteImportData importData = new SpriteImportData(sprite, assetPath);
+                SpriteConfigData configData = SpriteConfigData.GetData(importData.textureImporter.userData);
+                MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(configData.mode);
+
+                MeshPrefabService.OverrideGeometry(importData, meshCreator, configData);
+                MeshPrefabService.UpdateMeshInMeshPrefab(importData, meshCreator, configData);
+                break;
+            }
+        }
+
+        private static void RenameMeshPrefab(string assetPath)
+        {
+            EditorApplication.delayCall += () =>
+            {
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                SpriteImportData importData = new SpriteImportData(sprite, assetPath);
+
+                if (importData.HasMeshPrefab)
+                {
+                    PrefabUtil.TryRename(importData.assetPath, importData.MeshPrefab);
+                }
+            };
         }
     }
 }
