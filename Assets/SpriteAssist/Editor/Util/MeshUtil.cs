@@ -73,7 +73,7 @@ namespace SpriteAssist
             return $"{vertices2D.Length} verts, {triangles2D.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
-        public static Mesh Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        public static Mesh Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
         {
             Vector2[] uv = new Vector2[v.Length];
 
@@ -99,6 +99,12 @@ namespace SpriteAssist
             if (splitVertices)
             {
                 mesh.SplitVertices();
+
+                // 法線を保持したまま重複頂点を再結合する
+                if (weldVertices)
+                {
+                    WeldVertices(mesh, recalculateNormals: false, ignoreNormals: false, printResults: false);
+                }
             }
 
             return mesh;

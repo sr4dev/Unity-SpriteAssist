@@ -33,8 +33,8 @@ namespace SpriteAssist
             GameObject sub = root.transform.GetChild(0).gameObject;
             dummySprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
             dummySprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
-            PrefabUtil.UpdateMeshFiltersMesh(root, transparentVertices, transparentTriangles, textureInfo, data.isCorrectNormal);
-            PrefabUtil.UpdateMeshFiltersMesh(sub, opaqueVertices, opaqueTriangles, textureInfo, data.isCorrectNormal);
+            PrefabUtil.UpdateMeshFiltersMesh(root, transparentVertices, transparentTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            PrefabUtil.UpdateMeshFiltersMesh(sub, opaqueVertices, opaqueTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

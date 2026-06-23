@@ -53,6 +53,7 @@ namespace SpriteAssist
         public int sortingLayerId;
         public int sortingOrder;
         public bool isCorrectNormal;
+        public bool isWeldVertices;
 
         public static SpriteConfigData GetData(string jsonData)
         {
