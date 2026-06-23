@@ -53,17 +53,8 @@ namespace SpriteAssist
         }
 
         public SpriteImportData(Sprite sprite, string assetPath)
+            : this(sprite, AssetImporter.GetAtPath(assetPath) as TextureImporter, assetPath)
         {
-            this.sprite = sprite;
-            this.assetPath = assetPath;
-
-            textureImporter = AssetImporter.GetAtPath(this.assetPath) as TextureImporter;
-            textureImporterSettings = new TextureImporterSettings();
-            textureImporter.ReadTextureSettings(textureImporterSettings);
-            dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
-            _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
-            _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
-            HasSpriteOutline = OutlineUtil.HasOutline(textureImporter);
         }
 
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)
@@ -77,6 +68,7 @@ namespace SpriteAssist
             dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
+            HasSpriteOutline = OutlineUtil.HasOutline(textureImporter);
         }
         
         private Object FindExternalObject()
