@@ -5,10 +5,11 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
+    // ScriptableSingletonの.assetをAssets/外(ProjectSettings/)へ置くことでAssetDatabaseによる二重インスタンス生成を防ぐ
     [FilePath(SETTINGS_PATH, FilePathAttribute.Location.ProjectFolder)]
     public class SpriteAssistSettings : ScriptableSingleton<SpriteAssistSettings>
     {
-        private const string SETTINGS_PATH = "Assets/Editor/SpriteAssistSettings.asset";
+        private const string SETTINGS_PATH = "ProjectSettings/SpriteAssistSettings.asset";
         private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
         public const string DEFAULT_TAG = "Untagged";
@@ -38,6 +39,7 @@ namespace SpriteAssist
         [Tooltip("Pattern matching globs to describe included/excluded files. All relative to Assets/.")]
         public string[] inclusionGlobs = {};
 
+        [System.NonSerialized]
         protected Dictionary<string,Regex> compiledRegexes = new Dictionary<string, Regex>();
 
         public bool ShouldProcessSprite(Sprite s)
