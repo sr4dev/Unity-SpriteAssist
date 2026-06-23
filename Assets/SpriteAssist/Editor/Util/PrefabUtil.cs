@@ -146,7 +146,7 @@ namespace SpriteAssist
             }
 
             //create new mesh
-            Mesh mesh = MeshUtil.Update(null, v, t, textureInfo, spriteConfigData.isCorrectNormal);
+            Mesh mesh = MeshUtil.Update(null, v, t, textureInfo, spriteConfigData.isCorrectNormal, spriteConfigData.isWeldVertices);
             mesh.name = renderType;
             meshFilter.mesh = mesh;
 
@@ -163,10 +163,10 @@ namespace SpriteAssist
             //AssetDatabase.SaveAssets();
         }
 
-        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices)
+        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
         {
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
-            meshFilter.sharedMesh = MeshUtil.Update(meshFilter.sharedMesh, v, t, textureInfo, splitVertices);
+            meshFilter.sharedMesh = MeshUtil.Update(meshFilter.sharedMesh, v, t, textureInfo, splitVertices, weldVertices);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
