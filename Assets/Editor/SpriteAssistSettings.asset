@@ -17,6 +17,7 @@ MonoBehaviour:
   prefabRelativePath: 
   defaultTransparentShaderName: Unlit/Transparent
   defaultOpaqueShaderName: Unlit/Texture
+  defaultTriangulationLibrary: 1
   defaultTag: Untagged
   defaultLayer: 0
   defaultSortingLayerId: 0

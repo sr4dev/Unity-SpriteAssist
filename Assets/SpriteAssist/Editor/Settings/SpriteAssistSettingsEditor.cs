@@ -7,6 +7,8 @@ namespace SpriteAssist
 {
     public static class SpriteAssistSettingsEditor
     {
+        private const string IgnoreLibraryChangeDialogKey = "SpriteAssist.IgnoreLibraryChangeDialog";
+
         [SettingsProvider]
         public static SettingsProvider CreateSettingsProvider()
         {
@@ -40,13 +42,6 @@ namespace SpriteAssist
                             EditorGUILayout.Space();
                         }
 
-                        EditorGUILayout.LabelField("Default Triangulation");
-                        using (new EditorGUI.IndentLevelScope())
-                        {
-                            EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultTriangulationLibrary)), new GUIContent("Library"));
-                            EditorGUILayout.Space();
-                        }
-
                         EditorGUILayout.LabelField("Tags and Layers");
                         using (new EditorGUI.IndentLevelScope())
                         {
@@ -73,17 +68,83 @@ namespace SpriteAssist
                         EditorGUILayout.LabelField("Preview thumbnail", EditorStyles.boldLabel);
                         EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.maxThumbnailPreviewCount)), new GUIContent("Max count"));
                         EditorGUILayout.Space();
+
+                        EditorGUILayout.LabelField("Library", EditorStyles.boldLabel);
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            SerializedProperty libraryProperty = settings.FindProperty(nameof(SpriteAssistSettings.instance.defaultTriangulationLibrary));
+                            TriangulationLibrary[] libraryOrder = { TriangulationLibrary.IShape, TriangulationLibrary.LibTessDotNet };
+                            string[] libraryOptions = libraryOrder.Select(library => TriangulationUtil.GetTriangulator(library).DisplayName).ToArray();
+                            int libraryDisplayIndex = Array.IndexOf(libraryOrder, (TriangulationLibrary)libraryProperty.enumValueIndex);
+
+                            EditorGUI.BeginChangeCheck();
+                            libraryDisplayIndex = EditorGUILayout.Popup(new GUIContent("Triangulation"), libraryDisplayIndex, libraryOptions);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                int newLibraryEnum = (int)libraryOrder[libraryDisplayIndex];
+
+                                if (SessionState.GetBool(IgnoreLibraryChangeDialogKey, false))
+                                {
+                                    libraryProperty.enumValueIndex = newLibraryEnum;
+                                }
+                                else
+                                {
+                                    string fromLibraryName = TriangulationUtil.GetTriangulator((TriangulationLibrary)libraryProperty.enumValueIndex).DisplayName;
+                                    string toLibraryName = TriangulationUtil.GetTriangulator((TriangulationLibrary)newLibraryEnum).DisplayName;
+
+                                    int choice = EditorUtility.DisplayDialogComplex(
+                                        "Change Triangulation Library",
+                                        $"Library will change from \"{fromLibraryName}\" to \"{toLibraryName}\".\n\n" +
+                                        "This only applies to newly generated meshes. Existing meshes need a manual reimport (or Reimport All) to update.",
+                                        "Change and Reimport All",
+                                        "Just Change Library (ignore until Unity restart)",
+                                        "Just Change Library");
+
+                                    switch (choice)
+                                    {
+                                        case 0:
+                                            libraryProperty.enumValueIndex = newLibraryEnum;
+                                            settings.ApplyModifiedProperties();
+                                            EditorApplication.ExecuteMenuItem("Assets/Reimport All");
+                                            break;
+
+                                        case 1:
+                                            libraryProperty.enumValueIndex = newLibraryEnum;
+                                            SessionState.SetBool(IgnoreLibraryChangeDialogKey, true);
+                                            break;
+
+                                        default:
+                                            libraryProperty.enumValueIndex = newLibraryEnum;
+                                            break;
+                                    }
+                                }
+                            }
+
+                            EditorGUILayout.HelpBox(TriangulationUtil.GetTriangulator((TriangulationLibrary)libraryProperty.enumValueIndex).Description, MessageType.Info);
+
+                            EditorGUILayout.Space();
+                        }
                     }
                     
-                    using (new EditorGUILayout.HorizontalScope())
+                    using (new EditorGUI.IndentLevelScope())
                     {
-                        GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("GitHub", GUILayout.Width(100)))
+                        EditorGUILayout.LabelField("Links", EditorStyles.boldLabel);
+                        using (new EditorGUILayout.HorizontalScope())
                         {
-                            Application.OpenURL("https://github.com/sr4dev/Unity-SpriteAssist");
-                        }
+                            GUILayout.Space(EditorGUI.indentLevel * 15f);
 
-                        EditorGUILayout.Space();
+                            if (GUILayout.Button("GitHub", GUILayout.Width(100)))
+                            {
+                                Application.OpenURL("https://github.com/sr4dev/Unity-SpriteAssist");
+                            }
+
+                            if (GUILayout.Button("OpenUPM", GUILayout.Width(100)))
+                            {
+                                Application.OpenURL("https://openupm.com/packages/com.sr4dev.unity-spriteassist/");
+                            }
+
+                            GUILayout.FlexibleSpace();
+                        }
                     }
 
                     settings.ApplyModifiedProperties();
