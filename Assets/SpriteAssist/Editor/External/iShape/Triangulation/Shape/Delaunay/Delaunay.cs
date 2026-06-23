@@ -1,6 +1,7 @@
 ﻿using Unity.Collections;
 using iShape.Geometry;
 using iShape.Collections;
+using System;
 using UnityEngine;
 
 namespace iShape.Triangulation.Shape.Delaunay {
@@ -53,60 +54,68 @@ namespace iShape.Triangulation.Shape.Delaunay {
             var buffer = new DynamicArray<int>(16, Allocator.Temp);
 
             origin.Add(0);
+            int guard = Mathf.Max(1, count * count * 4);
 
-            while(origin.Count > 0) {
-                buffer.RemoveAll();
-                for(int l = 0; l < origin.Count; ++l) {
-                    int i = origin[l];
-                    var triangle = this.triangles[i];
-                    visitMarks[i] = true;
+            try {
+                while(origin.Count > 0) {
+                    if (guard-- <= 0) {
+                        ThrowIterationLimit("Build", count, origin.Count, buffer.Count);
+                    }
 
-                    for(int k = 0; k < 3; ++k) {
-                        
-                        int neighborIndex = triangle.Neighbor(k);
-                        if(neighborIndex >= 0) {
-                            var neighbor = triangles[neighborIndex];
-                            if(this.Swap(triangle, neighbor)) {
+                    buffer.RemoveAll();
+                    for(int l = 0; l < origin.Count; ++l) {
+                        int i = origin[l];
+                        var triangle = this.triangles[i];
+                        visitMarks[i] = true;
 
-                                triangle = this.triangles[triangle.index];
-                                neighbor = this.triangles[neighbor.index];
+                        for(int k = 0; k < 3; ++k) {
 
-                                for(int j = 0; j < 3; ++j) {
-                                    int ni = triangle.Neighbor(j);
-                                    if(ni >= 0 && ni != neighbor.index) {
-                                        buffer.Add(ni);
+                            int neighborIndex = triangle.Neighbor(k);
+                            if(neighborIndex >= 0) {
+                                var neighbor = triangles[neighborIndex];
+                                if(this.Swap(triangle, neighbor)) {
+
+                                    triangle = this.triangles[triangle.index];
+                                    neighbor = this.triangles[neighbor.index];
+
+                                    for(int j = 0; j < 3; ++j) {
+                                        int ni = triangle.Neighbor(j);
+                                        if(ni >= 0 && ni != neighbor.index) {
+                                            buffer.Add(ni);
+                                        }
                                     }
-                                }
 
-                                for(int j = 0; j < 3; ++j) {
-                                    int ni = neighbor.Neighbor(j);
-                                    if(ni >= 0 && ni != triangle.index) {
-                                        buffer.Add(ni);
+                                    for(int j = 0; j < 3; ++j) {
+                                        int ni = neighbor.Neighbor(j);
+                                        if(ni >= 0 && ni != triangle.index) {
+                                            buffer.Add(ni);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                origin.RemoveAll();
-                
-                if(buffer.Count == 0 && visitIndex < count) {
-                    ++visitIndex;
-                    while(visitIndex < count) {
-                        if(visitMarks[visitIndex] == false) {
-                            origin.Add(visitIndex);
-                            break;
-                        }
+                    origin.RemoveAll();
+
+                    if(buffer.Count == 0 && visitIndex < count) {
                         ++visitIndex;
+                        while(visitIndex < count) {
+                            if(visitMarks[visitIndex] == false) {
+                                origin.Add(visitIndex);
+                                break;
+                            }
+                            ++visitIndex;
+                        }
+                    } else {
+                        origin.Add(buffer);
                     }
-                } else {
-                    origin.Add(buffer);   
                 }
             }
-
-			origin.Dispose();
-			buffer.Dispose();
-            visitMarks.Dispose();
+			finally {
+				origin.Dispose();
+				buffer.Dispose();
+                visitMarks.Dispose();
+            }
 		}
         public void Dispose() {
             this.points.Dispose();
@@ -160,6 +169,11 @@ namespace iShape.Triangulation.Shape.Delaunay {
             long m1 = (b.y - a.y) * (c.x - a.x);
 
             return m0 < m1;
+        }
+
+        private static void ThrowIterationLimit(string stage, int triangleCount, int originCount, int bufferCount) {
+            string message = $"iShape Delaunay {stage} exceeded iteration limit. triangles={triangleCount}, origin={originCount}, buffer={bufferCount}";
+            throw new InvalidOperationException(message);
         }
 
     }
@@ -280,8 +294,18 @@ namespace iShape.Triangulation.Shape.Delaunay {
         internal static void Fix(this ref Delaunay delaunay, ref IndexBuffer indexBuffer, NativeArray<int> indices) {
             var origin = new NativeArray<int>(indices, Allocator.Temp);
             var buffer = new DynamicArray<int>(16, Allocator.Temp);
+            int count = delaunay.triangles.Count;
+            int guard = Mathf.Max(1, count * count * 4);
 
             while (origin.Length > 0) {
+                if (guard-- <= 0) {
+                    int originCount = origin.Length;
+                    int bufferCount = buffer.Count;
+                    origin.Dispose();
+                    buffer.Dispose();
+                    ThrowIterationLimit("Fix", count, originCount, bufferCount);
+                }
+
                 buffer.RemoveAll();
                 for (int ii = 0; ii < origin.Length; ++ii) {
                     int i = origin[ii];
@@ -326,6 +350,14 @@ namespace iShape.Triangulation.Shape.Delaunay {
                 origin.Dispose();
                 origin = buffer.ToArray(Allocator.Temp);
             }
+
+            origin.Dispose();
+            buffer.Dispose();
+        }
+
+        private static void ThrowIterationLimit(string stage, int triangleCount, int originCount, int bufferCount) {
+            string message = $"iShape Delaunay {stage} exceeded iteration limit. triangles={triangleCount}, origin={originCount}, buffer={bufferCount}";
+            throw new InvalidOperationException(message);
         }
     }
 
