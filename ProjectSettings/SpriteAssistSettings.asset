@@ -18,6 +18,7 @@ MonoBehaviour:
   defaultTransparentShaderName: Unlit/Transparent
   defaultOpaqueShaderName: Unlit/Texture
   defaultTriangulationLibrary: 1
+  logTriangulationFallback: 1
   defaultTag: Untagged
   defaultLayer: 0
   defaultSortingLayerId: 0

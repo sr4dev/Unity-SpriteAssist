@@ -25,6 +25,7 @@ namespace SpriteAssist
         public string defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
         public string defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
         public TriangulationLibrary defaultTriangulationLibrary = TriangulationLibrary.LibTessDotNet;
+        public bool logTriangulationFallback = true;
         //public int defaultThickness;
 
         public string defaultTag = DEFAULT_TAG;
@@ -84,6 +85,11 @@ namespace SpriteAssist
             }
             string path = AssetDatabase.GetAssetPath(s);
             return ShouldProcessSprite(path);
+        }
+
+        public void SaveSettings()
+        {
+            Save(true);
         }
         
         public bool ShouldProcessSprite(string path)

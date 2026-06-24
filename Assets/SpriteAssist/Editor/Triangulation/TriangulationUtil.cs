@@ -44,7 +44,10 @@ namespace SpriteAssist
 
             if (library != TriangulationLibrary.LibTessDotNet)
             {
-                Debug.LogWarning($"Triangulation failed with {library}. Falling back to LibTessDotNet.");
+                if (SpriteAssistSettings.instance.logTriangulationFallback)
+                {
+                    Debug.LogWarning($"Triangulation failed with {library}. Falling back to LibTessDotNet.");
+                }
 
                 if (_libTessDotNet.TryTriangulate(config, paths, out vertices, out triangles))
                 {

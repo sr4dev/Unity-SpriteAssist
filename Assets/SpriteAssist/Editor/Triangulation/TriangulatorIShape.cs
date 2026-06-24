@@ -40,7 +40,7 @@ namespace SpriteAssist
 
             if (sanitizedPaths.Length == 0)
             {
-                Debug.LogWarning($"iShape triangulation skipped. No valid paths after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}");
+                LogFallbackWarning($"iShape triangulation skipped. No valid paths after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}");
                 return false;
             }
 
@@ -59,7 +59,7 @@ namespace SpriteAssist
                         return true;
                     }
 
-                    Debug.LogWarning($"iShape triangulation skipped. Self-intersection remains after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}, sanitizedPaths={sanitizedPaths.Length}, sanitizedPoints={sanitizedPointCount}, path={intersection.pathIndex}, edges={intersection.edgeA}-{(intersection.edgeA + 1) % intersection.pointCount}/{intersection.edgeB}-{(intersection.edgeB + 1) % intersection.pointCount}, points={intersection.pointCount}, area={intersection.area:0.###}, minEdge={intersection.minEdge:0.######}@{intersection.minEdgeIndex}");
+                    LogFallbackWarning($"iShape triangulation skipped. Self-intersection remains after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}, sanitizedPaths={sanitizedPaths.Length}, sanitizedPoints={sanitizedPointCount}, path={intersection.pathIndex}, edges={intersection.edgeA}-{(intersection.edgeA + 1) % intersection.pointCount}/{intersection.edgeB}-{(intersection.edgeB + 1) % intersection.pointCount}, points={intersection.pointCount}, area={intersection.area:0.###}, minEdge={intersection.minEdge:0.######}@{intersection.minEdgeIndex}");
                     return false;
                 }
             }
@@ -92,7 +92,7 @@ namespace SpriteAssist
                 }
 
                 LogRetryException(retryException);
-                Debug.LogWarning($"iShape triangulation failed. {firstException.GetType().Name}: {firstException.Message}\n{firstException.StackTrace}");
+                LogFallbackWarning($"iShape triangulation failed. {firstException.GetType().Name}: {firstException.Message}\n{firstException.StackTrace}");
                 vertices = Array.Empty<Vector2>();
                 triangles = Array.Empty<ushort>();
                 return false;
@@ -181,7 +181,15 @@ namespace SpriteAssist
         {
             if (retryException != null)
             {
-                Debug.LogWarning($"iShape triangulation failed after retry. {retryException.GetType().Name}: {retryException.Message}\n{retryException.StackTrace}");
+                LogFallbackWarning($"iShape triangulation failed after retry. {retryException.GetType().Name}: {retryException.Message}\n{retryException.StackTrace}");
+            }
+        }
+
+        private static void LogFallbackWarning(string message)
+        {
+            if (SpriteAssistSettings.instance.logTriangulationFallback)
+            {
+                Debug.LogWarning(message);
             }
         }
 
@@ -225,7 +233,7 @@ namespace SpriteAssist
 
                         if (index > ushort.MaxValue)
                         {
-                            Debug.LogWarning($"iShape triangulation skipped. Vertex index exceeds ushort max. index={index}, vertices={plainShape.points.Length}, groups={groups.Length}");
+                            LogFallbackWarning($"iShape triangulation skipped. Vertex index exceeds ushort max. index={index}, vertices={plainShape.points.Length}, groups={groups.Length}");
                             vertices = Array.Empty<Vector2>();
                             triangles = Array.Empty<ushort>();
                             return false;
