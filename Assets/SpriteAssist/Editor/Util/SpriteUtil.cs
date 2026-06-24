@@ -44,9 +44,13 @@ namespace SpriteAssist
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
 
-            if (configData == null || sprite == null ||
-                configData.mode == SpriteConfigData.Mode.UnityDefaultForTransparent ||
-                configData.mode == SpriteConfigData.Mode.UnityDefaultForOpaque)
+            if (configData == null || sprite == null)
+            {
+                return false;
+            }
+
+            if (SpriteConfigData.IsUnityDefaultMode(configData.mode) &&
+                !SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes)
             {
                 return false;
             }

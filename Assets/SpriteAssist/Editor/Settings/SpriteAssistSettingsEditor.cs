@@ -8,6 +8,7 @@ namespace SpriteAssist
     public static class SpriteAssistSettingsEditor
     {
         private const string IgnoreLibraryChangeDialogKey = "SpriteAssist.IgnoreLibraryChangeDialog";
+        private const string IgnoreUnityDefaultTriangulationChangeDialogKey = "SpriteAssist.IgnoreUnityDefaultTriangulationChangeDialog";
 
         [SettingsProvider]
         public static SettingsProvider CreateSettingsProvider()
@@ -122,6 +123,62 @@ namespace SpriteAssist
                             }
 
                             EditorGUILayout.HelpBox(TriangulationUtil.GetTriangulator((TriangulationLibrary)libraryProperty.enumValueIndex).Description, MessageType.Info);
+
+                            SerializedProperty applyToUnityDefaultProperty = settings.FindProperty(nameof(SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes));
+                            EditorGUI.BeginChangeCheck();
+                            bool applyToUnityDefault = EditorGUILayout.Toggle(
+                                new GUIContent(
+                                    "Apply To Unity Default",
+                                    "Override Unity Default mode sprite geometry using SpriteAssist-generated outlines and the selected triangulation library."),
+                                applyToUnityDefaultProperty.boolValue);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                if (SessionState.GetBool(IgnoreUnityDefaultTriangulationChangeDialogKey, false))
+                                {
+                                    applyToUnityDefaultProperty.boolValue = applyToUnityDefault;
+                                }
+                                else
+                                {
+                                    string state = applyToUnityDefault ? "enabled" : "disabled";
+                                    string detail = applyToUnityDefault
+                                        ? "Unity Default mode sprite geometry will be overridden using SpriteAssist-generated outlines and the selected triangulation library."
+                                        : "Unity Default modes will return to Unity native sprite geometry.";
+
+                                    int choice = EditorUtility.DisplayDialogComplex(
+                                        "Change Unity Default Triangulation",
+                                        $"Triangulation for Unity Default modes will be {state}.\n\n" +
+                                        $"{detail}\n\n" +
+                                        "Existing sprites need a manual reimport (or Reimport All) to update.",
+                                        "Change and Reimport All",
+                                        "Just Change (ignore until Unity restart)",
+                                        "Just Change");
+
+                                    switch (choice)
+                                    {
+                                        case 0:
+                                            applyToUnityDefaultProperty.boolValue = applyToUnityDefault;
+                                            settings.ApplyModifiedProperties();
+                                            SpriteAssistSettings.instance.SaveSettings();
+                                            EditorApplication.ExecuteMenuItem("Assets/Reimport All");
+                                            break;
+
+                                        case 1:
+                                            applyToUnityDefaultProperty.boolValue = applyToUnityDefault;
+                                            SessionState.SetBool(IgnoreUnityDefaultTriangulationChangeDialogKey, true);
+                                            break;
+
+                                        default:
+                                            applyToUnityDefaultProperty.boolValue = applyToUnityDefault;
+                                            break;
+                                    }
+                                }
+                            }
+
+                            if (applyToUnityDefaultProperty.boolValue)
+                            {
+                                EditorGUILayout.HelpBox("Unity Default modes will override sprite geometry using SpriteAssist-generated outlines. Reimport existing sprites to update their geometry.", MessageType.Warning);
+                            }
+
                             EditorGUI.BeginChangeCheck();
                             bool logTriangulationFallback = EditorGUILayout.Toggle(new GUIContent("Log Fallback", "Log a warning when triangulation falls back to LibTessDotNet."), SpriteAssistSettings.instance.logTriangulationFallback);
                             if (EditorGUI.EndChangeCheck())

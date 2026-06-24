@@ -26,6 +26,11 @@ namespace SpriteAssist
             OpaqueEdgeGridMesh = OpaqueMesh | GridMesh,
             PixelMesh = 1 << 4,
         }
+
+        public static bool IsUnityDefaultMode(Mode mode)
+        {
+            return mode == Mode.UnityDefaultForTransparent || mode == Mode.UnityDefaultForOpaque;
+        }
         
         public Mode mode = Mode.UnityDefaultForTransparent;
 

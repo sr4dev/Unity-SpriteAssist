@@ -81,6 +81,8 @@ Since v1.3.0, SpriteAssist supports `iShapeTriangulation` as an alternative tria
 
 `LibTessDotNet` is the stable and lightweight default option. `iShapeTriangulation` can generate meshes with the same vertex count but fewer thin, elongated triangles, though it is heavier and may fall back to `LibTessDotNet` automatically when triangulation fails.
 
+By default, the selected triangulation library also applies to Unity Default modes. Disable **Apply To Unity Default** in Project Settings if you want Unity Default modes to keep Unity's native sprite geometry. Existing sprites need a manual reimport (or Reimport All) after changing this option.
+
 <p>
 <img src="https://github.com/user-attachments/assets/76d8278f-5626-4af7-9ad0-83f2e41c9741" width="644">
 </p>

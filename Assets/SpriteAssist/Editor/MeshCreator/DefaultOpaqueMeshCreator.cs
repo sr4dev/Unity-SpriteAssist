@@ -13,12 +13,17 @@ namespace SpriteAssist
 
         protected override Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
         {
-            return baseSprite;
+            return SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes ? dummySprite : baseSprite;
         }
 
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            //use unity native mesh
+            if (!SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes)
+            {
+                return;
+            }
+
+            base.OverrideGeometry(baseSprite, dummySprite, textureInfo, data);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()
