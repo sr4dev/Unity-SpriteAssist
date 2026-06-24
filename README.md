@@ -118,7 +118,7 @@ https://github.com/sr4dev/Unity-SpriteAssist/issues
 MIT License
 
 ## 📚Library
-* Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet), iShapeTriangulation
+* Triangulation: [LibTessDotNet v1.1.13](https://github.com/speps/LibTessDotNet), [iShapeTriangulation v0.0.8](https://github.com/iShapeUnity/Triangulation)
 * Polygon Clipping: [Clipper v6.4.2](http://www.angusj.com/delphi/clipper.php)
 
 ## ☕Donation
