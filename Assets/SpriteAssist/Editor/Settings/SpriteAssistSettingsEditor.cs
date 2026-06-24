@@ -18,6 +18,7 @@ namespace SpriteAssist
                 guiHandler = (_) =>
                 {
                     SerializedObject settings = new SerializedObject(SpriteAssistSettings.instance);
+                    settings.Update();
                     EditorGUILayout.Space();
 
                     using (new EditorGUI.IndentLevelScope())
@@ -121,6 +122,14 @@ namespace SpriteAssist
                             }
 
                             EditorGUILayout.HelpBox(TriangulationUtil.GetTriangulator((TriangulationLibrary)libraryProperty.enumValueIndex).Description, MessageType.Info);
+                            EditorGUI.BeginChangeCheck();
+                            bool logTriangulationFallback = EditorGUILayout.Toggle(new GUIContent("Log Fallback", "Log a warning when triangulation falls back to LibTessDotNet."), SpriteAssistSettings.instance.logTriangulationFallback);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                SpriteAssistSettings.instance.logTriangulationFallback = logTriangulationFallback;
+                                EditorUtility.SetDirty(SpriteAssistSettings.instance);
+                                SpriteAssistSettings.instance.SaveSettings();
+                            }
 
                             EditorGUILayout.Space();
                         }
@@ -147,7 +156,10 @@ namespace SpriteAssist
                         }
                     }
 
-                    settings.ApplyModifiedProperties();
+                    if (settings.ApplyModifiedProperties())
+                    {
+                        SpriteAssistSettings.instance.SaveSettings();
+                    }
                 },
                 keywords = new[] { "Sprite", "Assist", "SpriteAssist", "Shader" },
             };
