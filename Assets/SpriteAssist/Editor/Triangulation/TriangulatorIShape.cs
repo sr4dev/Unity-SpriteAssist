@@ -36,7 +36,8 @@ namespace SpriteAssist
             }
 
             IntGeom geom = IntGeom.DefGeom;
-            Vector2[][] sanitizedPaths = PathSanitizer.Sanitize(paths, geom);
+            Vector2[][] smoothedPaths = PathSanitizer.ApplyEdgeSmoothing(paths, config.edgeSmoothing);
+            Vector2[][] sanitizedPaths = PathSanitizer.Sanitize(smoothedPaths, geom);
             int sanitizedPointCount = PathSanitizer.CountPoints(sanitizedPaths);
 
             if (sanitizedPaths.Length == 0)

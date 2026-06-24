@@ -9,6 +9,48 @@ namespace SpriteAssist
         private const int MaxLocalRepairIterations = 8;
         private const int MaxLocalSelfIntersectionSpan = 8;
 
+        public static Vector2[][] ApplyEdgeSmoothing(Vector2[][] paths, float edgeSmoothing)
+        {
+            if (paths == null || paths.Length == 0)
+            {
+                return System.Array.Empty<Vector2[]>();
+            }
+
+            float threshold = 0.99f + Mathf.Pow(edgeSmoothing, 3) * 0.01f;
+            List<Vector2[]> smoothedPaths = new List<Vector2[]>(paths.Length);
+
+            for (var i = 0; i < paths.Length; i++)
+            {
+                Vector2[] path = paths[i];
+
+                if (path == null || path.Length == 0)
+                {
+                    smoothedPaths.Add(System.Array.Empty<Vector2>());
+                    continue;
+                }
+
+                List<Vector2> smoothedPath = new List<Vector2>(path.Length);
+
+                for (var j = 0; j < path.Length; j++)
+                {
+                    Vector2 oldPos = path[(path.Length + j - 1) % path.Length];
+                    Vector2 currentPos = path[j];
+                    Vector2 nextPos = path[(j + 1) % path.Length];
+
+                    if (Vector2.Dot((currentPos - oldPos).normalized, (nextPos - oldPos).normalized) >= threshold)
+                    {
+                        continue;
+                    }
+
+                    smoothedPath.Add(currentPos);
+                }
+
+                smoothedPaths.Add(smoothedPath.ToArray());
+            }
+
+            return smoothedPaths.ToArray();
+        }
+
         public static Vector2[][] Sanitize(Vector2[][] paths, IntGeom geom)
         {
             List<Vector2[]> sanitizedPaths = new List<Vector2[]>();
