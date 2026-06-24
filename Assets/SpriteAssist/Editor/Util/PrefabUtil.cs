@@ -39,7 +39,17 @@ namespace SpriteAssist
             string objectName = $"{prefix}{textureFileName}{suffix}";
             string currentDirectory = Path.GetDirectoryName(textureInfo.textureAssetPath);
             string relativePath = SpriteAssistSettings.instance.prefabRelativePath;
-            string path = Path.Combine(currentDirectory, $"{textureFileName}.prefab");
+
+            string path;
+            int count = 0;
+            do
+            {
+                count++;
+
+                string countText = count > 1 ? $"_{count}" : string.Empty;
+                path = Path.Combine(currentDirectory, $"{textureFileName}{countText}.prefab");
+            }
+            while (File.Exists(path));
 
             if (!string.IsNullOrEmpty(relativePath))
             {
@@ -59,7 +69,10 @@ namespace SpriteAssist
             if (hasSubObject)
             {
                 GameObject subInstance = new GameObject(objectName + "(sub)");
-                subInstance.transform.SetParent(instance.transform);
+                subInstance.transform.SetParent(instance.transform, false);
+                subInstance.transform.localPosition = default;
+                subInstance.transform.localRotation = default;
+                subInstance.transform.localScale = Vector3.one;
             }
 
             PrefabUtility.SaveAsPrefabAssetAndConnect(instance, path, InteractionMode.AutomatedAction);
@@ -86,7 +99,10 @@ namespace SpriteAssist
             if (hasSubObject)
             {
                 GameObject subInstance = new GameObject(instance.transform.name + "(sub)");
-                subInstance.transform.SetParent(instance.transform);
+                subInstance.transform.SetParent(instance.transform, false);
+                subInstance.transform.localPosition = default;
+                subInstance.transform.localRotation = default;
+                subInstance.transform.localScale = Vector3.one;
             }
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(instance, externalObjectPath, InteractionMode.AutomatedAction);
