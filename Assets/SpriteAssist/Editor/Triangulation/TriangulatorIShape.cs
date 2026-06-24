@@ -11,8 +11,6 @@ namespace SpriteAssist
     internal sealed class TriangulatorIShape : ITriangulator
     {
         private const int DirectTriangulationPointLimit = 1000;
-        private const int MediumRetryPointLimit = 1000;
-        private const int HighRetryPointLimit = 1800;
         private static readonly int[] RetryMinEdgeLengths = { 150, 250, 400, 600 };
 
         public string DisplayName => "Quality: iShapeTriangulation";
@@ -48,27 +46,37 @@ namespace SpriteAssist
 
             if (SelfIntersectionFinder.TryFind(sanitizedPaths, out SelfIntersection intersection))
             {
-                if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, out vertices, out triangles, out _))
+                if (TryRepairSelfIntersections(sanitizedPaths, geom, config.useNonZero, out Vector2[][] repairedPaths))
                 {
-                    return true;
+                    sanitizedPaths = repairedPaths;
+                    sanitizedPointCount = PathSanitizer.CountPoints(sanitizedPaths);
                 }
 
-                Debug.LogWarning($"iShape triangulation skipped. Self-intersection remains after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}, sanitizedPaths={sanitizedPaths.Length}, sanitizedPoints={sanitizedPointCount}, path={intersection.pathIndex}, edges={intersection.edgeA}-{(intersection.edgeA + 1) % intersection.pointCount}/{intersection.edgeB}-{(intersection.edgeB + 1) % intersection.pointCount}, points={intersection.pointCount}, area={intersection.area:0.###}, minEdge={intersection.minEdge:0.######}@{intersection.minEdgeIndex}");
-                return false;
+                if (SelfIntersectionFinder.TryFind(sanitizedPaths, out intersection))
+                {
+                    if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, config.useNonZero, out vertices, out triangles, out _))
+                    {
+                        return true;
+                    }
+
+                    Debug.LogWarning($"iShape triangulation skipped. Self-intersection remains after sanitize. inputPaths={paths.Length}, inputPoints={PathSanitizer.CountPoints(paths)}, sanitizedPaths={sanitizedPaths.Length}, sanitizedPoints={sanitizedPointCount}, path={intersection.pathIndex}, edges={intersection.edgeA}-{(intersection.edgeA + 1) % intersection.pointCount}/{intersection.edgeB}-{(intersection.edgeB + 1) % intersection.pointCount}, points={intersection.pointCount}, area={intersection.area:0.###}, minEdge={intersection.minEdge:0.######}@{intersection.minEdgeIndex}");
+                    return false;
+                }
             }
 
             if (sanitizedPointCount <= DirectTriangulationPointLimit)
             {
-                return TryTriangulateDirect(sanitizedPaths, geom, sanitizedPointCount, out vertices, out triangles);
+                return TryTriangulateDirect(sanitizedPaths, geom, sanitizedPointCount, config.useNonZero, out vertices, out triangles);
             }
 
-            return TryTriangulateLarge(sanitizedPaths, geom, sanitizedPointCount, out vertices, out triangles);
+            return TryTriangulateLarge(sanitizedPaths, geom, sanitizedPointCount, config.useNonZero, out vertices, out triangles);
         }
 
         private static bool TryTriangulateDirect(
             Vector2[][] sanitizedPaths,
             IntGeom geom,
             int sanitizedPointCount,
+            bool useNonZero,
             out Vector2[] vertices,
             out ushort[] triangles)
         {
@@ -78,7 +86,7 @@ namespace SpriteAssist
             }
             catch (Exception firstException)
             {
-                if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, out vertices, out triangles, out Exception retryException))
+                if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, useNonZero, out vertices, out triangles, out Exception retryException))
                 {
                     return true;
                 }
@@ -95,10 +103,11 @@ namespace SpriteAssist
             Vector2[][] sanitizedPaths,
             IntGeom geom,
             int sanitizedPointCount,
+            bool useNonZero,
             out Vector2[] vertices,
             out ushort[] triangles)
         {
-            if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, out vertices, out triangles, out Exception retryException))
+            if (TryTriangulateSimplified(sanitizedPaths, geom, sanitizedPointCount, useNonZero, out vertices, out triangles, out Exception retryException))
             {
                 return true;
             }
@@ -113,6 +122,7 @@ namespace SpriteAssist
             Vector2[][] sanitizedPaths,
             IntGeom geom,
             int pointCount,
+            bool useNonZero,
             out Vector2[] vertices,
             out ushort[] triangles,
             out Exception retryException)
@@ -121,7 +131,7 @@ namespace SpriteAssist
             triangles = Array.Empty<ushort>();
             retryException = null;
 
-            for (int i = GetRetryStartIndex(pointCount); i < RetryMinEdgeLengths.Length; i++)
+            for (int i = 0; i < RetryMinEdgeLengths.Length; i++)
             {
                 int minEdgeLength = RetryMinEdgeLengths[i];
 
@@ -130,7 +140,8 @@ namespace SpriteAssist
                     continue;
                 }
 
-                if (SelfIntersectionFinder.TryFind(simplifiedPaths, out _))
+                if (SelfIntersectionFinder.TryFind(simplifiedPaths, out _) &&
+                    !TryRepairSelfIntersections(simplifiedPaths, geom, useNonZero, out simplifiedPaths))
                 {
                     continue;
                 }
@@ -151,19 +162,19 @@ namespace SpriteAssist
             return false;
         }
 
-        private static int GetRetryStartIndex(int pointCount)
+        private static bool TryRepairSelfIntersections(
+            Vector2[][] paths,
+            IntGeom geom,
+            bool useNonZero,
+            out Vector2[][] repairedPaths)
         {
-            if (pointCount > HighRetryPointLimit)
+            if (!PathSanitizer.TryRepairSelfIntersections(paths, geom, useNonZero, out repairedPaths))
             {
-                return 2;
+                return false;
             }
 
-            if (pointCount > MediumRetryPointLimit)
-            {
-                return 1;
-            }
-
-            return 0;
+            repairedPaths = PathSanitizer.Sanitize(repairedPaths, geom);
+            return repairedPaths.Length > 0 && !SelfIntersectionFinder.TryFind(repairedPaths, out _);
         }
 
         private static void LogRetryException(Exception retryException)

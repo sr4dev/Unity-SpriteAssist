@@ -1,3 +1,4 @@
+using ClipperLib;
 using System.Collections.Generic;
 using iShape.Geometry;
 using UnityEngine;
@@ -124,6 +125,81 @@ namespace SpriteAssist
             }
 
             return count;
+        }
+
+        public static bool TryRepairSelfIntersections(Vector2[][] paths, IntGeom geom, bool useNonZero, out Vector2[][] repairedPaths)
+        {
+            repairedPaths = System.Array.Empty<Vector2[]>();
+
+            if (paths == null || paths.Length == 0)
+            {
+                return false;
+            }
+
+            List<List<IntPoint>> clipperPaths = new List<List<IntPoint>>(paths.Length);
+
+            for (var i = 0; i < paths.Length; i++)
+            {
+                Vector2[] path = paths[i];
+
+                if (path == null || path.Length < 3)
+                {
+                    continue;
+                }
+
+                List<IntPoint> clipperPath = new List<IntPoint>(path.Length);
+
+                for (var j = 0; j < path.Length; j++)
+                {
+                    IntVector point = geom.Int(path[j]);
+                    clipperPath.Add(new IntPoint(point.x, point.y));
+                }
+
+                clipperPaths.Add(clipperPath);
+            }
+
+            if (clipperPaths.Count == 0)
+            {
+                return false;
+            }
+
+            PolyFillType fillType = useNonZero ? PolyFillType.pftNonZero : PolyFillType.pftEvenOdd;
+            List<List<IntPoint>> solution = Clipper.SimplifyPolygons(clipperPaths, fillType);
+
+            if (solution == null || solution.Count == 0)
+            {
+                return false;
+            }
+
+            List<Vector2[]> results = new List<Vector2[]>(solution.Count);
+
+            for (var i = 0; i < solution.Count; i++)
+            {
+                List<IntPoint> clipperPath = solution[i];
+
+                if (clipperPath.Count < 3)
+                {
+                    continue;
+                }
+
+                Vector2[] result = new Vector2[clipperPath.Count];
+
+                for (var j = 0; j < clipperPath.Count; j++)
+                {
+                    IntPoint point = clipperPath[j];
+                    result[j] = geom.Float(new IntVector(point.X, point.Y));
+                }
+
+                results.Add(result);
+            }
+
+            if (results.Count == 0)
+            {
+                return false;
+            }
+
+            repairedPaths = results.ToArray();
+            return true;
         }
 
         private static Vector2[] SanitizePath(Vector2[] path, IntGeom geom)

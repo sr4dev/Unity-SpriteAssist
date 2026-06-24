@@ -27,6 +27,13 @@ namespace SpriteAssist
 
         public static void Triangulate(SpriteConfigData config, Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)
         {
+            if (paths == null || PathSanitizer.CountPoints(paths) == 0)
+            {
+                vertices = Array.Empty<Vector2>();
+                triangles = Array.Empty<ushort>();
+                return;
+            }
+
             TriangulationLibrary library = SpriteAssistSettings.instance.defaultTriangulationLibrary;
             ITriangulator triangulator = GetTriangulator(library);
 
