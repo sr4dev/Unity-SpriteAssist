@@ -53,6 +53,11 @@ namespace SpriteAssist
 
             Vector2[][] paths = OutlineUtil.GenerateOutline(sprite, configData, meshRenderType);
 
+            if (PathSanitizer.CountPoints(paths) == 0)
+            {
+                return false;
+            }
+
             if (meshRenderType == MeshRenderType.Grid || meshRenderType == MeshRenderType.TightGrid)
             {
                 TriangulationUtil.TriangulateGrid(paths, out vertices, out triangles);
