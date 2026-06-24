@@ -20,26 +20,18 @@ namespace SpriteAssist
             out Vector2[] vertices,
             out ushort[] triangles)
         {
-            float edgeSmoothing = config.edgeSmoothing;
             bool nonzero = config.useNonZero;
+            Vector2[][] smoothedPaths = PathSanitizer.ApplyEdgeSmoothing(paths, config.edgeSmoothing);
 
             Tess tess = new Tess();
 
-            foreach (Vector2[] path in paths)
+            foreach (Vector2[] path in smoothedPaths)
             {
-                List<ContourVertex> contour = new List<ContourVertex>();
+                List<ContourVertex> contour = new List<ContourVertex>(path.Length);
 
                 for (var i = 0; i < path.Length; i++)
                 {
-                    Vector2 oldPos = path[(path.Length + i - 1) % path.Length];
                     Vector2 currentPos = path[i];
-                    Vector2 nextPos = path[(i + 1) % path.Length];
-
-                    if (Vector2.Dot((currentPos - oldPos).normalized, (nextPos - oldPos).normalized) >= 0.99f + Mathf.Pow(edgeSmoothing, 3) * 0.01)
-                    {
-                        continue;
-                    }
-
                     contour.Add(new ContourVertex(new Vec3(currentPos.x, currentPos.y, 0)));
                 }
 
