@@ -1,3 +1,4 @@
+using ClipperLib;
 using System.Collections.Generic;
 using iShape.Geometry;
 using UnityEngine;
@@ -8,6 +9,48 @@ namespace SpriteAssist
     {
         private const int MaxLocalRepairIterations = 8;
         private const int MaxLocalSelfIntersectionSpan = 8;
+
+        public static Vector2[][] ApplyEdgeSmoothing(Vector2[][] paths, float edgeSmoothing)
+        {
+            if (paths == null || paths.Length == 0)
+            {
+                return System.Array.Empty<Vector2[]>();
+            }
+
+            float threshold = 0.99f + Mathf.Pow(edgeSmoothing, 3) * 0.01f;
+            List<Vector2[]> smoothedPaths = new List<Vector2[]>(paths.Length);
+
+            for (var i = 0; i < paths.Length; i++)
+            {
+                Vector2[] path = paths[i];
+
+                if (path == null || path.Length == 0)
+                {
+                    smoothedPaths.Add(System.Array.Empty<Vector2>());
+                    continue;
+                }
+
+                List<Vector2> smoothedPath = new List<Vector2>(path.Length);
+
+                for (var j = 0; j < path.Length; j++)
+                {
+                    Vector2 oldPos = path[(path.Length + j - 1) % path.Length];
+                    Vector2 currentPos = path[j];
+                    Vector2 nextPos = path[(j + 1) % path.Length];
+
+                    if (Vector2.Dot((currentPos - oldPos).normalized, (nextPos - oldPos).normalized) >= threshold)
+                    {
+                        continue;
+                    }
+
+                    smoothedPath.Add(currentPos);
+                }
+
+                smoothedPaths.Add(smoothedPath.ToArray());
+            }
+
+            return smoothedPaths.ToArray();
+        }
 
         public static Vector2[][] Sanitize(Vector2[][] paths, IntGeom geom)
         {
@@ -82,6 +125,81 @@ namespace SpriteAssist
             }
 
             return count;
+        }
+
+        public static bool TryRepairSelfIntersections(Vector2[][] paths, IntGeom geom, bool useNonZero, out Vector2[][] repairedPaths)
+        {
+            repairedPaths = System.Array.Empty<Vector2[]>();
+
+            if (paths == null || paths.Length == 0)
+            {
+                return false;
+            }
+
+            List<List<IntPoint>> clipperPaths = new List<List<IntPoint>>(paths.Length);
+
+            for (var i = 0; i < paths.Length; i++)
+            {
+                Vector2[] path = paths[i];
+
+                if (path == null || path.Length < 3)
+                {
+                    continue;
+                }
+
+                List<IntPoint> clipperPath = new List<IntPoint>(path.Length);
+
+                for (var j = 0; j < path.Length; j++)
+                {
+                    IntVector point = geom.Int(path[j]);
+                    clipperPath.Add(new IntPoint(point.x, point.y));
+                }
+
+                clipperPaths.Add(clipperPath);
+            }
+
+            if (clipperPaths.Count == 0)
+            {
+                return false;
+            }
+
+            PolyFillType fillType = useNonZero ? PolyFillType.pftNonZero : PolyFillType.pftEvenOdd;
+            List<List<IntPoint>> solution = Clipper.SimplifyPolygons(clipperPaths, fillType);
+
+            if (solution == null || solution.Count == 0)
+            {
+                return false;
+            }
+
+            List<Vector2[]> results = new List<Vector2[]>(solution.Count);
+
+            for (var i = 0; i < solution.Count; i++)
+            {
+                List<IntPoint> clipperPath = solution[i];
+
+                if (clipperPath.Count < 3)
+                {
+                    continue;
+                }
+
+                Vector2[] result = new Vector2[clipperPath.Count];
+
+                for (var j = 0; j < clipperPath.Count; j++)
+                {
+                    IntPoint point = clipperPath[j];
+                    result[j] = geom.Float(new IntVector(point.X, point.Y));
+                }
+
+                results.Add(result);
+            }
+
+            if (results.Count == 0)
+            {
+                return false;
+            }
+
+            repairedPaths = results.ToArray();
+            return true;
         }
 
         private static Vector2[] SanitizePath(Vector2[] path, IntGeom geom)
