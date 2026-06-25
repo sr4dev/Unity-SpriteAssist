@@ -35,7 +35,9 @@ namespace SpriteAssist
 
         public void UpdateAndResize(Rect rect, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            if (!dummySprite.TryGetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType))
+            Sprite source = SpriteConfigData.IsUnityDefaultMode(data.mode) && OutlineUtil.HasImporterOutline(baseSprite) ? baseSprite : dummySprite;
+
+            if (!source.TryGetVertexAndTriangle2D(data, out _vertices, out _triangles, _meshRenderType))
             {
                 _vertices = baseSprite.vertices;
                 _triangles = baseSprite.triangles;

@@ -6,12 +6,10 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    // ScriptableSingletonの.assetをAssets/外(ProjectSettings/)へ置くことでAssetDatabaseによる二重インスタンス生成を防ぐ
     [FilePath(SETTINGS_PATH, FilePathAttribute.Location.ProjectFolder)]
     public class SpriteAssistSettings : ScriptableSingleton<SpriteAssistSettings>
     {
         private const string SETTINGS_PATH = "ProjectSettings/SpriteAssistSettings.asset";
-        // 旧バージョンはAssets/内にassetを保存していた
         private const string LEGACY_SETTINGS_PATH = "Assets/Editor/SpriteAssistSettings.asset";
         private const string RENDER_SHADER_TRANSPARENT = "Unlit/Transparent";
         private const string RENDER_SHADER_OPAQUE = "Unlit/Texture";
@@ -25,7 +23,6 @@ namespace SpriteAssist
         public string defaultTransparentShaderName = RENDER_SHADER_TRANSPARENT;
         public string defaultOpaqueShaderName = RENDER_SHADER_OPAQUE;
         public TriangulationLibrary defaultTriangulationLibrary = TriangulationLibrary.LibTessDotNet;
-        public bool applyTriangulationToUnityDefaultModes = true;
         public bool logTriangulationFallback = true;
         //public int defaultThickness;
 
@@ -103,6 +100,38 @@ namespace SpriteAssist
         public void SaveSettings()
         {
             Save(true);
+        }
+
+        // In parallel import workers ScriptableSingleton.instance does not reflect changes made in the main process and returns a stale value,
+        // so the triangulation library (which affects the mesh result) is read directly from the file during import to keep worker and main results consistent.
+        public static TriangulationLibrary ResolvedDefaultTriangulationLibrary
+        {
+            get
+            {
+                if (PrefabUtil.IsAssetImportWorkerProcess())
+                {
+                    try
+                    {
+                        if (File.Exists(SETTINGS_PATH))
+                        {
+                            foreach (string raw in File.ReadAllLines(SETTINGS_PATH))
+                            {
+                                string line = raw.Trim();
+                                if (line.StartsWith("defaultTriangulationLibrary:") &&
+                                    int.TryParse(line.Substring("defaultTriangulationLibrary:".Length).Trim(), out int value))
+                                {
+                                    return (TriangulationLibrary)value;//Todo: more simple way to find the value of defaultTriangulationLibrary in the settings file?
+                                }
+                            }
+                        }
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+
+                return instance.defaultTriangulationLibrary;
+            }
         }
         
         public bool ShouldProcessSprite(string path)

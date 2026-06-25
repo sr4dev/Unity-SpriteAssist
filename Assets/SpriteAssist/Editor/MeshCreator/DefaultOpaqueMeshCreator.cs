@@ -13,17 +13,21 @@ namespace SpriteAssist
 
         protected override Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
         {
-            return SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes ? dummySprite : baseSprite;
+            if (OutlineUtil.HasImporterOutline(baseSprite))
+            {
+                return baseSprite;
+            }
+
+            return dummySprite;
         }
 
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            if (!SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes)
-            {
-                return;
-            }
-
-            base.OverrideGeometry(baseSprite, dummySprite, textureInfo, data);
+            string assetPath = textureInfo.textureAssetPath;
+            var sourceSprite = OutlineUtil.HasImporterOutline(baseSprite, assetPath) ? baseSprite : dummySprite;
+            sourceSprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType3D, assetPath);
+            vertices = MeshUtil.GetScaledVertices(vertices, textureInfo, isClamped: true);
+            baseSprite.OverrideGeometry(vertices, triangles);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

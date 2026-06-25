@@ -34,7 +34,7 @@ namespace SpriteAssist
                 return;
             }
 
-            TriangulationLibrary library = SpriteAssistSettings.instance.defaultTriangulationLibrary;
+            TriangulationLibrary library = SpriteAssistSettings.ResolvedDefaultTriangulationLibrary;
             ITriangulator triangulator = GetTriangulator(library);
 
             if (triangulator.TryTriangulate(config, paths, out vertices, out triangles))

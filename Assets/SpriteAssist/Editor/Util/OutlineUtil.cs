@@ -56,6 +56,75 @@ namespace SpriteAssist
             }
         }
 
+        public static bool TryGetImporterOutline(Sprite sprite, out Vector2[][] paths)
+        {
+            return TryGetImporterOutline(sprite, null, out paths);
+        }
+
+        // In import workers AssetDatabase.GetAssetPath(sprite) can return an empty string, so let callers pass a known assetPath.
+        public static bool TryGetImporterOutline(Sprite sprite, string assetPath, out Vector2[][] paths)
+        {
+            paths = Array.Empty<Vector2[]>();
+
+            if (sprite == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                assetPath = AssetDatabase.GetAssetPath(sprite);
+            }
+
+            var textureImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (textureImporter == null)
+            {
+                return false;
+            }
+
+            var serializedObject = new SerializedObject(textureImporter);
+            int spriteIndex = GetSpriteIndex(serializedObject, textureImporter.spriteImportMode, sprite.name);
+            if (spriteIndex < 0)
+            {
+                return false;
+            }
+
+            var outlineSP = GetOutlineProperty(serializedObject, textureImporter.spriteImportMode, spriteIndex);
+            var outlines = GetOutlines(outlineSP);
+
+            if (outlines.Count == 0)
+            {
+                return false;
+            }
+
+            float pixelsPerUnit = sprite.pixelsPerUnit;
+            Vector2 pivotOffset = (new Vector2(0.5f, 0.5f) - sprite.GetNormalizedPivot()) * sprite.rect.size;
+
+            paths = new Vector2[outlines.Count][];
+            for (int i = 0; i < outlines.Count; i++)
+            {
+                Vector2[] outline = outlines[i];
+                paths[i] = new Vector2[outline.Length];
+
+                for (int j = 0; j < outline.Length; j++)
+                {
+                    paths[i][j] = (outline[j] + pivotOffset) / pixelsPerUnit;
+                }
+            }
+
+            return true;
+        }
+
+        public static bool HasImporterOutline(Sprite sprite)
+        {
+            return TryGetImporterOutline(sprite, null, out _);
+        }
+
+        public static bool HasImporterOutline(Sprite sprite, string assetPath)
+        {
+            return TryGetImporterOutline(sprite, assetPath, out _);
+        }
+
         public static void Translate(TextureImporter textureImporter, TranslateDirection direction)
         {
             var serializedObject = new SerializedObject(textureImporter);
@@ -441,6 +510,25 @@ namespace SpriteAssist
         private static SerializedProperty GetOutlineProperty(SerializedObject importer, SpriteImportMode mode, int index)
         {
             return mode == SpriteImportMode.Multiple ? importer.FindProperty("m_SpriteSheet.m_Sprites").GetArrayElementAtIndex(index).FindPropertyRelative("m_Outline") : importer.FindProperty("m_SpriteSheet.m_Outline");
+        }
+
+        private static int GetSpriteIndex(SerializedObject importer, SpriteImportMode mode, string spriteName)
+        {
+            if (mode != SpriteImportMode.Multiple)
+            {
+                return 0;
+            }
+
+            var spritesSP = importer.FindProperty("m_SpriteSheet.m_Sprites");
+            for (int i = 0; i < spritesSP.arraySize; i++)
+            {
+                if (spritesSP.GetArrayElementAtIndex(i).FindPropertyRelative("m_Name").stringValue == spriteName)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public static bool HasOutline(TextureImporter textureImporter)

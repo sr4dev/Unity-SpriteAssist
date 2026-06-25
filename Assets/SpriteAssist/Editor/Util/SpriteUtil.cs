@@ -11,9 +11,9 @@ namespace SpriteAssist
             return sprite.pivot / sprite.rect.size;
         }
 
-        public static void GetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices2D, out ushort[] triangles2D, MeshRenderType meshRenderType)
+        public static void GetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices2D, out ushort[] triangles2D, MeshRenderType meshRenderType, string assetPath = null)
         {
-            if (!TryGetVertexAndTriangle2D(sprite, configData, out vertices2D, out triangles2D, meshRenderType))
+            if (!TryGetVertexAndTriangle2D(sprite, configData, out vertices2D, out triangles2D, meshRenderType, assetPath))
             {
                 //fallback
                 vertices2D = sprite.vertices;
@@ -21,9 +21,9 @@ namespace SpriteAssist
             }
         }
 
-        public static void GetVertexAndTriangle3D(this Sprite sprite, SpriteConfigData configData, out Vector3[] vertices3D, out int[] triangles3D, MeshRenderType meshRenderType)
+        public static void GetVertexAndTriangle3D(this Sprite sprite, SpriteConfigData configData, out Vector3[] vertices3D, out int[] triangles3D, MeshRenderType meshRenderType, string assetPath = null)
         {
-            if (!TryGetVertexAndTriangle2D(sprite, configData, out var vertices2D, out var triangles2D, meshRenderType))
+            if (!TryGetVertexAndTriangle2D(sprite, configData, out var vertices2D, out var triangles2D, meshRenderType, assetPath))
             {
                 //fallback
                 vertices2D = sprite.vertices;
@@ -39,7 +39,7 @@ namespace SpriteAssist
             }
         }
 
-        public static bool TryGetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType)
+        public static bool TryGetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType, string assetPath = null)
         {
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
@@ -49,13 +49,11 @@ namespace SpriteAssist
                 return false;
             }
 
-            if (SpriteConfigData.IsUnityDefaultMode(configData.mode) &&
-                !SpriteAssistSettings.instance.applyTriangulationToUnityDefaultModes)
+            bool isUnityDefaultMode = SpriteConfigData.IsUnityDefaultMode(configData.mode);
+            if (!isUnityDefaultMode || !OutlineUtil.TryGetImporterOutline(sprite, assetPath, out var paths))
             {
-                return false;
+                paths = OutlineUtil.GenerateOutline(sprite, configData, meshRenderType);
             }
-
-            Vector2[][] paths = OutlineUtil.GenerateOutline(sprite, configData, meshRenderType);
 
             if (PathSanitizer.CountPoints(paths) == 0)
             {
