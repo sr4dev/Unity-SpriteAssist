@@ -5,6 +5,16 @@ namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {
+        private void OnPreprocessTexture()
+        {
+            if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;
+
+            TextureImporter textureImporter = assetImporter as TextureImporter;
+            if (textureImporter == null) return;
+
+            SpriteImportData.RemoveMissingExternalPrefab(textureImporter, assetPath);
+        }
+
         private void OnPostprocessSprites(Texture2D tex, Sprite[] sprites)
         {
             if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;

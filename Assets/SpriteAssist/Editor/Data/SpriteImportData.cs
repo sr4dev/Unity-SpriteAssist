@@ -107,5 +107,27 @@ namespace SpriteAssist
             textureImporter.RemoveRemap(_newSourceAssetIdentifier);
             //textureImporter.SaveAndReimport();
         }
+
+        public void RemoveMissingExternalPrefab()
+        {
+            RemoveMissingExternalPrefab(textureImporter, assetPath);
+        }
+
+        public static void RemoveMissingExternalPrefab(TextureImporter textureImporter, string assetPath)
+        {
+            var oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
+            var newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
+            Dictionary<AssetImporter.SourceAssetIdentifier, Object> map = textureImporter.GetExternalObjectMap();
+
+            if (map.TryGetValue(oldSourceAssetIdentifier, out Object oldPrefab) && oldPrefab == null)
+            {
+                textureImporter.RemoveRemap(oldSourceAssetIdentifier);
+            }
+
+            if (map.TryGetValue(newSourceAssetIdentifier, out Object newPrefab) && newPrefab == null)
+            {
+                textureImporter.RemoveRemap(newSourceAssetIdentifier);
+            }
+        }
     }
 }

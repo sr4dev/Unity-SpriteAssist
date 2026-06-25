@@ -590,6 +590,7 @@ namespace SpriteAssist
                 if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
                 {
                     importData.textureImporter.userData = _originalUserData;
+                    importData.RemoveMissingExternalPrefab();
 
                     if (withMeshPrefabProcess)
                     {
