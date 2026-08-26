@@ -113,21 +113,26 @@ namespace SpriteAssist
             RemoveMissingExternalPrefab(textureImporter, assetPath);
         }
 
-        public static void RemoveMissingExternalPrefab(TextureImporter textureImporter, string assetPath)
+        public static bool RemoveMissingExternalPrefab(TextureImporter textureImporter, string assetPath)
         {
             var oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             var newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
             Dictionary<AssetImporter.SourceAssetIdentifier, Object> map = textureImporter.GetExternalObjectMap();
+            bool removed = false;
 
             if (map.TryGetValue(oldSourceAssetIdentifier, out Object oldPrefab) && oldPrefab == null)
             {
                 textureImporter.RemoveRemap(oldSourceAssetIdentifier);
+                removed = true;
             }
 
             if (map.TryGetValue(newSourceAssetIdentifier, out Object newPrefab) && newPrefab == null)
             {
                 textureImporter.RemoveRemap(newSourceAssetIdentifier);
+                removed = true;
             }
+
+            return removed;
         }
     }
 }

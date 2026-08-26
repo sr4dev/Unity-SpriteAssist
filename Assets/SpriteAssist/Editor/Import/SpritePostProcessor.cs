@@ -5,16 +5,6 @@ namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {
-        private void OnPreprocessTexture()
-        {
-            if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;
-
-            TextureImporter textureImporter = assetImporter as TextureImporter;
-            if (textureImporter == null) return;
-
-            SpriteImportData.RemoveMissingExternalPrefab(textureImporter, assetPath);
-        }
-
         private void OnPostprocessSprites(Texture2D tex, Sprite[] sprites)
         {
             if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;
@@ -40,6 +30,14 @@ namespace SpriteAssist
             foreach (string importedAssetPath in importedAssets)
             {
                 if (!SpriteAssistSettings.instance.ShouldProcessSprite(importedAssetPath)) continue;
+
+                TextureImporter textureImporter = AssetImporter.GetAtPath(importedAssetPath) as TextureImporter;
+                if (textureImporter == null) continue;
+
+                if (SpriteImportData.RemoveMissingExternalPrefab(textureImporter, importedAssetPath))
+                {
+                    AssetDatabase.WriteImportSettingsIfDirty(importedAssetPath);
+                }
 
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(importedAssetPath);
 
