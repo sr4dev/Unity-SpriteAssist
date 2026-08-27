@@ -1,0 +1,13 @@
+{
+    "name": "Unity-SpriteAssist.Editor.Tests",
+    "rootNamespace": "SpriteAssist.Tests",
+    "references": [
+        "Unity-SpriteAssist"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

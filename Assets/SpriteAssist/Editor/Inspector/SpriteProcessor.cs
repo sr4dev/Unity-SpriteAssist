@@ -60,11 +60,14 @@ namespace SpriteAssist
                         {
                             if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
                             {
-                                importData.textureImporterSettings.FixToSingleSprite();
-                                importData.textureImporter.SetTextureSettings(importData.textureImporterSettings);
-                                EditorUtility.SetDirty(importData.textureImporter);
-                                AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
-                                importData.textureImporter.SaveAndReimport();
+                                using (importData)
+                                {
+                                    importData.textureImporterSettings.FixToSingleSprite();
+                                    importData.textureImporter.SetTextureSettings(importData.textureImporterSettings);
+                                    EditorUtility.SetDirty(importData.textureImporter);
+                                    AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                                    importData.textureImporter.SaveAndReimport();
+                                }
                             }
                         }
 
@@ -532,8 +535,8 @@ namespace SpriteAssist
         public void Dispose()
         {
             _preview.Dispose();
-
             ShowSaveOrRevertUI();
+            _mainImportData.Dispose();
         }
 
         public void OverrideGeometry()
@@ -589,37 +592,40 @@ namespace SpriteAssist
             {
                 if (SpriteImportData.TryGetSpriteImportData(selectedTarget, out var importData))
                 {
-                    importData.textureImporter.userData = _originalUserData;
-                    importData.RemoveMissingExternalPrefab();
-
-                    if (withMeshPrefabProcess)
+                    using (importData)
                     {
-                        if (hasMeshPrefab)
+                        importData.textureImporter.userData = _originalUserData;
+                        importData.RemoveMissingExternalPrefab();
+
+                        if (withMeshPrefabProcess)
                         {
-                            MeshPrefabService.RemoveMeshPrefabContainer(importData, removeMeshPrefab);
+                            if (hasMeshPrefab)
+                            {
+                                MeshPrefabService.RemoveMeshPrefabContainer(importData, removeMeshPrefab);
+                            }
+                            else
+                            {
+                                MeshPrefabService.SetMeshPrefabContainer(importData, _meshCreator, _configData, removeMeshPrefab, attachedMeshPrefab);
+                            }
                         }
-                        else
+
+                        MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
+
+                        if (withCopyFromSprite)
                         {
-                            MeshPrefabService.SetMeshPrefabContainer(importData, _meshCreator, _configData, removeMeshPrefab, attachedMeshPrefab);
+                            Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(importData.assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
+
+                            if (rootSprite != null)
+                            {
+                                importData.textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
+                                importData.textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
+                            }
                         }
+
+                        EditorUtility.SetDirty(importData.textureImporter);
+                        AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                        importData.textureImporter.SaveAndReimport();
                     }
-
-                    MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
-
-                    if (withCopyFromSprite)
-                    {
-                        Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(importData.assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
-
-                        if (rootSprite != null)
-                        {
-                            importData.textureImporter.spritePixelsPerUnit = rootSprite.pixelsPerUnit;
-                            importData.textureImporter.spritePivot = rootSprite.GetNormalizedPivot();
-                        }
-                    }
-
-                    EditorUtility.SetDirty(importData.textureImporter);
-                    AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
-                    importData.textureImporter.SaveAndReimport();
                 }
             }
 

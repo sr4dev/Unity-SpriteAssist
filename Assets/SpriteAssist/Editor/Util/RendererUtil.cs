@@ -14,7 +14,7 @@ namespace SpriteAssist
                     PrefabUtil.TryGetSpriteRendererWithSprite(gameObject, out SpriteRenderer spriteRenderer) &&
                     PrefabUtil.TryGetInternalAssetPath(spriteRenderer.sprite.texture, out string texturePath))
                 {
-                    SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
+                    using SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
 
                     if (import.HasMeshPrefab)
                     {
@@ -40,7 +40,7 @@ namespace SpriteAssist
                 PrefabUtil.TryGetSpriteRendererWithSprite(gameObject, out SpriteRenderer spriteRenderer) &&
                 PrefabUtil.TryGetInternalAssetPath(spriteRenderer.sprite.texture, out string texturePath))
             {
-                SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
+                using SpriteImportData import = new SpriteImportData(spriteRenderer.sprite, texturePath);
                 if (import.HasMeshPrefab)
                 {
                     GameObject meshPrefabInstance = (GameObject)PrefabUtility.InstantiatePrefab(import.MeshPrefab);

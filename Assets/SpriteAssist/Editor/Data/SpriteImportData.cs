@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
-    public class SpriteImportData
+    public class SpriteImportData : IDisposable
     {
         public const string MESH_PREFAB_IDENTIFIER = "MeshPrefab";
 
@@ -133,6 +133,19 @@ namespace SpriteAssist
             }
 
             return removed;
+        }
+
+        public void Dispose()
+        {
+            if (dummySprite == null || dummySprite == sprite) return;
+
+            Texture2D dummyTexture = dummySprite.texture;
+            Object.DestroyImmediate(dummySprite);
+
+            if (dummyTexture != null && dummyTexture != sprite.texture)
+            {
+                Object.DestroyImmediate(dummyTexture);
+            }
         }
     }
 }

@@ -32,6 +32,8 @@ namespace SpriteAssist
         {
             base.OnDisable();
 
+            DestroyDummySprite();
+
             if(SpriteProcessor != null)
             {
                 SpriteProcessor?.Dispose();
@@ -79,6 +81,7 @@ namespace SpriteAssist
                 if (_oldSprite != sprite || isSpriteReloaded)
                 {
                     string assetPath = AssetDatabase.GetAssetPath(sprite);
+                    DestroyDummySprite();
                     _dummySprite = SpriteUtil.TryCreateDummySprite(sprite, SpriteProcessor.TextureImporter, assetPath);
                     _textureInfo = new TextureInfo(_dummySprite, assetPath);
                 }
@@ -103,6 +106,20 @@ namespace SpriteAssist
         private void OnAfterAssemblyReload()
         {
             _oldSprite = null;
+        }
+
+        private void DestroyDummySprite()
+        {
+            if (_dummySprite == null) return;
+
+            Texture2D dummyTexture = _dummySprite.texture;
+            DestroyImmediate(_dummySprite);
+            _dummySprite = null;
+
+            if (dummyTexture != null)
+            {
+                DestroyImmediate(dummyTexture);
+            }
         }
     }
 }

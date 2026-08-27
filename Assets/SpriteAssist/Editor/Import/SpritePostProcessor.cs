@@ -45,7 +45,7 @@ namespace SpriteAssist
 
                 SpriteInspector.isSpriteReloaded = true;
 
-                SpriteImportData importData = new SpriteImportData(sprite, importedAssetPath);
+                using SpriteImportData importData = new SpriteImportData(sprite, importedAssetPath);
 
                 UpdateMeshPrefab(importData);
 
@@ -60,7 +60,10 @@ namespace SpriteAssist
         {
             if (TryResolveFirstSprite(sprites, out SpriteImportData importData, out MeshCreatorBase meshCreator, out SpriteConfigData configData))
             {
-                MeshPrefabService.OverrideGeometry(importData, meshCreator, configData);
+                using (importData)
+                {
+                    MeshPrefabService.OverrideGeometry(importData, meshCreator, configData);
+                }
             }
         }
 
