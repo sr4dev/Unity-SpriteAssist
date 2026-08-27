@@ -17,6 +17,8 @@ namespace SpriteAssist
                 label = "SpriteAssist",
                 guiHandler = (_) =>
                 {
+                    // ScriptableSingleton uses HideAndDontSave, whose NotEditable flag disables SerializedProperty fields in newer Unity versions.
+                    SpriteAssistSettings.instance.hideFlags &= ~HideFlags.NotEditable;
                     SerializedObject settings = new SerializedObject(SpriteAssistSettings.instance);
                     settings.Update();
                     EditorGUILayout.Space();
@@ -69,6 +71,19 @@ namespace SpriteAssist
                         EditorGUILayout.LabelField("Preview thumbnail", EditorStyles.boldLabel);
                         EditorGUILayout.PropertyField(settings.FindProperty(nameof(SpriteAssistSettings.instance.maxThumbnailPreviewCount)), new GUIContent("Max count"));
                         EditorGUILayout.Space();
+
+                        EditorGUILayout.LabelField("Sprite Inclusion", EditorStyles.boldLabel);
+                        using (new EditorGUI.IndentLevelScope())
+                        {
+                            EditorGUILayout.PropertyField(
+                                settings.FindProperty(nameof(SpriteAssistSettings.instance.inclusionMode)),
+                                new GUIContent("Mode", "Choose whether matching sprites are included or excluded from SpriteAssist processing."));
+                            EditorGUILayout.PropertyField(
+                                settings.FindProperty(nameof(SpriteAssistSettings.instance.inclusionGlobs)),
+                                new GUIContent("Globs", "Patterns relative to Assets/ that identify included or excluded sprites."),
+                                true);
+                            EditorGUILayout.Space();
+                        }
 
                         EditorGUILayout.LabelField("Library", EditorStyles.boldLabel);
                         using (new EditorGUI.IndentLevelScope())
