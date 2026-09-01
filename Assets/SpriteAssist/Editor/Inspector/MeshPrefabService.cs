@@ -19,6 +19,19 @@ namespace SpriteAssist
             }
         }
 
+        public static void UpdateMeshInMeshPrefabFromImportedSprite(GameObject meshPrefab, Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData)
+        {
+            Vector3[] vertices = sprite.vertices.ToVector3();
+            int[] triangles = sprite.triangles.ToInt();
+
+            if (configData.thickness > 0 && configData.mode != SpriteConfigData.Mode.OpaqueEdgeGridMesh)
+            {
+                TriangulationUtil.ExpandMeshThickness(ref vertices, ref triangles, configData.thickness);
+            }
+
+            PrefabUtil.UpdateMeshFiltersMesh(meshPrefab, vertices, triangles, textureInfo, configData.isCorrectNormal, configData.isWeldVertices);
+        }
+
         public static void SetMeshPrefabContainer(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData, bool removeOldMeshPrefab, GameObject attachedMeshPrefab)
         {
             importData.RemoveExternalPrefab(removeOldMeshPrefab);

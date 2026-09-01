@@ -1,10 +1,20 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
     public class SpritePostProcessor : AssetPostprocessor
     {
+        private const int BulkUnloadThreshold = 100;
+        private static readonly Dictionary<string, string> _pendingMeshPrefabs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static bool _flushScheduled;
+        private static bool _isFlushingMeshPrefabs;
+        private static bool _isBulkFlush;
+
         private void OnPostprocessSprites(Texture2D tex, Sprite[] sprites)
         {
             if (!SpriteAssistSettings.instance.ShouldProcessSprite(assetPath)) return;
@@ -25,7 +35,7 @@ namespace SpriteAssist
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             // worker プロセスでは外部アセットを変更しない（メインプロセスのみで処理）
-            if (PrefabUtil.IsAssetImportWorkerProcess()) return;
+            if (PrefabUtil.IsAssetImportWorkerProcess() || _isFlushingMeshPrefabs) return;
 
             foreach (string importedAssetPath in importedAssets)
             {
@@ -34,26 +44,19 @@ namespace SpriteAssist
                 TextureImporter textureImporter = AssetImporter.GetAtPath(importedAssetPath) as TextureImporter;
                 if (textureImporter == null) continue;
 
+                if (textureImporter.spriteImportMode != SpriteImportMode.Single) continue;
+
                 if (SpriteImportData.RemoveMissingExternalPrefab(textureImporter, importedAssetPath))
                 {
                     AssetDatabase.WriteImportSettingsIfDirty(importedAssetPath);
                 }
 
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(importedAssetPath);
+                if (!TryGetMeshPrefabPath(textureImporter, importedAssetPath, out string meshPrefabPath)) continue;
 
-                if (sprite == null) continue;
-
-                SpriteInspector.isSpriteReloaded = true;
-
-                using SpriteImportData importData = new SpriteImportData(sprite, importedAssetPath);
-
-                UpdateMeshPrefab(importData);
-
-                if (SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically)
-                {
-                    RenameMeshPrefab(importData);
-                }
+                QueueMeshPrefab(importedAssetPath, meshPrefabPath);
             }
+
+            ScheduleMeshPrefabFlush();
         }
 
         private void OverrideSpriteGeometry(Sprite[] sprites)
@@ -84,29 +87,166 @@ namespace SpriteAssist
             return false;
         }
 
-        private static void UpdateMeshPrefab(SpriteImportData importData)
+        private static bool TryGetMeshPrefabPath(TextureImporter textureImporter, string spriteAssetPath, out string meshPrefabPath)
         {
-            // Mesh Prefab を持つ single sprite のみ更新対象
-            if (!importData.HasMeshPrefab) return;
-            if (!importData.textureImporterSettings.IsSingleSprite()) return;
+            string legacyIdentifier = Path.GetFileNameWithoutExtension(spriteAssetPath);
+            foreach (KeyValuePair<AssetImporter.SourceAssetIdentifier, Object> externalObject in textureImporter.GetExternalObjectMap())
+            {
+                if ((externalObject.Key.name != SpriteImportData.MESH_PREFAB_IDENTIFIER && externalObject.Key.name != legacyIdentifier) ||
+                    externalObject.Value is not GameObject prefab)
+                {
+                    continue;
+                }
 
-            SpriteConfigData configData = SpriteConfigData.GetData(importData.textureImporter.userData);
-            MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(configData.mode);
-            MeshPrefabService.UpdateMeshInMeshPrefab(importData, meshCreator, configData);
+                meshPrefabPath = AssetDatabase.GetAssetPath(prefab);
+                if (!string.IsNullOrEmpty(meshPrefabPath))
+                {
+                    return true;
+                }
+            }
+
+            meshPrefabPath = null;
+            return false;
         }
 
-        private static void RenameMeshPrefab(SpriteImportData importData)
+        private static void QueueMeshPrefab(string spriteAssetPath, string meshPrefabPath)
         {
-            string assetPath = importData.assetPath;
-            GameObject meshPrefab = importData.MeshPrefab;
+            _pendingMeshPrefabs[meshPrefabPath] = spriteAssetPath;
+        }
 
-            if (meshPrefab == null) return;
+        private static void ScheduleMeshPrefabFlush()
+        {
+            if (_flushScheduled || _pendingMeshPrefabs.Count == 0) return;
 
-            // import サイクル完了後に rename する（import 中の asset 移動を避ける）
-            EditorApplication.delayCall += () =>
+            _flushScheduled = true;
+            EditorApplication.delayCall += FlushMeshPrefabs;
+        }
+
+        private static void FlushMeshPrefabs()
+        {
+            _flushScheduled = false;
+            if (_pendingMeshPrefabs.Count == 0) return;
+
+            _isBulkFlush |= _pendingMeshPrefabs.Count >= BulkUnloadThreshold;
+            var pendingMeshPrefabs = new Dictionary<string, string>(BulkUnloadThreshold, StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, string> pendingMeshPrefab in _pendingMeshPrefabs)
             {
-                PrefabUtil.TryRename(assetPath, meshPrefab);
-            };
+                pendingMeshPrefabs.Add(pendingMeshPrefab.Key, pendingMeshPrefab.Value);
+                if (pendingMeshPrefabs.Count == BulkUnloadThreshold) break;
+            }
+
+            foreach (string meshPrefabPath in pendingMeshPrefabs.Keys)
+            {
+                _pendingMeshPrefabs.Remove(meshPrefabPath);
+            }
+
+            _isFlushingMeshPrefabs = true;
+
+            try
+            {
+                var dirtyMeshPrefabs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (KeyValuePair<string, string> pendingMeshPrefab in pendingMeshPrefabs)
+                {
+                    if (UpdateMeshPrefab(pendingMeshPrefab.Value, pendingMeshPrefab.Key))
+                        dirtyMeshPrefabs.Add(pendingMeshPrefab.Key, pendingMeshPrefab.Value);
+                }
+
+                foreach (string meshPrefabPath in dirtyMeshPrefabs.Keys)
+                {
+                    SaveMeshPrefabIfDirty(meshPrefabPath);
+                }
+
+                var importPaths = new HashSet<string>(dirtyMeshPrefabs.Keys, StringComparer.OrdinalIgnoreCase);
+                AssetDatabase.StartAssetEditing();
+                try
+                {
+                    if (SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically)
+                    {
+                        RenameMeshPrefabs(dirtyMeshPrefabs, importPaths);
+                    }
+
+                    ImportMeshPrefabs(importPaths);
+                }
+                finally
+                {
+                    // rename と import の間で自動 refresh させず、必ず local artifact を生成する。
+                    AssetDatabase.StopAssetEditing();
+                }
+
+                if (_isBulkFlush)
+                {
+                    EditorUtility.UnloadUnusedAssetsImmediate();
+                }
+            }
+            finally
+            {
+                _isFlushingMeshPrefabs = false;
+                if (_pendingMeshPrefabs.Count == 0) _isBulkFlush = false;
+                ScheduleMeshPrefabFlush();
+            }
+        }
+
+        private static bool UpdateMeshPrefab(string spriteAssetPath, string meshPrefabPath)
+        {
+            TextureImporter textureImporter = AssetImporter.GetAtPath(spriteAssetPath) as TextureImporter;
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spriteAssetPath);
+            GameObject meshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
+            if (textureImporter == null || sprite == null || meshPrefab == null) return false;
+
+            SpriteInspector.isSpriteReloaded = true;
+            SpriteConfigData configData = SpriteConfigData.GetData(textureImporter.userData);
+            if (configData.mode == SpriteConfigData.Mode.ComplexMesh)
+            {
+                using SpriteImportData importData = new SpriteImportData(sprite, textureImporter, spriteAssetPath);
+                MeshPrefabService.UpdateMeshInMeshPrefab(importData, MeshCreatorBase.GetInstance(configData.mode), configData);
+            }
+            else
+            {
+                MeshPrefabService.UpdateMeshInMeshPrefabFromImportedSprite(meshPrefab, sprite,
+                    new TextureInfo(sprite, spriteAssetPath), configData);
+            }
+
+            return true;
+        }
+
+        private static void SaveMeshPrefabIfDirty(string meshPrefabPath)
+        {
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(meshPrefabPath))
+            {
+                if (EditorUtility.IsDirty(asset))
+                {
+                    AssetDatabase.SaveAssetIfDirty(asset);
+                }
+            }
+        }
+
+        private static void ImportMeshPrefabs(HashSet<string> importPaths)
+        {
+            if (importPaths.Count == 0) return;
+
+            foreach (string meshPrefabPath in importPaths)
+            {
+                // 変更した prefab は Accelerator から取得せず、ローカルで artifact を更新する。
+                AssetDatabase.ImportAsset(meshPrefabPath,
+                    ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+            }
+        }
+
+        private static void RenameMeshPrefabs(Dictionary<string, string> pendingMeshPrefabs, HashSet<string> importPaths)
+        {
+            foreach (KeyValuePair<string, string> pendingMeshPrefab in pendingMeshPrefabs)
+            {
+                string meshPrefabPath = pendingMeshPrefab.Key;
+                string spriteName = Path.GetFileNameWithoutExtension(pendingMeshPrefab.Value);
+                if (Path.GetFileNameWithoutExtension(meshPrefabPath) == spriteName) continue;
+
+                string error = AssetDatabase.RenameAsset(meshPrefabPath, spriteName);
+                if (!string.IsNullOrEmpty(error)) continue;
+
+                importPaths.Remove(meshPrefabPath);
+                string renamedPath = Path.Combine(Path.GetDirectoryName(meshPrefabPath)!, spriteName + ".prefab");
+                importPaths.Add(renamedPath.Replace('\\', '/'));
+            }
         }
     }
 }

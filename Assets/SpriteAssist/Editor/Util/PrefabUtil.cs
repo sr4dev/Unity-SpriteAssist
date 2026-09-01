@@ -172,6 +172,7 @@ namespace SpriteAssist
         {
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
             meshFilter.sharedMesh = MeshUtil.Update(meshFilter.sharedMesh, v, t, textureInfo, splitVertices, weldVertices);
+            EditorUtility.SetDirty(meshFilter.sharedMesh);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)
