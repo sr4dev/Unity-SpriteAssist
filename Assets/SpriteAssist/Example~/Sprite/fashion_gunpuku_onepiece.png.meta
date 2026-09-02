@@ -1,7 +1,10 @@
 fileFormatVersion: 2
 guid: e3705575bb82b484e9084d6010a74527
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -8680675989847930688
+    second: fashion_gunpuku_onepiece_0
   externalObjects:
   - first:
       type: UnityEditor:DefaultAsset
@@ -9,17 +12,11 @@ TextureImporter:
       name: ttt
     second: {fileID: 102900000, guid: 67095274c6db78545844b89c3e1c6b91, type: 3}
   - first:
-      type: UnityEngine:GameObject
-      assembly: UnityEngine.CoreModule
-      name: fashion_gunpuku_onepiece
-    second: {fileID: 2800778655808321509, guid: 78b9c73c89684e046bbda5e1f52bb390,
-      type: 3}
-  - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Standard
     second: {instanceID: 0}
-  serializedVersion: 11
+  serializedVersion: 13
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -36,9 +33,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -47,12 +47,12 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: -1
-    mipBias: -100
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -66,16 +66,23 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationMethod: 0
   spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 1
   platformSettings:
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -85,9 +92,10 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -97,10 +105,11 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: iPhone
+  - serializedVersion: 4
+    buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -109,12 +118,49 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: fashion_gunpuku_onepiece_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 312
+        height: 450
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c80adeed2b088780800000000000000
+      internalID: -8680675989847930688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
+    customData: 
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
@@ -124,9 +170,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-  spritePackingTag: 
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
-  userData: '{"mode":1,"transparentDetail":0.43799999356269839,"transparentAlphaTolerance":0,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"detectHoles":true,"edgeSmoothing":0.9599999785423279,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0}'
+  userData: '{"mode":1,"transparentDetail":0.10599999874830246,"transparentAlphaTolerance":0,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"opaqueExtrude":0.06400000303983689,"gridSize":0,"gridTolerance":0.0,"detectHoles":true,"edgeSmoothing":0.9599999785423279,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0,"overrideTag":false,"overrideLayer":false,"overrideSortingLayer":false,"tag":"Untagged","layer":0,"sortingLayerId":0,"sortingOrder":0}'
   assetBundleName: 
   assetBundleVariant: 

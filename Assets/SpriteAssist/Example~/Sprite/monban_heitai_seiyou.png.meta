@@ -104,6 +104,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -112,12 +114,12 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: -1
-    mipBias: -100
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -135,9 +137,12 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
   applyGammaDecoding: 0
   platformSettings:
   - serializedVersion: 3
@@ -756,9 +761,37 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      monban_heitai_seiyou_7: -6944964030848081850
+      monban_heitai_seiyou_13: -794153870523120680
+      monban_heitai_seiyou_10: -8182838496040007736
+      monban_heitai_seiyou_2: 7371594808964593464
+      monban_heitai_seiyou_23: 2044324315631166533
+      monban_heitai_seiyou_26: 6467008231471733391
+      monban_heitai_seiyou_6: -8302927452004342581
+      monban_heitai_seiyou_19: -3950016209508795952
+      monban_heitai_seiyou_24: 480516399847988839
+      monban_heitai_seiyou_14: -2338084783441011559
+      monban_heitai_seiyou_3: -2468186316615992996
+      monban_heitai_seiyou_16: 7720950290282434201
+      monban_heitai_seiyou_9: 3889569560877546972
+      monban_heitai_seiyou_15: 1552591712487098577
+      monban_heitai_seiyou_18: -8377489135965703187
+      monban_heitai_seiyou_25: -778582822928871452
+      monban_heitai_seiyou_8: 5347550811010936849
+      monban_heitai_seiyou_22: -7793703014579023428
+      monban_heitai_seiyou_4: -2050268982794036279
+      monban_heitai_seiyou_17: 2935097507011037978
+      monban_heitai_seiyou_0: 691841968507506712
+      monban_heitai_seiyou_1: 5311325079291166313
+      monban_heitai_seiyou_5: -3772685335938024822
+      monban_heitai_seiyou_11: -9109283719222008835
+      monban_heitai_seiyou_12: -8665220450072032711
+      monban_heitai_seiyou_21: 1511450301185516289
+      monban_heitai_seiyou_20: 6450127362306424402
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
-  userData: '{"mode":2,"transparentDetail":0.546999990940094,"transparentAlphaTolerance":33,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"detectHoles":true,"edgeSmoothing":0.9599999785423279,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0}'
+  userData: '{"mode":0,"transparentDetail":0.546999990940094,"transparentAlphaTolerance":33,"opaqueDetail":0.0010000000474974514,"opaqueAlphaTolerance":254,"opaqueExtrude":0.06400000303983689,"gridSize":0,"gridTolerance":0.0,"detectHoles":true,"edgeSmoothing":0.9599999785423279,"useNonZero":false,"transparentShaderName":"Unlit/Transparent","opaqueShaderName":"Unlit/Texture","thickness":0.0,"overrideTag":false,"overrideLayer":false,"overrideSortingLayer":false,"tag":"Untagged","layer":0,"sortingLayerId":0,"sortingOrder":0}'
   assetBundleName: 
   assetBundleVariant: 

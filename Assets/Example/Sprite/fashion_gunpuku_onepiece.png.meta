@@ -1,7 +1,10 @@
 fileFormatVersion: 2
 guid: e3705575bb82b484e9084d6010a74527
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -8680675989847930688
+    second: fashion_gunpuku_onepiece_0
   externalObjects:
   - first:
       type: UnityEditor:DefaultAsset
@@ -63,7 +66,9 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationMethod: 0
   spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -131,7 +136,29 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: fashion_gunpuku_onepiece_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 312
+        height: 450
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c80adeed2b088780800000000000000
+      internalID: -8680675989847930688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
