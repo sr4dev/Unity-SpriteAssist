@@ -48,6 +48,63 @@ namespace SpriteAssist.Tests
             }
         }
 
+        [Test, Timeout(300000)]
+        public void Migrate_OrphanLegacyPrefab_LinksTextureFromMaterialAndRelinksMesh()
+        {
+            const string OrphanTexturePath = TempRoot + "/Orphan.png";
+            const string OrphanPrefabPath = TempRoot + "/Orphan.prefab";
+
+            AssetDatabase.DeleteAsset(TempRoot);
+            Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+
+            try
+            {
+                // cloud.png(ComplexMesh 設定) の複製と、Material だけがその複製を指す未リンク legacy prefab を用意する
+                Assert.That(AssetDatabase.CopyAsset("Assets/Example/Sprite/cloud.png", OrphanTexturePath), Is.True);
+                Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, OrphanPrefabPath), Is.True);
+
+                Texture2D orphanTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(OrphanTexturePath);
+                foreach (Material material in AssetDatabase.LoadAllAssetsAtPath(OrphanPrefabPath).OfType<Material>())
+                {
+                    material.SetMainTexture(orphanTexture);
+                    EditorUtility.SetDirty(material);
+                }
+                AssetDatabase.SaveAssets();
+
+                TextureImporter importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
+                Assert.That(SpriteImportData.HasMeshPrefabLink(importer, OrphanTexturePath), Is.False);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.False);
+
+                MeshPrefabMigration.Result result = MeshPrefabMigration.Migrate(new[] { OrphanPrefabPath });
+                Assert.That(result.linked, Is.EqualTo(1));
+                Assert.That(result.migrated, Is.EqualTo(1));
+                Assert.That(result.skipped, Is.Zero);
+
+                importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
+                Assert.That(SpriteImportData.TryGetMeshPrefabPath(importer, OrphanTexturePath, out string linkedPrefabPath), Is.True);
+                Assert.That(linkedPrefabPath, Is.EqualTo(OrphanPrefabPath));
+
+                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out Mesh rootMesh, out Mesh subMesh), Is.True);
+                Assert.That(subMesh, Is.Not.Null, "cloud.png is ComplexMesh");
+
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath);
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.False);
+                Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(rootMesh));
+                Assert.That(prefab.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(subMesh));
+                Assert.That(AssetDatabase.LoadAllAssetsAtPath(OrphanPrefabPath).OfType<Mesh>(), Is.Empty);
+
+                // 再実行しても何もしない
+                result = MeshPrefabMigration.Migrate(new[] { OrphanPrefabPath, OrphanTexturePath });
+                Assert.That(result.linked, Is.Zero);
+                Assert.That(result.migrated, Is.Zero);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
         private static void PrepareFixtures()
         {
             AssetDatabase.DeleteAsset(TempRoot);
