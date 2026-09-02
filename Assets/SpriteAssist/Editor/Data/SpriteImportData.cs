@@ -113,6 +113,46 @@ namespace SpriteAssist
             RemoveMissingExternalPrefab(textureImporter, assetPath);
         }
 
+        // import worker では外部 prefab の Object を解決できないため、remap の key の有無だけで判定する
+        public static bool HasMeshPrefabLink(TextureImporter textureImporter, string assetPath)
+        {
+            string legacyIdentifier = Path.GetFileNameWithoutExtension(assetPath);
+
+            foreach (AssetImporter.SourceAssetIdentifier identifier in textureImporter.GetExternalObjectMap().Keys)
+            {
+                if (identifier.type == typeof(GameObject) &&
+                    (identifier.name == MESH_PREFAB_IDENTIFIER || identifier.name == legacyIdentifier))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool TryGetMeshPrefabPath(TextureImporter textureImporter, string assetPath, out string meshPrefabPath)
+        {
+            string legacyIdentifier = Path.GetFileNameWithoutExtension(assetPath);
+
+            foreach (KeyValuePair<AssetImporter.SourceAssetIdentifier, Object> externalObject in textureImporter.GetExternalObjectMap())
+            {
+                if ((externalObject.Key.name != MESH_PREFAB_IDENTIFIER && externalObject.Key.name != legacyIdentifier) ||
+                    externalObject.Value is not GameObject prefab)
+                {
+                    continue;
+                }
+
+                meshPrefabPath = AssetDatabase.GetAssetPath(prefab);
+                if (!string.IsNullOrEmpty(meshPrefabPath))
+                {
+                    return true;
+                }
+            }
+
+            meshPrefabPath = null;
+            return false;
+        }
+
         public static bool RemoveMissingExternalPrefab(TextureImporter textureImporter, string assetPath)
         {
             var oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));

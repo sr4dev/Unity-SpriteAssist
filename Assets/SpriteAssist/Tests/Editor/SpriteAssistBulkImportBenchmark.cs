@@ -63,25 +63,31 @@ namespace SpriteAssist.Tests
                     stream.WriteByte((byte)(i % byte.MaxValue));
                 }
 
-                AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
-                result.refreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-
-                // delayCall で実行される全 prefab batch も測定結果へ含める。
-                int batchCount = Mathf.CeilToInt(assetCount / 100f);
-                for (int i = 0; i <= batchCount; i++)
-                {
-                    yield return null;
-                }
-
-                stopwatch.Stop();
-                result.elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-                result.flushElapsedMilliseconds = result.elapsedMilliseconds - result.refreshElapsedMilliseconds;
-
                 long[] prefabWriteTimes = new long[assetCount];
                 for (int i = 0; i < assetCount; i++)
                 {
                     prefabWriteTimes[i] = File.GetLastWriteTimeUtc(GetPrefabPath(i)).Ticks;
                 }
+
+                AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+                result.refreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                // Mesh はテクスチャ import の成果物なので、import 後の prefab flush は存在しない。
+                yield return null;
+
+                stopwatch.Stop();
+                result.elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+                result.flushElapsedMilliseconds = result.elapsedMilliseconds - result.refreshElapsedMilliseconds;
+
+                for (int i = 0; i < assetCount; i++)
+                {
+                    if (File.GetLastWriteTimeUtc(GetPrefabPath(i)).Ticks != prefabWriteTimes[i])
+                    {
+                        result.prefabWriteCount++;
+                    }
+                }
+
+                Assert.That(result.prefabWriteCount, Is.Zero);
 
                 stopwatch.Restart();
                 for (int i = 0; i < assetCount; i++)
@@ -93,10 +99,7 @@ namespace SpriteAssist.Tests
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
                 result.noOpRefreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
-                for (int i = 0; i <= batchCount; i++)
-                {
-                    yield return null;
-                }
+                yield return null;
 
                 stopwatch.Stop();
                 result.noOpElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
@@ -180,10 +183,10 @@ namespace SpriteAssist.Tests
 
         private static void VerifyFixtureGeometry()
         {
-            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(GetTexturePath(0));
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GetPrefabPath(0));
-            Mesh mesh = prefab.GetComponent<MeshFilter>().sharedMesh;
+            string texturePath = GetTexturePath(0);
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(texturePath);
 
+            Assert.That(SpriteMeshAssets.TryGetMeshes(texturePath, out Mesh mesh, out _), Is.True);
             Assert.That(mesh.vertices, Is.EqualTo(sprite.vertices.ToVector3()));
             Assert.That(mesh.triangles, Is.EqualTo(sprite.triangles.ToInt()));
         }
@@ -201,6 +204,7 @@ namespace SpriteAssist.Tests
             public long noOpElapsedMilliseconds;
             public long noOpRefreshElapsedMilliseconds;
             public long noOpFlushElapsedMilliseconds;
+            public int prefabWriteCount;
             public int noOpPrefabWriteCount;
             public long reservedMemoryBefore;
             public long reservedMemoryAfter;

@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -17,46 +19,61 @@ namespace SpriteAssist.Tests
         private const string RenamedPrefabPath = TempRoot + "/RenamedSprite.prefab";
         private const string MultipleTexturePath = TempRoot + "/Multiple.png";
         private const string MultiplePrefabPath = TempRoot + "/UnchangedPrefab.prefab";
+        private const int MaxWaitFrames = 30;
 
         [UnityTest, Timeout(300000)]
-        public IEnumerator ParallelImport_UpdatesLegacySingleSpriteButSkipsMultipleSprite()
+        public IEnumerator ParallelImport_GeneratesMeshWithoutWritingPrefab_AndRenamesPrefab()
         {
             bool renameAutomatically = SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically;
             SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically = true;
 
             try
             {
-                PrepareFixtures(out Vector3[] multipleVertices, out int[] multipleTriangles);
+                PrepareFixtures();
+                long multiplePrefabWriteTime = File.GetLastWriteTimeUtc(MultiplePrefabPath).Ticks;
+
                 Touch(SingleTexturePath);
                 Touch(MultipleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
-                yield return null;
-                yield return null;
+                // rename は delayCall で実行され、AssetDatabase の状態次第で次フレームに再試行されることがある
+                yield return WaitUntil(() => AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath) != null, "prefab rename");
 
+                // Single: サブアセット Mesh が生成され、prefab は rename されるがファイル内容は書き換えられない
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(SingleTexturePath);
-                GameObject renamedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
-                Mesh renamedMesh = renamedPrefab.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(SpriteMeshAssets.TryGetMeshes(SingleTexturePath, out Mesh mesh, out _), Is.True);
+                Assert.That(mesh.vertices, Is.EqualTo(sprite.vertices.ToVector3()));
+                Assert.That(mesh.triangles, Is.EqualTo(sprite.triangles.ToInt()));
 
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath), Is.Null);
-                Assert.That(renamedMesh.vertices, Is.EqualTo(sprite.vertices.ToVector3()));
-                Assert.That(renamedMesh.triangles, Is.EqualTo(sprite.triangles.ToInt()));
+                GameObject renamedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
+                Assert.That(renamedPrefab, Is.Not.Null);
+                // RenameAsset は root GameObject 名を書き換えるため write time は比較しない。内容が legacy のままなら import は触っていない。
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(renamedPrefab), Is.True, "legacy prefab is migrated only by explicit user action");
 
-                GameObject multiplePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MultiplePrefabPath);
-                Mesh multipleMesh = multiplePrefab.GetComponent<MeshFilter>().sharedMesh;
+                // Multiple: 対象外。Mesh も生成されず prefab も触られない
+                Assert.That(SpriteMeshAssets.TryGetMeshes(MultipleTexturePath, out _, out _), Is.False);
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(TempRoot + "/Multiple.prefab"), Is.Null);
-                Assert.That(multipleMesh.vertices, Is.EqualTo(multipleVertices));
-                Assert.That(multipleMesh.triangles, Is.EqualTo(multipleTriangles));
+                Assert.That(File.GetLastWriteTimeUtc(MultiplePrefabPath).Ticks, Is.EqualTo(multiplePrefabWriteTime));
 
-                Assert.That(AssetDatabase.RenameAsset(RenamedPrefabPath, Path.GetFileNameWithoutExtension(LegacyPrefabPath)), Is.Empty);
+                // 移行後の prefab はサブアセット Mesh を参照し、以降の import で追従する
+                Assert.That(MeshPrefabMigration.Migrate(SingleTexturePath), Is.True);
+                GameObject migratedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
+                Assert.That(SpriteMeshAssets.IsLinkedToTexture(migratedPrefab, SingleTexturePath), Is.True);
+                Assert.That(AssetDatabase.LoadAllAssetsAtPath(RenamedPrefabPath).OfType<Mesh>(), Is.Empty);
+
+                long migratedPrefabWriteTime = File.GetLastWriteTimeUtc(RenamedPrefabPath).Ticks;
                 Touch(SingleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
                 yield return null;
                 yield return null;
 
-                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath), Is.Null);
-                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath), Is.Not.Null);
+                migratedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
+                Mesh referencedMesh = migratedPrefab.GetComponent<MeshFilter>().sharedMesh;
+                Assert.That(referencedMesh, Is.Not.Null);
+                Assert.That(AssetDatabase.GetAssetPath(referencedMesh), Is.EqualTo(SingleTexturePath));
+                Assert.That(File.GetLastWriteTimeUtc(RenamedPrefabPath).Ticks, Is.EqualTo(migratedPrefabWriteTime));
             }
             finally
             {
@@ -66,7 +83,18 @@ namespace SpriteAssist.Tests
             }
         }
 
-        private static void PrepareFixtures(out Vector3[] multipleVertices, out int[] multipleTriangles)
+        private static IEnumerator WaitUntil(Func<bool> condition, string description)
+        {
+            for (int i = 0; i < MaxWaitFrames; i++)
+            {
+                if (condition()) yield break;
+                yield return null;
+            }
+
+            Assert.That(condition(), Is.True, $"Timed out waiting for {description}");
+        }
+
+        private static void PrepareFixtures()
         {
             AssetDatabase.DeleteAsset(TempRoot);
             Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
@@ -89,10 +117,6 @@ namespace SpriteAssist.Tests
                 typeof(GameObject), SpriteImportData.MESH_PREFAB_IDENTIFIER);
             multipleImporter.AddRemap(identifier, multiplePrefab);
             Assert.That(AssetDatabase.WriteImportSettingsIfDirty(MultipleTexturePath), Is.True);
-
-            Mesh multipleMesh = multiplePrefab.GetComponent<MeshFilter>().sharedMesh;
-            multipleVertices = multipleMesh.vertices;
-            multipleTriangles = multipleMesh.triangles;
         }
 
         private static void Touch(string assetPath)

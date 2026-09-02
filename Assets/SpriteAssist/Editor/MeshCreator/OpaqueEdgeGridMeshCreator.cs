@@ -23,31 +23,18 @@ namespace SpriteAssist
             return PrefabUtil.CreateMeshPrefab(textureInfo, false);
         }
 
-        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh)
         {
-            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, false);
-            try
-            {
-                PrefabUtil.AddComponentsAssets(baseSprite, externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
-            }
-            finally
-            {
-                Object.DestroyImmediate(combinedMesh);
-            }
+            // thickness はこの mode では適用しない（既存仕様）
+            rootMesh = CreateMeshFromImportedSprite(importedSprite, textureInfo, data, applyThickness: false, RENDER_TYPE_OPAQUE);
+            subMesh = null;
         }
 
-        public override bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, false);
-            try
-            {
-                return PrefabUtil.UpdateMeshFiltersMesh(externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
-            }
-            finally
-            {
-                Object.DestroyImmediate(combinedMesh);
-            }
+            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
+            SpriteMeshAssets.TryGetMeshes(textureInfo.textureAssetPath, out Mesh rootMesh, out _);
+            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, rootMesh, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

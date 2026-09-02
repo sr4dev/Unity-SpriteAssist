@@ -29,10 +29,30 @@ namespace SpriteAssist
 
         public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
 
-        public abstract void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
+        // import 中に呼ばれる。Mesh Prefab 用の Mesh を生成して返す（テクスチャのサブアセットとして出力される）。
+        // importedSprite は OverrideGeometry 適用後のスプライト。
+        public abstract void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh);
 
-        public abstract bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
+        // Mesh Prefab の構造・Material・MeshFilter 参照を更新する（ユーザー操作時のみ。import 中には呼ばない）
+        public abstract void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
+
+        // OverrideGeometry 済みスプライトのジオメトリから Mesh を作る。
+        // dummy sprite からの再三角形分割と等価であることはテストで検証済み。
+        protected static Mesh CreateMeshFromImportedSprite(Sprite importedSprite, TextureInfo textureInfo, SpriteConfigData data, bool applyThickness, string name)
+        {
+            Vector3[] vertices = importedSprite.vertices.ToVector3();
+            int[] triangles = importedSprite.triangles.ToInt();
+
+            if (applyThickness && data.thickness > 0)
+            {
+                TriangulationUtil.ExpandMeshThickness(ref vertices, ref triangles, data.thickness);
+            }
+
+            Mesh mesh = MeshUtil.Update(null, vertices, triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            mesh.name = name;
+            return mesh;
+        }
     }
 }

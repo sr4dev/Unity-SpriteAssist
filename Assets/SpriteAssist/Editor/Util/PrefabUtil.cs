@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -116,7 +115,8 @@ namespace SpriteAssist
             return prefab;
         }
 
-        public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, string renderType, string shaderName, SpriteConfigData spriteConfigData)
+        // Mesh はテクスチャのサブアセット（SpriteMeshAssets）を参照する。Material のみ prefab のサブアセットとして持つ。
+        public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Mesh mesh, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
             prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.instance.defaultLayer;
             string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.instance.defaultTag;
@@ -151,10 +151,13 @@ namespace SpriteAssist
                 meshRenderer.sortingOrder = SpriteAssistSettings.instance.defaultSortingOrder;
             }
 
-            //create new mesh
-            Mesh mesh = MeshUtil.Update(null, v, t, textureInfo, spriteConfigData.isCorrectNormal, spriteConfigData.isWeldVertices);
-            mesh.name = renderType;
-            meshFilter.mesh = mesh;
+            //link imported mesh (texture sub-asset)
+            if (mesh == null)
+            {
+                Debug.LogWarning($"[SpriteAssist] Mesh sub-asset not found for '{sprite.texture.name}'. Reimport the texture to regenerate it.");
+            }
+
+            meshFilter.sharedMesh = mesh;
 
             //create new material
             Material material = new Material(Shader.Find(shaderName));
@@ -163,53 +166,9 @@ namespace SpriteAssist
 
             meshRenderer.sharedMaterial = material;
 
-            //set assets as sub-asset
+            //set material as sub-asset
             AssetDatabase.AddObjectToAsset(material, prefab);
-            AssetDatabase.AddObjectToAsset(mesh, prefab);
-            //AssetDatabase.SaveAssets();
-        }
-
-        public static bool UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
-        {
-            MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
-            Mesh mesh = meshFilter.sharedMesh;
-            if (mesh == null)
-            {
-                meshFilter.sharedMesh = MeshUtil.Update(null, v, t, textureInfo, splitVertices, weldVertices);
-                EditorUtility.SetDirty(meshFilter.sharedMesh);
-                return true;
-            }
-
-            Vector3[] vertices = mesh.vertices;
-            int[] triangles = mesh.triangles;
-            Vector2[] uv = mesh.uv;
-            Vector3[] normals = mesh.normals;
-            Color[] colors = mesh.colors;
-            Vector4[] tangents = mesh.tangents;
-            Bounds bounds = mesh.bounds;
-            bool wasDirty = EditorUtility.IsDirty(mesh);
-
-            // 既存 Mesh と同一ジオメトリなら dirty にせず false を返す。
-            // clean import 時に不要な prefab 保存・強制 reimport を発生させないため。
-            MeshUtil.Update(mesh, v, t, textureInfo, splitVertices, weldVertices);
-
-            bool changed = !vertices.SequenceEqual(mesh.vertices) ||
-                           !triangles.SequenceEqual(mesh.triangles) ||
-                           !uv.SequenceEqual(mesh.uv) ||
-                           !normals.SequenceEqual(mesh.normals) ||
-                           !colors.SequenceEqual(mesh.colors) ||
-                           !tangents.SequenceEqual(mesh.tangents) ||
-                           bounds != mesh.bounds;
-            if (changed)
-            {
-                EditorUtility.SetDirty(mesh);
-            }
-            else if (!wasDirty)
-            {
-                EditorUtility.ClearDirty(mesh);
-            }
-
-            return changed;
+            EditorUtility.SetDirty(prefab);
         }
 
         public static void CleanUpSubAssets(GameObject prefab)

@@ -10,11 +10,6 @@ namespace SpriteAssist
 
         protected abstract string GetShaderName(SpriteConfigData data);
 
-        protected virtual Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
-        {
-            return dummySprite;
-        }
-
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             dummySprite.GetVertexAndTriangle2D(data, out var vertices, out var triangles, MeshRenderType3D);
@@ -27,18 +22,17 @@ namespace SpriteAssist
             return PrefabUtil.CreateMeshPrefab(textureInfo, false);
         }
 
-        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh)
         {
-            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
-
-            GetSource3D(baseSprite, dummySprite).GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType3D);
-            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RenderType, GetShaderName(data), data);
+            rootMesh = CreateMeshFromImportedSprite(importedSprite, textureInfo, data, applyThickness: true, RenderType);
+            subMesh = null;
         }
 
-        public override bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, TextureInfo textureInfo, SpriteConfigData data)
         {
-            GetSource3D(baseSprite, dummySprite).GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType3D);
-            return PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            PrefabUtil.UpdateMeshPrefab(textureInfo, false, externalObject);
+            SpriteMeshAssets.TryGetMeshes(textureInfo.textureAssetPath, out Mesh rootMesh, out _);
+            PrefabUtil.AddComponentsAssets(baseSprite, externalObject, rootMesh, RenderType, GetShaderName(data), data);
         }
     }
 }

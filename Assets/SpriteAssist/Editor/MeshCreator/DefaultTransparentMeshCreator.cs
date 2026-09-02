@@ -11,16 +11,6 @@ namespace SpriteAssist
 
         protected override string GetShaderName(SpriteConfigData data) => data.transparentShaderName;
 
-        protected override Sprite GetSource3D(Sprite baseSprite, Sprite dummySprite)
-        {
-            if (OutlineUtil.HasImporterOutline(baseSprite))
-            {
-                return baseSprite;
-            }
-
-            return dummySprite;
-        }
-
         public override void OverrideGeometry(Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             string assetPath = textureInfo.textureAssetPath;

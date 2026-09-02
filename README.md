@@ -76,6 +76,10 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 - **Default Transparent Shader**
 - **Default Opaque Shader**
 
+Since v1.5.0, the Mesh of a Mesh Prefab is generated as a **sub-asset of the sprite texture** during texture import, and the prefab's `MeshFilter` simply references it. The prefab file itself is never rewritten by import, so mesh updates are tracked by Unity's import pipeline (safe against editor crashes, cached by Unity Accelerator, and compatible with Parallel Import).
+
+Mesh Prefabs created with older versions embed the Mesh inside the prefab. They keep working but no longer receive automatic mesh updates until migrated. Migrate them with **Assets > SpriteAssist > Migrate Legacy Mesh Prefabs**, or click **Apply** (or **Migrate Mesh Prefab**) in the Sprite inspector for individual sprites.
+
 ### Triangulation Library
 Since v1.3.0, SpriteAssist supports `iShapeTriangulation` as an alternative triangulation library. You can select the default library in Project Settings.
 

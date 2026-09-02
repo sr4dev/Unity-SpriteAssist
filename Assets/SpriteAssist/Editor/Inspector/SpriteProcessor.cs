@@ -468,6 +468,21 @@ namespace SpriteAssist
                                 EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
                         }
                     }
+
+                    if (MeshPrefabService.IsLegacyMeshPrefab(_mainImportData))
+                    {
+                        using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 0, 5, 5) }))
+                        {
+                            EditorGUILayout.HelpBox("This Mesh Prefab embeds its Mesh (legacy). The Mesh is now generated as a sub-asset of the texture. Migrate to relink it.", MessageType.Warning);
+
+                            if (GUILayout.Button("Migrate Mesh Prefab"))
+                            {
+                                Apply();
+                                GUIUtility.ExitGUI();
+                                return;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -544,11 +559,6 @@ namespace SpriteAssist
             MeshPrefabService.OverrideGeometry(_mainImportData, _meshCreator, _configData);
         }
 
-        public void UpdateMeshInMeshPrefab()
-        {
-            MeshPrefabService.UpdateMeshInMeshPrefab(_mainImportData, _meshCreator, _configData);
-        }
-
         private void ShowSaveOrRevertUI()
         {
             if (_isDataChanged)
@@ -609,8 +619,6 @@ namespace SpriteAssist
                             }
                         }
 
-                        MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
-
                         if (withCopyFromSprite)
                         {
                             Sprite rootSprite = AssetDatabase.LoadAllAssetsAtPath(importData.assetPath).FirstOrDefault(obj => obj is Sprite) as Sprite;
@@ -624,7 +632,16 @@ namespace SpriteAssist
 
                         EditorUtility.SetDirty(importData.textureImporter);
                         AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
+                        // reimport でサブアセット Mesh が生成されるので、prefab のリンク更新はその後に行う
                         importData.textureImporter.SaveAndReimport();
+
+                        MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
+
+                        if (AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath))
+                        {
+                            // remap が変わった場合のみ再 import（通常は発生しない）
+                            importData.textureImporter.SaveAndReimport();
+                        }
                     }
                 }
             }
