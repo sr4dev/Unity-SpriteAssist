@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -168,11 +169,47 @@ namespace SpriteAssist
             //AssetDatabase.SaveAssets();
         }
 
-        public static void UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
+        public static bool UpdateMeshFiltersMesh(GameObject prefab, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
         {
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
-            meshFilter.sharedMesh = MeshUtil.Update(meshFilter.sharedMesh, v, t, textureInfo, splitVertices, weldVertices);
-            EditorUtility.SetDirty(meshFilter.sharedMesh);
+            Mesh mesh = meshFilter.sharedMesh;
+            if (mesh == null)
+            {
+                meshFilter.sharedMesh = MeshUtil.Update(null, v, t, textureInfo, splitVertices, weldVertices);
+                EditorUtility.SetDirty(meshFilter.sharedMesh);
+                return true;
+            }
+
+            Vector3[] vertices = mesh.vertices;
+            int[] triangles = mesh.triangles;
+            Vector2[] uv = mesh.uv;
+            Vector3[] normals = mesh.normals;
+            Color[] colors = mesh.colors;
+            Vector4[] tangents = mesh.tangents;
+            Bounds bounds = mesh.bounds;
+            bool wasDirty = EditorUtility.IsDirty(mesh);
+
+            // 既存 Mesh と同一ジオメトリなら dirty にせず false を返す。
+            // clean import 時に不要な prefab 保存・強制 reimport を発生させないため。
+            MeshUtil.Update(mesh, v, t, textureInfo, splitVertices, weldVertices);
+
+            bool changed = !vertices.SequenceEqual(mesh.vertices) ||
+                           !triangles.SequenceEqual(mesh.triangles) ||
+                           !uv.SequenceEqual(mesh.uv) ||
+                           !normals.SequenceEqual(mesh.normals) ||
+                           !colors.SequenceEqual(mesh.colors) ||
+                           !tangents.SequenceEqual(mesh.tangents) ||
+                           bounds != mesh.bounds;
+            if (changed)
+            {
+                EditorUtility.SetDirty(mesh);
+            }
+            else if (!wasDirty)
+            {
+                EditorUtility.ClearDirty(mesh);
+            }
+
+            return changed;
         }
 
         public static void CleanUpSubAssets(GameObject prefab)

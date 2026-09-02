@@ -31,7 +31,7 @@ namespace SpriteAssist
 
         public abstract void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
 
-        public abstract void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
+        public abstract bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
     }

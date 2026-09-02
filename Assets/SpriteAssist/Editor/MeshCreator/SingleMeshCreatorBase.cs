@@ -35,10 +35,10 @@ namespace SpriteAssist
             PrefabUtil.AddComponentsAssets(baseSprite, externalObject, vertices, triangles, textureInfo, RenderType, GetShaderName(data), data);
         }
 
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             GetSource3D(baseSprite, dummySprite).GetVertexAndTriangle3D(data, out var vertices, out var triangles, MeshRenderType3D);
-            PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            return PrefabUtil.UpdateMeshFiltersMesh(externalObject, vertices, triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
         }
     }
 }

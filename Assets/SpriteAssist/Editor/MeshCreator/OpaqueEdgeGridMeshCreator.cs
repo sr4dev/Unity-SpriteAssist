@@ -37,12 +37,12 @@ namespace SpriteAssist
             }
         }
 
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             Mesh combinedMesh = GetCombinedMesh(baseSprite, dummySprite, textureInfo, data, false);
             try
             {
-                PrefabUtil.UpdateMeshFiltersMesh(externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+                return PrefabUtil.UpdateMeshFiltersMesh(externalObject, combinedMesh.vertices, combinedMesh.triangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
             }
             finally
             {

@@ -47,6 +47,16 @@ namespace SpriteAssist.Tests
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(TempRoot + "/Multiple.prefab"), Is.Null);
                 Assert.That(multipleMesh.vertices, Is.EqualTo(multipleVertices));
                 Assert.That(multipleMesh.triangles, Is.EqualTo(multipleTriangles));
+
+                Assert.That(AssetDatabase.RenameAsset(RenamedPrefabPath, Path.GetFileNameWithoutExtension(LegacyPrefabPath)), Is.Empty);
+                Touch(SingleTexturePath);
+                AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+
+                yield return null;
+                yield return null;
+
+                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath), Is.Null);
+                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath), Is.Not.Null);
             }
             finally
             {

@@ -27,14 +27,15 @@ namespace SpriteAssist
             PrefabUtil.AddComponentsAssets(baseSprite, sub, opaqueVertices, opaqueTriangles, textureInfo, RENDER_TYPE_OPAQUE, data.opaqueShaderName, data);
         }
 
-        public override void UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
+        public override bool UpdateMeshInMeshPrefab(GameObject externalObject, Sprite baseSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data)
         {
             GameObject root = externalObject;
             GameObject sub = root.transform.GetChild(0).gameObject;
             dummySprite.GetVertexAndTriangle3D(data, out var transparentVertices, out var transparentTriangles, MeshRenderType.SeparatedTransparent);
             dummySprite.GetVertexAndTriangle3D(data, out var opaqueVertices, out var opaqueTriangles, MeshRenderType.Opaque);
-            PrefabUtil.UpdateMeshFiltersMesh(root, transparentVertices, transparentTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
-            PrefabUtil.UpdateMeshFiltersMesh(sub, opaqueVertices, opaqueTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            bool rootChanged = PrefabUtil.UpdateMeshFiltersMesh(root, transparentVertices, transparentTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            bool subChanged = PrefabUtil.UpdateMeshFiltersMesh(sub, opaqueVertices, opaqueTriangles, textureInfo, data.isCorrectNormal, data.isWeldVertices);
+            return rootChanged || subChanged;
         }
 
         public override List<SpritePreviewWireframe> GetMeshWireframes()

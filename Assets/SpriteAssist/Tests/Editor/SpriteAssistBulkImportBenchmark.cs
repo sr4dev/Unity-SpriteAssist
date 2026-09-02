@@ -64,6 +64,7 @@ namespace SpriteAssist.Tests
                 }
 
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+                result.refreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
                 // delayCall で実行される全 prefab batch も測定結果へ含める。
                 int batchCount = Mathf.CeilToInt(assetCount / 100f);
@@ -74,6 +75,41 @@ namespace SpriteAssist.Tests
 
                 stopwatch.Stop();
                 result.elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+                result.flushElapsedMilliseconds = result.elapsedMilliseconds - result.refreshElapsedMilliseconds;
+
+                long[] prefabWriteTimes = new long[assetCount];
+                for (int i = 0; i < assetCount; i++)
+                {
+                    prefabWriteTimes[i] = File.GetLastWriteTimeUtc(GetPrefabPath(i)).Ticks;
+                }
+
+                stopwatch.Restart();
+                for (int i = 0; i < assetCount; i++)
+                {
+                    using FileStream stream = new FileStream(GetTexturePath(i), FileMode.Append, FileAccess.Write, FileShare.Read);
+                    stream.WriteByte((byte)((i + 1) % byte.MaxValue));
+                }
+
+                AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+                result.noOpRefreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                for (int i = 0; i <= batchCount; i++)
+                {
+                    yield return null;
+                }
+
+                stopwatch.Stop();
+                result.noOpElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+                result.noOpFlushElapsedMilliseconds = result.noOpElapsedMilliseconds - result.noOpRefreshElapsedMilliseconds;
+                for (int i = 0; i < assetCount; i++)
+                {
+                    if (File.GetLastWriteTimeUtc(GetPrefabPath(i)).Ticks != prefabWriteTimes[i])
+                    {
+                        result.noOpPrefabWriteCount++;
+                    }
+                }
+
+                Assert.That(result.noOpPrefabWriteCount, Is.Zero);
 
                 VerifyFixtureGeometry();
                 EditorUtility.UnloadUnusedAssetsImmediate();
@@ -160,6 +196,12 @@ namespace SpriteAssist.Tests
             public int desiredWorkerCount;
             public int processId;
             public long elapsedMilliseconds;
+            public long refreshElapsedMilliseconds;
+            public long flushElapsedMilliseconds;
+            public long noOpElapsedMilliseconds;
+            public long noOpRefreshElapsedMilliseconds;
+            public long noOpFlushElapsedMilliseconds;
+            public int noOpPrefabWriteCount;
             public long reservedMemoryBefore;
             public long reservedMemoryAfter;
             public long allocatedMemoryBefore;

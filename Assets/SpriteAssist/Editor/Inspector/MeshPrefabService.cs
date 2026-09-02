@@ -10,16 +10,18 @@ namespace SpriteAssist
             meshCreator.OverrideGeometry(importData.sprite, importData.dummySprite, textureInfo, configData);
         }
 
-        public static void UpdateMeshInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
+        public static bool UpdateMeshInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
         {
             if (importData.HasMeshPrefab)
             {
                 TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
-                meshCreator.UpdateMeshInMeshPrefab(importData.MeshPrefab, importData.sprite, importData.dummySprite, textureInfo, configData);
+                return meshCreator.UpdateMeshInMeshPrefab(importData.MeshPrefab, importData.sprite, importData.dummySprite, textureInfo, configData);
             }
+
+            return false;
         }
 
-        public static void UpdateMeshInMeshPrefabFromImportedSprite(GameObject meshPrefab, Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData)
+        public static bool UpdateMeshInMeshPrefabFromImportedSprite(GameObject meshPrefab, Sprite sprite, TextureInfo textureInfo, SpriteConfigData configData)
         {
             Vector3[] vertices = sprite.vertices.ToVector3();
             int[] triangles = sprite.triangles.ToInt();
@@ -29,7 +31,7 @@ namespace SpriteAssist
                 TriangulationUtil.ExpandMeshThickness(ref vertices, ref triangles, configData.thickness);
             }
 
-            PrefabUtil.UpdateMeshFiltersMesh(meshPrefab, vertices, triangles, textureInfo, configData.isCorrectNormal, configData.isWeldVertices);
+            return PrefabUtil.UpdateMeshFiltersMesh(meshPrefab, vertices, triangles, textureInfo, configData.isCorrectNormal, configData.isWeldVertices);
         }
 
         public static void SetMeshPrefabContainer(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData, bool removeOldMeshPrefab, GameObject attachedMeshPrefab)

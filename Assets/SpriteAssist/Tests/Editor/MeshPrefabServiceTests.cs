@@ -87,11 +87,12 @@ namespace SpriteAssist.Tests
                 using SpriteImportData importData = new SpriteImportData(sprite, importer, assetPath);
                 MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(mode);
                 meshCreator.UpdateMeshInMeshPrefab(expectedObject, sprite, importData.dummySprite, textureInfo, configData);
-                MeshPrefabService.UpdateMeshInMeshPrefabFromImportedSprite(actualObject, sprite, textureInfo, configData);
+                Assert.That(MeshPrefabService.UpdateMeshInMeshPrefabFromImportedSprite(actualObject, sprite, textureInfo, configData), Is.True, mode.ToString());
 
                 AssertVerticesEqual(actualMesh.vertices, expectedMesh.vertices, mode);
                 Assert.That(actualMesh.triangles, Is.EqualTo(expectedMesh.triangles), mode.ToString());
                 AssertUvsEqual(actualMesh.uv, expectedMesh.uv, mode);
+                Assert.That(MeshPrefabService.UpdateMeshInMeshPrefabFromImportedSprite(actualObject, sprite, textureInfo, configData), Is.False, mode.ToString());
                 Assert.That(Resources.FindObjectsOfTypeAll<Mesh>().Length, Is.EqualTo(meshCountBefore + 2), mode.ToString());
             }
             finally
