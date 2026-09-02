@@ -67,3 +67,6 @@ crashlytics-build.properties
 /Assets/AssetStoreTools.meta
 .history
 .codegraph
+UserSettings
+*.slnx
+.vscode
