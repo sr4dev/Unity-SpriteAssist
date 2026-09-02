@@ -8,12 +8,13 @@ using Object = UnityEngine.Object;
 namespace SpriteAssist
 {
     // 旧構造（Mesh が prefab に埋め込み）の Mesh Prefab を、テクスチャのサブアセット Mesh を参照する新構造へ移行する。
-    // Project ウィンドウで prefab / テクスチャ / フォルダを選択していればその範囲、未選択ならプロジェクト全体を対象にする。
+    // Project ウィンドウの選択範囲、または確認付きのプロジェクト全体メニューから実行する。
     public static class MeshPrefabMigration
     {
         public struct Result
         {
             public int migrated;
+            // v1.5.1 との API 互換性のため残す。orphan の自動リンクは行わないため常に 0。
             public int linked;
             public int skipped;
         }
@@ -51,7 +52,7 @@ namespace SpriteAssist
         {
             string skipped = result.skipped > 0 ? $"\nSkipped: {result.skipped} (see Console)" : string.Empty;
             EditorUtility.DisplayDialog("SpriteAssist",
-                $"Mesh Prefab migration ({scope})\n\nMigrated: {result.migrated}\nNewly linked: {result.linked}{skipped}", "OK");
+                $"Mesh Prefab migration ({scope})\n\nMigrated: {result.migrated}{skipped}", "OK");
         }
 
         public static Result MigrateAll()
@@ -85,16 +86,6 @@ namespace SpriteAssist
                 }
 
                 if (candidates.Count == 0) return result;
-
-                // 未リンクの prefab はテクスチャに remap を追加してから reimport する
-                foreach (Candidate candidate in candidates)
-                {
-                    if (candidate.needsLink)
-                    {
-                        Link(candidate);
-                        result.linked++;
-                    }
-                }
 
                 EnsureImportMeshes(candidates);
 
@@ -157,7 +148,6 @@ namespace SpriteAssist
         {
             public string texturePath;
             public string meshPrefabPath;
-            public bool needsLink;
         }
 
         private static bool TryCreateCandidate(string assetPath, out Candidate candidate, out string skipReason)
@@ -202,8 +192,11 @@ namespace SpriteAssist
             candidate = default;
             skipReason = null;
 
+            // t:GameObject には FBX 等も含まれるため、prefab 以外は対象にしない。
+            if (!string.Equals(Path.GetExtension(meshPrefabPath), ".prefab", StringComparison.OrdinalIgnoreCase)) return false;
+
             GameObject meshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
-            if (meshPrefab == null || meshPrefab.GetComponent<MeshFilter>() == null) return false;
+            if (!SpriteMeshAssets.IsLegacyMeshPrefab(meshPrefab)) return false;
 
             // Material のテクスチャから元スプライトを推定する（Inspector が MeshRenderer に対して行うのと同じ）
             Sprite sprite = SpriteUtil.FindSprite(meshPrefab);
@@ -231,34 +224,20 @@ namespace SpriteAssist
                 return false;
             }
 
-            bool needsLink = true;
-            if (SpriteImportData.TryGetMeshPrefabPath(textureImporter, texturePath, out string linkedPrefabPath))
+            if (!SpriteImportData.TryGetMeshPrefabPath(textureImporter, texturePath, out string linkedPrefabPath))
             {
-                if (!string.Equals(linkedPrefabPath, meshPrefabPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    skipReason = $"source texture '{texturePath}' is already linked to another Mesh Prefab '{linkedPrefabPath}'";
-                    return false;
-                }
-
-                needsLink = false;
+                skipReason = $"source texture '{texturePath}' is not linked to this Mesh Prefab";
+                return false;
             }
 
-            if (!needsLink && !SpriteMeshAssets.IsLegacyMeshPrefab(meshPrefab) && SpriteMeshAssets.IsLinkedToTexture(meshPrefab, texturePath)) return false;
+            if (!string.Equals(linkedPrefabPath, meshPrefabPath, StringComparison.OrdinalIgnoreCase))
+            {
+                skipReason = $"source texture '{texturePath}' is already linked to another Mesh Prefab '{linkedPrefabPath}'";
+                return false;
+            }
 
-            candidate = new Candidate { texturePath = texturePath, meshPrefabPath = meshPrefabPath, needsLink = needsLink };
+            candidate = new Candidate { texturePath = texturePath, meshPrefabPath = meshPrefabPath };
             return true;
-        }
-
-        private static void Link(Candidate candidate)
-        {
-            TextureImporter textureImporter = AssetImporter.GetAtPath(candidate.texturePath) as TextureImporter;
-            GameObject meshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(candidate.meshPrefabPath);
-            if (textureImporter == null || meshPrefab == null) return;
-
-            textureImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(GameObject), SpriteImportData.MESH_PREFAB_IDENTIFIER), meshPrefab);
-            EditorUtility.SetDirty(textureImporter);
-            AssetDatabase.WriteImportSettingsIfDirty(candidate.texturePath);
-            Debug.Log($"[SpriteAssist] Linked Mesh Prefab '{candidate.meshPrefabPath}' to '{candidate.texturePath}'.");
         }
 
         // サブアセット Mesh が無いテクスチャをまとめて reimport する（1 件ずつ refresh させない）
@@ -267,7 +246,7 @@ namespace SpriteAssist
             var missing = new List<string>();
             foreach (Candidate candidate in candidates)
             {
-                if (candidate.needsLink || !SpriteMeshAssets.TryGetMeshes(candidate.texturePath, out _, out _))
+                if (!SpriteMeshAssets.TryGetMeshes(candidate.texturePath, out _, out _))
                 {
                     missing.Add(candidate.texturePath);
                 }

@@ -49,7 +49,7 @@ namespace SpriteAssist.Tests
         }
 
         [Test, Timeout(300000)]
-        public void Migrate_OrphanLegacyPrefab_LinksTextureFromMaterialAndRelinksMesh()
+        public void Migrate_OrphanLegacyPrefab_IsSkipped()
         {
             const string OrphanTexturePath = TempRoot + "/Orphan.png";
             const string OrphanPrefabPath = TempRoot + "/Orphan.prefab";
@@ -63,6 +63,15 @@ namespace SpriteAssist.Tests
                 Assert.That(AssetDatabase.CopyAsset("Assets/Example/Sprite/cloud.png", OrphanTexturePath), Is.True);
                 Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, OrphanPrefabPath), Is.True);
 
+                TextureImporter importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
+                foreach (AssetImporter.SourceAssetIdentifier identifier in importer!.GetExternalObjectMap().Keys.ToArray())
+                {
+                    importer.RemoveRemap(identifier);
+                }
+                importer.SaveAndReimport();
+
+                LegacyMeshPrefabTestUtil.ConvertToLegacy(OrphanPrefabPath);
+
                 Texture2D orphanTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(OrphanTexturePath);
                 foreach (Material material in AssetDatabase.LoadAllAssetsAtPath(OrphanPrefabPath).OfType<Material>())
                 {
@@ -71,32 +80,66 @@ namespace SpriteAssist.Tests
                 }
                 AssetDatabase.SaveAssets();
 
-                TextureImporter importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
                 Assert.That(SpriteImportData.HasMeshPrefabLink(importer, OrphanTexturePath), Is.False);
                 Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.False);
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath)), Is.True);
 
                 MeshPrefabMigration.Result result = MeshPrefabMigration.Migrate(new[] { OrphanPrefabPath });
-                Assert.That(result.linked, Is.EqualTo(1));
-                Assert.That(result.migrated, Is.EqualTo(1));
-                Assert.That(result.skipped, Is.Zero);
-
-                importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
-                Assert.That(SpriteImportData.TryGetMeshPrefabPath(importer, OrphanTexturePath, out string linkedPrefabPath), Is.True);
-                Assert.That(linkedPrefabPath, Is.EqualTo(OrphanPrefabPath));
-
-                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out Mesh rootMesh, out Mesh subMesh), Is.True);
-                Assert.That(subMesh, Is.Not.Null, "cloud.png is ComplexMesh");
-
-                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath);
-                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.False);
-                Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(rootMesh));
-                Assert.That(prefab.transform.GetChild(0).GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(subMesh));
-                Assert.That(AssetDatabase.LoadAllAssetsAtPath(OrphanPrefabPath).OfType<Mesh>(), Is.Empty);
-
-                // 再実行しても何もしない
-                result = MeshPrefabMigration.Migrate(new[] { OrphanPrefabPath, OrphanTexturePath });
                 Assert.That(result.linked, Is.Zero);
                 Assert.That(result.migrated, Is.Zero);
+                Assert.That(result.skipped, Is.EqualTo(1));
+
+                importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
+                Assert.That(SpriteImportData.TryGetMeshPrefabPath(importer, OrphanTexturePath, out _), Is.False);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.False);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath);
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        [Test, Timeout(300000)]
+        public void Migrate_RegularMeshPrefab_IsNotTreatedAsLegacy()
+        {
+            const string TexturePath = TempRoot + "/Regular.png";
+            const string MeshPath = TempRoot + "/Regular.asset";
+            const string MaterialPath = TempRoot + "/Regular.mat";
+            const string PrefabPath = TempRoot + "/Regular.prefab";
+
+            AssetDatabase.DeleteAsset(TempRoot);
+            Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+
+            try
+            {
+                Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, TexturePath), Is.True);
+
+                var mesh = new Mesh { name = "Regular" };
+                mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+                mesh.triangles = new[] { 0, 1, 2 };
+                AssetDatabase.CreateAsset(mesh, MeshPath);
+
+                var material = new Material(Shader.Find("Unlit/Texture"));
+                material.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(TexturePath);
+                AssetDatabase.CreateAsset(material, MaterialPath);
+
+                var instance = new GameObject("Regular");
+                instance.AddComponent<MeshFilter>().sharedMesh = mesh;
+                instance.AddComponent<MeshRenderer>().sharedMaterial = material;
+                PrefabUtility.SaveAsPrefabAsset(instance, PrefabPath);
+                Object.DestroyImmediate(instance);
+
+                MeshPrefabMigration.Result result = MeshPrefabMigration.Migrate(new[] { PrefabPath });
+                Assert.That(result.migrated, Is.Zero);
+                Assert.That(result.linked, Is.Zero);
+                Assert.That(result.skipped, Is.Zero);
+
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(mesh));
+                Assert.That(prefab.GetComponent<MeshRenderer>().sharedMaterial, Is.EqualTo(material));
             }
             finally
             {
@@ -116,6 +159,7 @@ namespace SpriteAssist.Tests
                 string prefabPath = GetPrefabPath(mode);
                 Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, texturePath), Is.True);
                 Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, prefabPath), Is.True);
+                LegacyMeshPrefabTestUtil.ConvertToLegacy(prefabPath);
 
                 TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
                 Assert.That(importer, Is.Not.Null);

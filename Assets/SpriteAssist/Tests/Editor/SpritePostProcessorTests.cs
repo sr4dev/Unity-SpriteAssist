@@ -102,6 +102,8 @@ namespace SpriteAssist.Tests
             Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, LegacyPrefabPath), Is.True);
             Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, MultipleTexturePath), Is.True);
             Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, MultiplePrefabPath), Is.True);
+            LegacyMeshPrefabTestUtil.ConvertToLegacy(LegacyPrefabPath);
+            LegacyMeshPrefabTestUtil.ConvertToLegacy(MultiplePrefabPath);
 
             TextureImporter singleImporter = AssetImporter.GetAtPath(SingleTexturePath) as TextureImporter;
             GameObject legacyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath);
