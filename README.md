@@ -78,6 +78,8 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 
 Since v1.5.0, the Mesh of a Mesh Prefab is generated as a **sub-asset of the sprite texture** during texture import, and the prefab's `MeshFilter` simply references it. The prefab file itself is never rewritten by import, so mesh updates are tracked by Unity's import pipeline (safe against editor crashes, cached by Unity Accelerator, and compatible with Parallel Import).
 
+The Layer, Tag, Sorting Layer/Order, shader and Material of a Mesh Prefab are **initial values applied only when the prefab is created**. Reimporting the texture, pressing **Apply**, or running the migration keeps whatever you have changed on the prefab afterwards (including a replaced shader or an external Material), and only relinks the Mesh.
+
 Mesh Prefabs created with older versions embed the Mesh inside the prefab. They keep working but no longer receive automatic mesh updates until migrated. Migrate them from the Project window context menu: **SpriteAssist > Migrate Legacy Mesh Prefabs (Selected)** handles the selected prefabs, textures and folders (including subfolders), and **Migrate Legacy Mesh Prefabs (Entire Project)** scans everything under `Assets`. Only Mesh Prefabs already linked to their source texture are migrated; orphan prefabs are skipped. Individual sprites can also be migrated with **Apply** (or **Migrate Mesh Prefab**) in the Sprite inspector.
 
 ### Triangulation Library

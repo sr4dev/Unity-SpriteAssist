@@ -44,9 +44,10 @@ namespace SpriteAssist
             importData.RemoveExternalPrefab(removeOldMeshPrefabToo);
         }
 
-        // Mesh Prefab の構造・Material・Mesh 参照を更新する。
+        // Mesh Prefab の構造・Mesh 参照を更新する。
         // テクスチャの reimport 後（サブアセット Mesh が存在する状態）に呼ぶこと。
         // 旧構造（Mesh が prefab に埋め込み）の prefab は CleanUpSubAssets で埋め込み Mesh が除去され、新構造へ移行する。
+        // 既存の Layer / Tag / Sorting / Material は保持し、MeshRenderer を新規追加する場合のみ初期値を適用する。
         public static void UpdateSubAssetsInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
         {
             if (!importData.HasMeshPrefab) return;
@@ -56,6 +57,8 @@ namespace SpriteAssist
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
             PrefabUtil.CleanUpSubAssets(meshPrefab);
             meshCreator.UpdateExternalObject(meshPrefab, importData.sprite, textureInfo, configData);
+            // 階層の再構築（Single ⇔ Complex）で消えた子 Renderer の Material が孤立するため、更新後にも除去する
+            PrefabUtil.CleanUpSubAssets(meshPrefab);
 
             // CleanUpSubAssets 直後はディスク上の prefab が「Mesh/Material 参照が空」の中間状態になり得る。
             // 途中でクラッシュしても壊れた prefab が残らないよう、1 件ごとに確実に書き出す。

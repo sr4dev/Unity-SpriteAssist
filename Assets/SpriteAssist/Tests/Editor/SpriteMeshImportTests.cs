@@ -148,6 +148,156 @@ namespace SpriteAssist.Tests
             }
         }
 
+        // migration / reimport 更新時に prefab 側で変更した Layer / Tag / Sorting / Material(shader) が保持されること
+        [Test, Timeout(300000)]
+        public void Migrate_PreservesPrefabRendererSettingsAndMaterial()
+        {
+            const string TexturePath = TempRoot + "/Preserve.png";
+            const string PrefabPath = TempRoot + "/Preserve.prefab";
+            const int CustomLayer = 5;
+            const int CustomSortingOrder = 42;
+            const string CustomShaderName = "Unlit/Color";
+            Color customColor = new Color(0.1f, 0.2f, 0.3f, 1f);
+
+            AssetDatabase.DeleteAsset(TempRoot);
+            Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+
+            try
+            {
+                Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, TexturePath), Is.True);
+                Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, PrefabPath), Is.True);
+                LegacyMeshPrefabTestUtil.ConvertToLegacy(PrefabPath);
+
+                TextureImporter importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+                var configData = new SpriteConfigData
+                {
+                    mode = SpriteConfigData.Mode.TransparentMesh,
+                    transparentShaderName = "Unlit/Transparent",
+                    opaqueShaderName = "Unlit/Texture",
+                    overrideLayer = true,
+                    layer = 0,
+                    overrideSortingLayer = true,
+                    sortingOrder = 0
+                };
+                importer!.userData = JsonUtility.ToJson(configData);
+
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(GameObject), SpriteImportData.MESH_PREFAB_IDENTIFIER), prefab);
+                Assert.That(AssetDatabase.WriteImportSettingsIfDirty(TexturePath), Is.True);
+                AssetDatabase.ImportAsset(TexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+
+                // 利用者が prefab 側で変更した状態を再現する
+                Shader customShader = Shader.Find(CustomShaderName);
+                Assert.That(customShader, Is.Not.Null);
+                prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                prefab.layer = CustomLayer;
+                MeshRenderer renderer = prefab.GetComponent<MeshRenderer>();
+                renderer.sortingOrder = CustomSortingOrder;
+                Material customMaterial = renderer.sharedMaterial;
+                customMaterial.shader = customShader;
+                customMaterial.color = customColor;
+                EditorUtility.SetDirty(customMaterial);
+                EditorUtility.SetDirty(prefab);
+                AssetDatabase.SaveAssets();
+
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True);
+
+                // migration
+                Assert.That(MeshPrefabMigration.Migrate(TexturePath), Is.True);
+                AssertPreserved(PrefabPath, TexturePath, CustomLayer, CustomSortingOrder, customShader, customColor, "migration");
+
+                // reimport 後の更新（Apply 相当）
+                Assert.That(MeshPrefabMigration.Migrate(TexturePath), Is.True);
+                AssertPreserved(PrefabPath, TexturePath, CustomLayer, CustomSortingOrder, customShader, customColor, "update");
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        private static void AssertPreserved(string prefabPath, string texturePath, int layer, int sortingOrder, Shader shader, Color color, string label)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            MeshRenderer renderer = prefab.GetComponent<MeshRenderer>();
+
+            Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.False, label);
+            Assert.That(SpriteMeshAssets.IsLinkedToTexture(prefab, texturePath), Is.True, label);
+            Assert.That(prefab.layer, Is.EqualTo(layer), label);
+            Assert.That(renderer.sortingOrder, Is.EqualTo(sortingOrder), label);
+            Assert.That(renderer.sharedMaterial, Is.Not.Null, label);
+            Assert.That(renderer.sharedMaterial.shader, Is.EqualTo(shader), label);
+            Assert.That(renderer.sharedMaterial.color, Is.EqualTo(color), label);
+            Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Mesh>(), Is.Empty, label);
+            Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Material>().Count(), Is.EqualTo(1), label);
+        }
+
+        // 新規作成時は Sprite 設定の Layer / Sorting が初期値として適用されること（overrideLayer の判定修正を含む）
+        [Test, Timeout(300000)]
+        public void Create_AppliesInitialLayerAndSortingFromConfig()
+        {
+            const string TexturePath = TempRoot + "/Create.png";
+            const int ConfigLayer = 5;
+            const int ConfigSortingOrder = 7;
+
+            AssetDatabase.DeleteAsset(TempRoot);
+            Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+
+            try
+            {
+                Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, TexturePath), Is.True);
+
+                TextureImporter importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+                var configData = new SpriteConfigData
+                {
+                    mode = SpriteConfigData.Mode.TransparentMesh,
+                    transparentShaderName = "Unlit/Transparent",
+                    opaqueShaderName = "Unlit/Texture",
+                    overrideLayer = true,
+                    layer = ConfigLayer,
+                    overrideSortingLayer = true,
+                    sortingOrder = ConfigSortingOrder
+                };
+                importer!.userData = JsonUtility.ToJson(configData);
+                Assert.That(AssetDatabase.WriteImportSettingsIfDirty(TexturePath), Is.True);
+                AssetDatabase.ImportAsset(TexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(TexturePath);
+                importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+                MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(configData.mode);
+
+                // Inspector の Apply(Create) と同じ流れ: リンク → reimport(サブアセット Mesh 生成) → prefab 更新
+                using (SpriteImportData importData = new SpriteImportData(sprite, importer, TexturePath, createDummySprite: false))
+                {
+                    MeshPrefabService.SetMeshPrefabContainer(importData, meshCreator, configData, removeOldMeshPrefab: false, attachedMeshPrefab: null);
+                    EditorUtility.SetDirty(importer);
+                    AssetDatabase.WriteImportSettingsIfDirty(TexturePath);
+                    importer.SaveAndReimport();
+
+                    MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, meshCreator, configData);
+                    AssetDatabase.WriteImportSettingsIfDirty(TexturePath);
+                }
+
+                AssetDatabase.SaveAssets();
+
+                importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
+                Assert.That(SpriteImportData.TryGetMeshPrefabPath(importer, TexturePath, out string prefabPath), Is.True);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                MeshRenderer renderer = prefab.GetComponent<MeshRenderer>();
+
+                Assert.That(prefab.layer, Is.EqualTo(ConfigLayer));
+                Assert.That(renderer.sortingOrder, Is.EqualTo(ConfigSortingOrder));
+                Assert.That(renderer.sharedMaterial.shader.name, Is.EqualTo("Unlit/Transparent"));
+                Assert.That(SpriteMeshAssets.IsLinkedToTexture(prefab, TexturePath), Is.True);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
         private static void PrepareFixtures()
         {
             AssetDatabase.DeleteAsset(TempRoot);

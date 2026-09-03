@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -123,39 +124,26 @@ namespace SpriteAssist
         }
 
         // Mesh はテクスチャのサブアセット（SpriteMeshAssets）を参照する。Material のみ prefab のサブアセットとして持つ。
+        //
+        // Layer / Tag / Sorting Layer / Material(shader 含む) は Mesh Prefab の「生成時の初期値」であり、
+        // 既に MeshRenderer を持つ prefab（reimport・migration・Apply 時）では利用者が prefab 側で変更した値を保持する。
+        // 初期値の適用は MeshRenderer を新規追加したときだけ行う。
         public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Mesh mesh, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
-            prefab.layer = spriteConfigData.overrideSortingLayer ? spriteConfigData.layer : SpriteAssistSettings.instance.defaultLayer;
-            string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : SpriteAssistSettings.instance.defaultTag;
-
-            if (string.IsNullOrEmpty(tag))
-            {
-                prefab.tag = SpriteAssistSettings.DEFAULT_TAG;
-            }
-
             //add components
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
             MeshRenderer meshRenderer = prefab.GetComponent<MeshRenderer>();
+            bool isNewRenderer = meshRenderer == null;
 
             if (meshFilter == null)
             {
                 meshFilter = prefab.AddComponent<MeshFilter>();
             }
 
-            if (meshRenderer == null)
+            if (isNewRenderer)
             {
                 meshRenderer = prefab.AddComponent<MeshRenderer>();
-            }
-
-            if (spriteConfigData.overrideSortingLayer)
-            {
-                meshRenderer.sortingLayerID = spriteConfigData.sortingLayerId;
-                meshRenderer.sortingOrder = spriteConfigData.sortingOrder;
-            }
-            else
-            {
-                meshRenderer.sortingLayerID = SpriteAssistSettings.instance.defaultSortingLayerId;
-                meshRenderer.sortingOrder = SpriteAssistSettings.instance.defaultSortingOrder;
+                ApplyInitialRendererSettings(prefab, meshRenderer, spriteConfigData);
             }
 
             //link imported mesh (texture sub-asset)
@@ -166,26 +154,77 @@ namespace SpriteAssist
 
             meshFilter.sharedMesh = mesh;
 
-            //create new material
-            Material material = new Material(Shader.Find(shaderName));
-            material.name = renderType;
-            material.SetMainTexture(sprite.texture);
+            // 既存 Material があればそのまま使う（shader・プロパティ・外部 Material 参照を保持する）
+            if (meshRenderer.sharedMaterial == null)
+            {
+                //create new material
+                Material material = new Material(Shader.Find(shaderName));
+                material.name = renderType;
+                material.SetMainTexture(sprite.texture);
 
-            meshRenderer.sharedMaterial = material;
+                meshRenderer.sharedMaterial = material;
 
-            //set material as sub-asset
-            AssetDatabase.AddObjectToAsset(material, prefab);
+                //set material as sub-asset
+                AssetDatabase.AddObjectToAsset(material, prefab);
+            }
+
             EditorUtility.SetDirty(prefab);
         }
 
+        // 生成時のみ適用する初期値（Layer / Tag / Sorting Layer / Sorting Order）
+        private static void ApplyInitialRendererSettings(GameObject prefab, MeshRenderer meshRenderer, SpriteConfigData spriteConfigData)
+        {
+            SpriteAssistSettings settings = SpriteAssistSettings.instance;
+
+            prefab.layer = spriteConfigData.overrideLayer ? spriteConfigData.layer : settings.defaultLayer;
+
+            string tag = spriteConfigData.overrideTag ? spriteConfigData.tag : settings.defaultTag;
+            if (string.IsNullOrEmpty(tag) || Array.IndexOf(UnityEditorInternal.InternalEditorUtility.tags, tag) < 0)
+            {
+                tag = SpriteAssistSettings.DEFAULT_TAG;
+            }
+
+            prefab.tag = tag;
+
+            if (spriteConfigData.overrideSortingLayer)
+            {
+                meshRenderer.sortingLayerID = spriteConfigData.sortingLayerId;
+                meshRenderer.sortingOrder = spriteConfigData.sortingOrder;
+            }
+            else
+            {
+                meshRenderer.sortingLayerID = settings.defaultSortingLayerId;
+                meshRenderer.sortingOrder = settings.defaultSortingOrder;
+            }
+        }
+
+        // 旧構造で prefab に埋め込まれた Mesh と、どの Renderer からも参照されていない Material サブアセットを除去する。
+        // Renderer が参照している Material は利用者の変更を保持するため残す。
         public static void CleanUpSubAssets(GameObject prefab)
         {
+            var referencedMaterials = new HashSet<Material>();
+            foreach (Renderer renderer in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material != null)
+                    {
+                        referencedMaterials.Add(material);
+                    }
+                }
+            }
+
             Object[] allRelatedAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(prefab));
 
             //clean up sub assets
             foreach (Object asset in allRelatedAssets)
             {
-                if (AssetDatabase.IsSubAsset(asset) && (asset is Mesh || asset is Material))
+                if (!AssetDatabase.IsSubAsset(asset)) continue;
+
+                bool isEmbeddedMesh = asset is Mesh;
+                bool isOrphanMaterial = asset is Material material && !referencedMaterials.Contains(material);
+
+                if (isEmbeddedMesh || isOrphanMaterial)
                 {
                     AssetDatabase.RemoveObjectFromAsset(asset);
                 }
