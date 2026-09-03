@@ -57,6 +57,10 @@ namespace SpriteAssist
             PrefabUtil.CleanUpSubAssets(meshPrefab);
             meshCreator.UpdateExternalObject(meshPrefab, importData.sprite, textureInfo, configData);
 
+            // CleanUpSubAssets 直後はディスク上の prefab が「Mesh/Material 参照が空」の中間状態になり得る。
+            // 途中でクラッシュしても壊れた prefab が残らないよう、1 件ごとに確実に書き出す。
+            AssetDatabase.SaveAssetIfDirty(meshPrefab);
+
             // prefab の root GameObject が差し替わった場合のみ remap し直す（不要な .meta 更新を避ける）
             GameObject savedMeshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
             if (savedMeshPrefab != null && importData.MeshPrefab != savedMeshPrefab)

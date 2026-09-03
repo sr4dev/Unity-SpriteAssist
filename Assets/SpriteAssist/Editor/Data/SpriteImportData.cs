@@ -58,6 +58,12 @@ namespace SpriteAssist
         }
 
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath)
+            : this(sprite, importer, assetPath, createDummySprite: true)
+        {
+        }
+
+        // createDummySprite=false: 元画像のデコード/リサイズを行わない（Mesh 生成が不要な処理向け。大量処理時のメモリ・時間を節約する）
+        public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath, bool createDummySprite)
         {
             this.sprite = sprite;
             this.assetPath = assetPath;
@@ -65,7 +71,7 @@ namespace SpriteAssist
             textureImporter = importer;
             textureImporterSettings = new TextureImporterSettings();
             textureImporter.ReadTextureSettings(textureImporterSettings);
-            dummySprite = SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath);
+            dummySprite = createDummySprite ? SpriteUtil.TryCreateDummySprite(sprite, textureImporter, assetPath) : null;
             _oldSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), Path.GetFileNameWithoutExtension(assetPath));
             _newSourceAssetIdentifier = new AssetImporter.SourceAssetIdentifier(typeof(GameObject), MESH_PREFAB_IDENTIFIER);
             HasSpriteOutline = OutlineUtil.HasOutline(textureImporter);

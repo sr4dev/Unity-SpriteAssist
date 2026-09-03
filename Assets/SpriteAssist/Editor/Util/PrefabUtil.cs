@@ -87,6 +87,13 @@ namespace SpriteAssist
 
         public static GameObject UpdateMeshPrefab(TextureInfo textureInfo, bool hasSubObject, GameObject externalObject)
         {
+            // 階層が既に期待通りなら prefab の再構築（Instantiate → SaveAsPrefabAsset → reimport）を省略する。
+            // 大量マイグレーション時はこの再構築が 1 件あたりの主要コストになる。
+            if (externalObject.transform.childCount == (hasSubObject ? 1 : 0))
+            {
+                return externalObject;
+            }
+
             var externalObjectPath = AssetDatabase.GetAssetPath(externalObject);
             GameObject instance = PrefabUtility.InstantiatePrefab(externalObject) as GameObject;
             PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);

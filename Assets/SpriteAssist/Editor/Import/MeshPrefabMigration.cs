@@ -22,6 +22,12 @@ namespace SpriteAssist
         private const string MigrateSelectedMenu = "Assets/SpriteAssist/Migrate Legacy Mesh Prefabs (Selected)";
         private const string MigrateAllMenu = "Assets/SpriteAssist/Migrate Legacy Mesh Prefabs (Entire Project)";
 
+        // 大量処理時のメモリ対策。AssetDatabase.LoadAssetAtPath 等で読み込んだテクスチャ/prefab は明示的に解放しないと
+        // 処理が終わるまでメモリに残り続けるため、一定件数ごとに保存・解放する。
+        private const int ScanUnloadInterval = 200;
+        private const int ReimportBatchSize = 100;
+        private const int MigrateFlushInterval = 50;
+
         // 選択中のテクスチャ / prefab / フォルダ（サブフォルダ含む）を対象にする
         [MenuItem(MigrateSelectedMenu, priority = 710)]
         private static void MigrateSelectedMenuItem()
@@ -69,6 +75,7 @@ namespace SpriteAssist
 
             try
             {
+                int scanned = 0;
                 foreach (string assetPath in ExpandAssetPaths(assetPaths))
                 {
                     if (TryCreateCandidate(assetPath, out Candidate candidate, out string skipReason))
@@ -83,7 +90,15 @@ namespace SpriteAssist
                         result.skipped++;
                         Debug.LogWarning($"[SpriteAssist] Skipped '{assetPath}': {skipReason}");
                     }
+
+                    // 判定のために読み込んだ prefab / テクスチャを解放する（候補はパス文字列のみ保持）
+                    if (++scanned % ScanUnloadInterval == 0)
+                    {
+                        UnloadUnusedAssets();
+                    }
                 }
+
+                UnloadUnusedAssets();
 
                 if (candidates.Count == 0) return result;
 
@@ -106,6 +121,13 @@ namespace SpriteAssist
                     {
                         result.skipped++;
                     }
+
+                    // dirty な prefab を都度ディスクへ書き出し、読み込んだアセットを解放する
+                    if ((i + 1) % MigrateFlushInterval == 0)
+                    {
+                        AssetDatabase.SaveAssets();
+                        UnloadUnusedAssets();
+                    }
                 }
 
                 AssetDatabase.SaveAssets();
@@ -114,7 +136,14 @@ namespace SpriteAssist
             finally
             {
                 EditorUtility.ClearProgressBar();
+                UnloadUnusedAssets();
             }
+        }
+
+        private static void UnloadUnusedAssets()
+        {
+            GC.Collect();
+            EditorUtility.UnloadUnusedAssetsImmediate();
         }
 
         // 単一テクスチャの Mesh Prefab を新構造へリンクし直す。サブアセット Mesh が無ければ先に reimport する。
@@ -124,7 +153,8 @@ namespace SpriteAssist
             TextureImporter textureImporter = AssetImporter.GetAtPath(texturePath) as TextureImporter;
             if (sprite == null || textureImporter == null || textureImporter.spriteImportMode != SpriteImportMode.Single) return false;
 
-            using SpriteImportData importData = new SpriteImportData(sprite, textureImporter, texturePath);
+            // Mesh はテクスチャの reimport 成果物を使うため、dummy sprite（元画像のデコード）は不要
+            using SpriteImportData importData = new SpriteImportData(sprite, textureImporter, texturePath, createDummySprite: false);
             if (!importData.HasMeshPrefab) return false;
 
             if (!SpriteMeshAssets.TryGetMeshes(texturePath, out _, out _))
@@ -240,31 +270,52 @@ namespace SpriteAssist
             return true;
         }
 
-        // サブアセット Mesh が無いテクスチャをまとめて reimport する（1 件ずつ refresh させない）
+        // サブアセット Mesh が無いテクスチャをまとめて reimport する（1 件ずつ refresh させない）。
+        // 数千件を 1 バッチにすると import 結果がまとめてメモリに載るため、一定件数ごとに区切って解放する。
         private static void EnsureImportMeshes(List<Candidate> candidates)
         {
             var missing = new List<string>();
-            foreach (Candidate candidate in candidates)
+            for (int i = 0; i < candidates.Count; i++)
             {
-                if (!SpriteMeshAssets.TryGetMeshes(candidate.texturePath, out _, out _))
+                if (i % ScanUnloadInterval == 0)
                 {
-                    missing.Add(candidate.texturePath);
+                    EditorUtility.DisplayProgressBar("SpriteAssist", $"Checking meshes ({i}/{candidates.Count})", (float)i / candidates.Count);
+                }
+
+                if (!SpriteMeshAssets.TryGetMeshes(candidates[i].texturePath, out _, out _))
+                {
+                    missing.Add(candidates[i].texturePath);
+                }
+
+                if ((i + 1) % ScanUnloadInterval == 0)
+                {
+                    UnloadUnusedAssets();
                 }
             }
+
+            UnloadUnusedAssets();
 
             if (missing.Count == 0) return;
 
-            AssetDatabase.StartAssetEditing();
-            try
+            for (int start = 0; start < missing.Count; start += ReimportBatchSize)
             {
-                foreach (string texturePath in missing)
+                int end = Math.Min(start + ReimportBatchSize, missing.Count);
+                EditorUtility.DisplayProgressBar("SpriteAssist", $"Reimporting textures ({end}/{missing.Count})", (float)start / missing.Count);
+
+                AssetDatabase.StartAssetEditing();
+                try
                 {
-                    AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                    for (int i = start; i < end; i++)
+                    {
+                        AssetDatabase.ImportAsset(missing[i], ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                    }
                 }
-            }
-            finally
-            {
-                AssetDatabase.StopAssetEditing();
+                finally
+                {
+                    AssetDatabase.StopAssetEditing();
+                }
+
+                UnloadUnusedAssets();
             }
         }
 
