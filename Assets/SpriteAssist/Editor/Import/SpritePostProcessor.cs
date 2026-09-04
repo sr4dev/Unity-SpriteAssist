@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -12,7 +12,8 @@ namespace SpriteAssist
     public class SpritePostProcessor : AssetPostprocessor
     {
         // import 出力（サブアセット Mesh）の仕様を変えたら必ず上げる。過去 artifact を無効化するため。
-        private const uint VERSION = 1;
+        // v2: outline 元テクスチャの生成を GPU（Blit/ReadPixels）から CPU に変更。-nographics 環境で矩形 Mesh になっていた artifact を無効化する。
+        private const uint VERSION = 2;
 
         private const int MaxRenameAttempts = 3;
 
@@ -35,10 +36,12 @@ namespace SpriteAssist
             textureImporter!.ReadTextureSettings(textureImporterSettings);
 
             if (!textureImporterSettings.IsSingleSprite()) return;
-            if (!TryResolveFirstSprite(sprites, out SpriteImportData importData, out MeshCreatorBase meshCreator, out SpriteConfigData configData)) return;
 
-            using (importData)
+            SpriteImportData importData = null;
+            try
             {
+                if (!TryResolveFirstSprite(sprites, out importData, out MeshCreatorBase meshCreator, out SpriteConfigData configData)) return;
+
                 // import 対象スプライト自体のジオメトリ上書き
                 MeshPrefabService.OverrideGeometry(importData, meshCreator, configData);
 
@@ -47,6 +50,16 @@ namespace SpriteAssist
                 {
                     MeshPrefabService.AddImportMeshes(context, importData, meshCreator, configData);
                 }
+            }
+            catch (Exception e)
+            {
+                // 黙って Unity 既定ジオメトリ（矩形）で成功させると、壊れた成果物が Accelerator 経由で全マシンに伝播する。
+                // import エラーとして明示的に失敗させ、原因をログに残す。
+                context.LogImportError($"{e.Message}\n{e.StackTrace}");
+            }
+            finally
+            {
+                importData?.Dispose();
             }
         }
 

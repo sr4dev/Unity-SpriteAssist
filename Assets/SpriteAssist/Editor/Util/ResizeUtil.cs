@@ -282,27 +282,12 @@ namespace SpriteAssist
             }
         }
 
-        //https://github.com/ababilinski/unity-gpu-texture-resize/blob/master/ResizeTool.cs
-        public static Texture2D ScaleTexture(this Texture2D texture2D, int targetX, int targetY, bool mipmap = false, FilterMode filter = FilterMode.Bilinear)
+        // GPU を使わないため -nographics 環境でも決定的な結果になる。
+        public static Texture2D ScaleTexture(this Texture2D texture2D, int targetX, int targetY)
         {
-            RenderTexture rt = RenderTexture.GetTemporary(targetX, targetY, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-            RenderTexture.active = rt;
-            Graphics.Blit(texture2D, rt);
-            texture2D.Reinitialize(targetX, targetY, texture2D.format, mipmap);
-            texture2D.filterMode = filter;
-
-            try
-            {
-                texture2D.ReadPixels(new Rect(0.0f, 0.0f, targetX, targetY), 0, 0);
-                texture2D.Apply();
-            }
-            catch
-            {
-                Debug.LogError("Read/Write is not enabled on texture " + texture2D.name);
-            }
-
-            RenderTexture.ReleaseTemporary(rt);
-            return texture2D;
+            Texture2D scaled = TextureUtil.ResampleBilinear(texture2D, targetX, targetY);
+            scaled.name = texture2D.name;
+            return scaled;
         }
 
         private static Texture2D ExpandOrCropTexture(Texture2D source, Vector2 pivot, int newWidth, int newHeight)

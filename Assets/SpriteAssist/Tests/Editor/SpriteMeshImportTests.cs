@@ -350,6 +350,10 @@ namespace SpriteAssist.Tests
             Assert.That(subMesh, Is.Null, mode.ToString());
             Assert.That(AssetDatabase.GetAssetPath(rootMesh), Is.EqualTo(texturePath), mode.ToString());
 
+            // OverrideGeometry が黙って Unity 既定ジオメトリ（矩形 4 頂点）へ fallback していないこと。
+            // -nographics / import worker で GPU 経路が空テクスチャを返した際の回帰を検出する。
+            AssertNotUnityDefaultRectangle(sprite, mode);
+
             // import 出力は OverrideGeometry 済みスプライトのジオメトリ（+thickness）と一致する
             Vector3[] expectedVertices = sprite.vertices.ToVector3();
             int[] expectedTriangles = sprite.triangles.ToInt();
@@ -374,6 +378,33 @@ namespace SpriteAssist.Tests
             Assert.That(prefab.transform.childCount, Is.Zero, mode.ToString());
             Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Mesh>(), Is.Empty, mode.ToString());
             Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Material>().Count(), Is.EqualTo(1), mode.ToString());
+        }
+
+        private static void AssertNotUnityDefaultRectangle(Sprite sprite, SpriteConfigData.Mode mode)
+        {
+            // GridMesh は矩形の集合なので頂点数のみ確認する
+            if (mode == SpriteConfigData.Mode.GridMesh)
+            {
+                Assert.That(sprite.vertices.Length, Is.GreaterThan(4), $"{mode}: geometry looks like Unity default rectangle");
+                return;
+            }
+
+            Vector2[] vertices = sprite.vertices;
+            if (vertices.Length != 4) return;
+
+            Rect rect = sprite.rect;
+            Vector2 pivot = sprite.pivot;
+            float ppu = sprite.pixelsPerUnit;
+            Vector2[] corners =
+            {
+                (new Vector2(0, 0) - pivot) / ppu,
+                (new Vector2(rect.width, 0) - pivot) / ppu,
+                (new Vector2(0, rect.height) - pivot) / ppu,
+                (new Vector2(rect.width, rect.height) - pivot) / ppu
+            };
+
+            bool isRectangle = corners.All(c => vertices.Any(v => (v - c).sqrMagnitude < 1e-6f));
+            Assert.That(isRectangle, Is.False, $"{mode}: sprite geometry is Unity default rectangle (SpriteAssist geometry was not applied)");
         }
 
         private static void AssertComplexModeImport()
