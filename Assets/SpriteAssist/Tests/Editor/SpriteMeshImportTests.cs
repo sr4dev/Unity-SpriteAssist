@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace SpriteAssist.Tests
@@ -13,6 +15,9 @@ namespace SpriteAssist.Tests
         private const string SourceTexturePath = "Assets/Example/Sprite/rebox-green-tri.png";
         private const string SourcePrefabPath = "Assets/Example/Sprite/cloud.prefab";
         private const string UnlinkedTexturePath = TempRoot + "/Unlinked.png";
+        private const string LifecycleTexturePath = TempRoot + "/Lifecycle.png";
+        private const string LifecyclePrefabPath = TempRoot + "/Lifecycle.prefab";
+        private const string ParticlePrefabPath = TempRoot + "/Particles.prefab";
 
         private static readonly SpriteConfigData.Mode[] SingleMeshModes =
         {
@@ -38,7 +43,7 @@ namespace SpriteAssist.Tests
                 }
 
                 AssertComplexModeImport();
-                AssertUnlinkedTextureHasNoMesh();
+                AssertUnlinkedTextureHasMesh();
                 AssertMeshFileIdIsStableAcrossModeChange();
             }
             finally
@@ -81,7 +86,7 @@ namespace SpriteAssist.Tests
                 AssetDatabase.SaveAssets();
 
                 Assert.That(SpriteImportData.HasMeshPrefabLink(importer, OrphanTexturePath), Is.False);
-                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.False);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.True);
                 Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath)), Is.True);
 
                 MeshPrefabMigration.Result result = MeshPrefabMigration.Migrate(new[] { OrphanPrefabPath });
@@ -91,7 +96,7 @@ namespace SpriteAssist.Tests
 
                 importer = AssetImporter.GetAtPath(OrphanTexturePath) as TextureImporter;
                 Assert.That(SpriteImportData.TryGetMeshPrefabPath(importer, OrphanTexturePath, out _), Is.False);
-                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.False);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(OrphanTexturePath, out _, out _), Is.True);
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(OrphanPrefabPath);
                 Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True);
             }
@@ -298,6 +303,222 @@ namespace SpriteAssist.Tests
             }
         }
 
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(true, true)]
+        public void Unlink_KeepsParticleMeshAfterReimport(bool deletePrefab, bool legacyLink)
+        {
+            try
+            {
+                PrepareLifecycleFixture(legacyLink);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out Mesh before, out _), Is.True);
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(before, out string guid, out long fileId);
+                SaveParticlePrefab(before);
+
+                TextureImporter importer = AssetImporter.GetAtPath(LifecycleTexturePath) as TextureImporter;
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(LifecycleTexturePath);
+                using (var importData = new SpriteImportData(sprite, importer, LifecycleTexturePath, createDummySprite: false))
+                {
+                    MeshPrefabService.RemoveMeshPrefabContainer(importData, deletePrefab);
+                    importer.userData = JsonUtility.ToJson(new SpriteConfigData { mode = SpriteConfigData.Mode.OpaqueMesh });
+                }
+                importer.SaveAndReimport();
+
+                Assert.That(SpriteImportData.HasMeshPrefabLink(importer, LifecycleTexturePath), Is.False);
+                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LifecyclePrefabPath) != null, Is.EqualTo(!deletePrefab));
+
+                // 設定の保存後にもう一度 import し、メモリ上の Mesh への依存が無いことを確認する。
+                AssetDatabase.ImportAsset(LifecycleTexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                AssertRootAndParticleReference(LifecycleTexturePath, guid, fileId);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out Mesh after, out Mesh sub), Is.True);
+                Assert.That(after.name, Is.EqualTo(MeshCreatorBase.RENDER_TYPE_OPAQUE));
+                Assert.That(sub, Is.Null);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        [Test]
+        public void DeletedLegacyLink_KeepsMeshAfterMissingRemapCleanup()
+        {
+            try
+            {
+                PrepareLifecycleFixture(legacyLink: true);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out Mesh before, out _), Is.True);
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(before, out string guid, out long fileId);
+                SaveParticlePrefab(before);
+
+                Assert.That(AssetDatabase.DeleteAsset(LifecyclePrefabPath), Is.True);
+                AssetDatabase.ImportAsset(LifecycleTexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                TextureImporter importer = AssetImporter.GetAtPath(LifecycleTexturePath) as TextureImporter;
+                Assert.That(SpriteImportData.HasMeshPrefabLink(importer, LifecycleTexturePath), Is.False);
+
+                AssetDatabase.ImportAsset(LifecycleTexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+                AssertRootAndParticleReference(LifecycleTexturePath, guid, fileId);
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        [Test]
+        public void Import_WithoutPrefab_GeneratesMeshesForEveryMode()
+        {
+            try
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+                Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, UnlinkedTexturePath), Is.True);
+                TextureImporter importer = AssetImporter.GetAtPath(UnlinkedTexturePath) as TextureImporter;
+                Assert.That(importer.GetExternalObjectMap(), Is.Empty);
+                Assert.That(SpriteMeshAssets.TryGetMeshes(UnlinkedTexturePath, out Mesh initialRoot, out _), Is.True);
+                Assert.That(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(initialRoot, out string guid, out long fileId), Is.True);
+                SaveParticlePrefab(initialRoot);
+
+                foreach (SpriteConfigData.Mode mode in SingleMeshModes.Append(SpriteConfigData.Mode.ComplexMesh))
+                {
+                    // 生成履歴も prefab remap も無い設定だけから再生成する。
+                    var config = new SpriteConfigData
+                    {
+                        mode = mode,
+                        gridSize = 8,
+                        gridTolerance = 0.5f
+                    };
+                    string settings = JsonUtility.ToJson(config);
+                    importer.userData = settings;
+                    importer.SaveAndReimport();
+
+                    AssertRootAndParticleReference(UnlinkedTexturePath, guid, fileId);
+                    Assert.That(SpriteMeshAssets.TryGetMeshes(UnlinkedTexturePath, out _, out Mesh sub), Is.True);
+                    Assert.That(sub != null, Is.EqualTo(mode == SpriteConfigData.Mode.ComplexMesh));
+                    Assert.That(importer.GetExternalObjectMap(), Is.Empty);
+                    Assert.That(importer.userData, Is.EqualTo(settings), "import must not add generation state to userData");
+                }
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Update_MissingImportMeshes_DoesNotModifyLegacyPrefab(bool missingRoot)
+        {
+            try
+            {
+                PrepareLifecycleFixture();
+                LegacyMeshPrefabTestUtil.ConvertToLegacy(LifecyclePrefabPath);
+                TextureImporter importer = AssetImporter.GetAtPath(LifecycleTexturePath) as TextureImporter;
+                if (missingRoot)
+                {
+                    // 非対応の Sprite Mode で必要な import 出力が存在しない状況を作る。
+                    importer.spriteImportMode = SpriteImportMode.Multiple;
+                    importer.SaveAndReimport();
+                    Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out _, out _), Is.False);
+                }
+
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(LifecyclePrefabPath);
+                Mesh originalMesh = prefab.GetComponent<MeshFilter>().sharedMesh;
+                Material originalMaterial = prefab.GetComponent<MeshRenderer>().sharedMaterial;
+                byte[] originalFile = File.ReadAllBytes(LifecyclePrefabPath);
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(LifecycleTexturePath);
+                var config = new SpriteConfigData { mode = SpriteConfigData.Mode.ComplexMesh };
+                using (var importData = new SpriteImportData(sprite, importer, LifecycleTexturePath, createDummySprite: false))
+                {
+                    importData.RemapExternalObject(prefab);
+                    LogAssert.Expect(LogType.Warning, $"[SpriteAssist] Required Mesh sub-assets are missing for '{LifecycleTexturePath}' ({config.mode}). Mesh Prefab was not updated.");
+                    Assert.That(MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, MeshCreatorBase.GetInstance(config.mode), config), Is.False);
+                }
+
+                Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(originalMesh));
+                Assert.That(prefab.GetComponent<MeshRenderer>().sharedMaterial, Is.EqualTo(originalMaterial));
+                Assert.That(prefab.transform.childCount, Is.Zero);
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True);
+                AssetDatabase.SaveAssetIfDirty(prefab);
+                Assert.That(File.ReadAllBytes(LifecyclePrefabPath), Is.EqualTo(originalFile));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(TempRoot);
+                EditorUtility.UnloadUnusedAssetsImmediate();
+            }
+        }
+
+        private static void PrepareLifecycleFixture(bool legacyLink = false)
+        {
+            AssetDatabase.DeleteAsset(TempRoot);
+            Assert.That(AssetDatabase.CreateFolder("Assets", TempRoot.Substring("Assets/".Length)), Is.Not.Empty);
+            Assert.That(AssetDatabase.CopyAsset(SourceTexturePath, LifecycleTexturePath), Is.True);
+            var instance = new GameObject("Lifecycle");
+            GameObject prefab;
+            try
+            {
+                prefab = PrefabUtility.SaveAsPrefabAsset(instance, LifecyclePrefabPath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
+
+            TextureImporter importer = AssetImporter.GetAtPath(LifecycleTexturePath) as TextureImporter;
+            var config = new SpriteConfigData
+            {
+                mode = SpriteConfigData.Mode.TransparentMesh,
+                transparentShaderName = "Unlit/Transparent",
+                opaqueShaderName = "Unlit/Texture"
+            };
+            importer.userData = JsonUtility.ToJson(config);
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(LifecycleTexturePath);
+            using (var importData = new SpriteImportData(sprite, importer, LifecycleTexturePath, createDummySprite: false))
+            {
+                if (legacyLink)
+                    importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(GameObject), "Lifecycle"), prefab);
+                else
+                    importData.RemapExternalObject(prefab);
+                importer.SaveAndReimport();
+                Assert.That(MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, MeshCreatorBase.GetInstance(config.mode), config), Is.True);
+                AssetDatabase.WriteImportSettingsIfDirty(LifecycleTexturePath);
+            }
+        }
+
+        private static void SaveParticlePrefab(Mesh mesh)
+        {
+            var instance = new GameObject("Particles");
+            try
+            {
+                instance.AddComponent<ParticleSystem>();
+                ParticleSystemRenderer renderer = instance.GetComponent<ParticleSystemRenderer>();
+                renderer.renderMode = ParticleSystemRenderMode.Mesh;
+                renderer.mesh = mesh;
+                PrefabUtility.SaveAsPrefabAsset(instance, ParticlePrefabPath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+            }
+        }
+
+        private static void AssertRootAndParticleReference(string texturePath, string guid, long fileId)
+        {
+            Assert.That(SpriteMeshAssets.TryGetMeshes(texturePath, out Mesh root, out _), Is.True);
+            Assert.That(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(root, out string actualGuid, out long actualFileId), Is.True);
+            Assert.That(actualGuid, Is.EqualTo(guid));
+            Assert.That(actualFileId, Is.EqualTo(fileId));
+            Assert.That(root.vertexCount, Is.GreaterThan(0));
+            // 保存した外部参照を再読み込みする。Particle prefab 自体の再保存は行わない。
+            AssetDatabase.ImportAsset(ParticlePrefabPath, ImportAssetOptions.ForceUpdate);
+            GameObject particles = AssetDatabase.LoadAssetAtPath<GameObject>(ParticlePrefabPath);
+            Assert.That(particles.GetComponent<ParticleSystemRenderer>().mesh, Is.EqualTo(root));
+        }
+
         private static void PrepareFixtures()
         {
             AssetDatabase.DeleteAsset(TempRoot);
@@ -429,9 +650,11 @@ namespace SpriteAssist.Tests
             Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Mesh>(), Is.Empty);
         }
 
-        private static void AssertUnlinkedTextureHasNoMesh()
+        private static void AssertUnlinkedTextureHasMesh()
         {
-            Assert.That(SpriteMeshAssets.TryGetMeshes(UnlinkedTexturePath, out _, out _), Is.False);
+            Assert.That(SpriteMeshAssets.TryGetMeshes(UnlinkedTexturePath, out Mesh root, out Mesh sub), Is.True);
+            Assert.That(root.vertexCount, Is.GreaterThan(0));
+            Assert.That(sub, Is.Null);
         }
 
         private static void AssertMeshFileIdIsStableAcrossModeChange()
@@ -442,22 +665,28 @@ namespace SpriteAssist.Tests
             Assert.That(SpriteMeshAssets.TryGetMeshes(texturePath, out Mesh before, out _), Is.True);
             Assert.That(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(before, out string guidBefore, out long fileIdBefore), Is.True);
 
-            TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
-            SpriteConfigData configData = SpriteConfigData.GetData(importer!.userData);
-            configData.mode = SpriteConfigData.Mode.OpaqueMesh;
-            importer.userData = JsonUtility.ToJson(configData);
-            Assert.That(AssetDatabase.WriteImportSettingsIfDirty(texturePath), Is.True);
-            AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
+            SaveParticlePrefab(before);
+            byte[] particleFile = File.ReadAllBytes(ParticlePrefabPath);
+            foreach (SpriteConfigData.Mode singleMode in SingleMeshModes)
+            {
+                foreach (SpriteConfigData.Mode mode in new[] { SpriteConfigData.Mode.ComplexMesh, singleMode })
+                {
+                    TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
+                    SpriteConfigData configData = SpriteConfigData.GetData(importer!.userData);
+                    configData.mode = mode;
+                    importer.userData = JsonUtility.ToJson(configData);
+                    Assert.That(AssetDatabase.WriteImportSettingsIfDirty(texturePath), Is.True);
+                    AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
 
-            Assert.That(SpriteMeshAssets.TryGetMeshes(texturePath, out Mesh after, out _), Is.True);
-            Assert.That(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(after, out string guidAfter, out long fileIdAfter), Is.True);
-            Assert.That(guidAfter, Is.EqualTo(guidBefore));
-            Assert.That(fileIdAfter, Is.EqualTo(fileIdBefore), "root mesh fileID must not change with mode");
-            Assert.That(after.name, Is.EqualTo(MeshCreatorBase.RENDER_TYPE_OPAQUE));
-
-            // prefab の参照は Apply 無しでも維持される
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(after));
+                    AssertRootAndParticleReference(texturePath, guidBefore, fileIdBefore);
+                    Assert.That(SpriteMeshAssets.TryGetMeshes(texturePath, out Mesh root, out Mesh sub), Is.True);
+                    Assert.That(sub != null, Is.EqualTo(mode == SpriteConfigData.Mode.ComplexMesh));
+                    Assert.That(AssetDatabase.LoadAllAssetsAtPath(texturePath).OfType<Mesh>().Count(), Is.EqualTo(sub != null ? 2 : 1));
+                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    Assert.That(prefab.GetComponent<MeshFilter>().sharedMesh, Is.EqualTo(root));
+                }
+            }
+            Assert.That(File.ReadAllBytes(ParticlePrefabPath), Is.EqualTo(particleFile));
         }
 
         private static string GetTexturePath(SpriteConfigData.Mode mode)

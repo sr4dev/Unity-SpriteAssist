@@ -169,7 +169,7 @@ namespace SpriteAssist
 
             SpriteConfigData configData = SpriteConfigData.GetData(textureImporter.userData);
             MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(configData.mode);
-            MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, meshCreator, configData);
+            if (!MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, meshCreator, configData)) return false;
             AssetDatabase.WriteImportSettingsIfDirty(texturePath);
             return true;
         }

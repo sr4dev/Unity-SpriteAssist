@@ -52,8 +52,8 @@ Clone or download this repository and copy `Assets/SpriteAssist` folder to your 
 - **Complex**: Separate area by alpha.
   - Alpha pixel is converted to Transparent Mesh area.
   - Non-alpha pixel is converted to Opaque Mesh area.
-  - To Use Complex mode must be created Mesh Prefab.
-  - Complex mode dose not override original Sprite mesh.
+  - The generated Mesh sub-assets can be used through a Mesh Prefab or assigned directly to a Particle System or another Mesh consumer.
+  - Complex mode does not override the original Sprite geometry.
   
 ### Parameter
 ![image](https://user-images.githubusercontent.com/9159336/97451357-04f68700-1977-11eb-9445-77eac8a9efe3.png)
@@ -76,7 +76,11 @@ Wikipedia: [Non-zero winding](https://en.wikipedia.org/wiki/Nonzero-rule)
 - **Default Transparent Shader**
 - **Default Opaque Shader**
 
-Since v1.5.0, the Mesh of a Mesh Prefab is generated as a **sub-asset of the sprite texture** during texture import, and the prefab's `MeshFilter` simply references it. The prefab file itself is never rewritten by import, so mesh updates are tracked by Unity's import pipeline (safe against editor crashes, cached by Unity Accelerator, and compatible with Parallel Import).
+Since v1.5.0, the Mesh of a Mesh Prefab is generated as a **sub-asset of the sprite texture** during texture import, and the prefab's `MeshFilter` simply references it. The prefab file itself is never rewritten by import, so mesh updates are tracked by Unity's import pipeline, including Unity Accelerator caching and Parallel Import.
+
+Every supported Single sprite included by SpriteAssist generates Mesh sub-assets for its current mode during texture import, independently of Mesh Prefab links or previously generated meshes. These Meshes can be assigned directly to a Particle System or another Mesh consumer without first creating a prefab. Unlinking or deleting a Mesh Prefab does not stop Mesh generation. The postprocessor version bump invalidates older cached import results so affected textures are reimported automatically.
+
+The **root Mesh** keeps the same identifier across SpriteAssist modes, while its geometry follows the selected mode. In Complex mode the root contains the Transparent geometry, and an additional Opaque Mesh is generated. Switching from Complex to a Single mode updates the root and **removes the Opaque Mesh**; direct references to that Opaque Mesh can become Missing. Root reference continuity applies while the source remains an included, supported Single sprite and Mesh generation succeeds. If required Mesh outputs are missing, updating the Mesh Prefab is skipped rather than replacing its references with null.
 
 The Layer, Tag, Sorting Layer/Order, shader and Material of a Mesh Prefab are **initial values applied only when the prefab is created**. Reimporting the texture, pressing **Apply**, or running the migration keeps whatever you have changed on the prefab afterwards (including a replaced shader or an external Material), and only relinks the Mesh.
 

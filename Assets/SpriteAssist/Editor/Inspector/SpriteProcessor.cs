@@ -195,7 +195,7 @@ namespace SpriteAssist
                         if (_configData.mode == SpriteConfigData.Mode.ComplexMesh)
                         {
                             using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 5, 0, 5) }))
-                                EditorGUILayout.HelpBox("Complex mode dose not override original sprite mesh.\nComplex mode only affects Mesh Prefab.", MessageType.Info);
+                                EditorGUILayout.HelpBox("Complex mode does not override Sprite geometry.\nIt generates Transparent (root) and Opaque Mesh sub-assets.", MessageType.Info);
                         }
 
                         _isPreviewChanged |= checkChangedMeshSettings.changed;
@@ -459,15 +459,6 @@ namespace SpriteAssist
                     }
                     
                     EditorGUILayout.Space();
-
-                    if (_configData != null && _configData.mode == SpriteConfigData.Mode.ComplexMesh)
-                    {
-                        if (_mainImportData.MeshPrefab == null)
-                        {
-                            using (new EditorGUILayout.VerticalScope(new GUIStyle { margin = new RectOffset(5, 0, 5, 5) }))
-                                EditorGUILayout.HelpBox("To use complex mode must be created Mesh Prefab.", MessageType.Warning);
-                        }
-                    }
 
                     if (MeshPrefabService.IsLegacyMeshPrefab(_mainImportData))
                     {

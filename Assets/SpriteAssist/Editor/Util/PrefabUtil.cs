@@ -130,6 +130,8 @@ namespace SpriteAssist
         // 初期値の適用は MeshRenderer を新規追加したときだけ行う。
         public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Mesh mesh, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
+            if (mesh == null) throw new ArgumentNullException(nameof(mesh));
+
             //add components
             MeshFilter meshFilter = prefab.GetComponent<MeshFilter>();
             MeshRenderer meshRenderer = prefab.GetComponent<MeshRenderer>();
@@ -147,11 +149,6 @@ namespace SpriteAssist
             }
 
             //link imported mesh (texture sub-asset)
-            if (mesh == null)
-            {
-                Debug.LogWarning($"[SpriteAssist] Mesh sub-asset not found for '{sprite.texture.name}'. Reimport the texture to regenerate it.");
-            }
-
             meshFilter.sharedMesh = mesh;
 
             // 既存 Material があればそのまま使う（shader・プロパティ・外部 Material 参照を保持する）
