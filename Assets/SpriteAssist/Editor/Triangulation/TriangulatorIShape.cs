@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
+using ClipperLib;
 
 namespace SpriteAssist
 {
@@ -36,6 +37,11 @@ namespace SpriteAssist
             IntGeom geom = IntGeom.DefGeom;
             Vector2[][] smoothedPaths = PathSanitizer.ApplyEdgeSmoothing(paths, config.edgeSmoothing);
             Vector2[][] sanitizedPaths = PathSanitizer.Sanitize(smoothedPaths, geom);
+            // 輪郭同士の重なりにも winding 設定を適用してから iShape へ渡す。
+            if (TryRepairSelfIntersections(sanitizedPaths, geom, config.useNonZero, out var filledPaths))
+            {
+                sanitizedPaths = filledPaths;
+            }
             int sanitizedPointCount = PathSanitizer.CountPoints(sanitizedPaths);
 
             if (sanitizedPaths.Length == 0)
@@ -203,15 +209,34 @@ namespace SpriteAssist
             {
                 Vector2[] hullPath = ShapeGrouper.NormalizeOrientation(paths[group.hull], true);
                 IntVector[] hull = geom.Int(hullPath);
-                IntVector[][] holes = new IntVector[group.holes.Count][];
+                var separatedHoles = new List<IntVector[]>();
 
                 for (var i = 0; i < group.holes.Count; i++)
                 {
                     Vector2[] holePath = ShapeGrouper.NormalizeOrientation(paths[group.holes[i]], false);
-                    holes[i] = ShapeGrouper.ShouldUseHole(hullPath, holePath) ? geom.Int(holePath) : Array.Empty<IntVector>();
+                    if (ShapeGrouper.ShouldUseHole(hullPath, holePath))
+                    {
+                        separatedHoles.Add(geom.Int(holePath));
+                        continue;
+                    }
+
+                    // 接触した穴を捨てず、整数グリッドの最小幅だけ内側へ離す。
+                    var clipperPath = new List<IntPoint>();
+                    foreach (var point in geom.Int(holePath)) clipperPath.Add(new IntPoint(point.x, point.y));
+                    var offset = new ClipperOffset();
+                    offset.AddPath(clipperPath, JoinType.jtMiter, EndType.etClosedPolygon);
+                    var inset = new List<List<IntPoint>>();
+                    offset.Execute(ref inset, -2);
+                    foreach (var path in inset)
+                    {
+                        var points = new Vector2[path.Count];
+                        for (int j = 0; j < path.Count; j++) points[j] = geom.Float(new IntVector(path[j].X, path[j].Y));
+                        if (!ShapeGrouper.ShouldUseHole(hullPath, points)) throw new InvalidOperationException("Unable to separate touching hole");
+                        separatedHoles.Add(geom.Int(ShapeGrouper.NormalizeOrientation(points, false)));
+                    }
                 }
 
-                holes = RemoveEmptyHoles(holes);
+                IntVector[][] holes = separatedHoles.ToArray();
 
                 IntShape shape = new IntShape(hull, holes);
                 PlainShape plainShape = new PlainShape(shape, Allocator.Temp);
@@ -258,19 +283,5 @@ namespace SpriteAssist
             return true;
         }
 
-        private static IntVector[][] RemoveEmptyHoles(IntVector[][] holes)
-        {
-            List<IntVector[]> result = new List<IntVector[]>();
-
-            foreach (IntVector[] hole in holes)
-            {
-                if (hole.Length > 0)
-                {
-                    result.Add(hole);
-                }
-            }
-
-            return result.ToArray();
-        }
     }
 }
