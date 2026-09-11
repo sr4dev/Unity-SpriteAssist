@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using ClipperLib;
+using iShape.Geometry;
 using UnityEngine;
 
 namespace SpriteAssist
@@ -22,10 +24,22 @@ namespace SpriteAssist
             List<ShapeGroup> groups = new List<ShapeGroup>();
             int[] parents = new int[paths.Length];
             int[] depths = new int[paths.Length];
+            var integerPaths = new List<IntPoint>[paths.Length];
+            var areas = new double[paths.Length];
+            for (int i = 0; i < paths.Length; i++)
+            {
+                integerPaths[i] = new List<IntPoint>(paths[i].Length);
+                foreach (var point in paths[i])
+                {
+                    var value = IntGeom.DefGeom.Int(point);
+                    integerPaths[i].Add(new IntPoint(value.x, value.y));
+                }
+                areas[i] = System.Math.Abs(Clipper.Area(integerPaths[i]));
+            }
 
             for (var i = 0; i < paths.Length; i++)
             {
-                parents[i] = FindSmallestContainer(paths, i);
+                parents[i] = FindSmallestContainer(integerPaths, areas, i);
             }
 
             for (var i = 0; i < paths.Length; i++)
@@ -116,23 +130,22 @@ namespace SpriteAssist
             return null;
         }
 
-        private static int FindSmallestContainer(Vector2[][] paths, int pathIndex)
+        private static int FindSmallestContainer(List<IntPoint>[] paths, double[] areas, int pathIndex)
         {
-            Vector2 point = paths[pathIndex][0];
-            float currentArea = Mathf.Abs(TriangulationGeometry.SignedArea(paths[pathIndex]));
+            double currentArea = areas[pathIndex];
             int parent = -1;
-            float parentArea = float.MaxValue;
+            double parentArea = double.MaxValue;
 
             for (var i = 0; i < paths.Length; i++)
             {
-                if (i == pathIndex || !TriangulationGeometry.ContainsPoint(paths[i], point))
+                if (i == pathIndex)
                 {
                     continue;
                 }
 
-                float area = Mathf.Abs(TriangulationGeometry.SignedArea(paths[i]));
+                double area = areas[i];
 
-                if (area <= currentArea)
+                if (area <= currentArea || area >= parentArea || !ContainsPath(paths[i], paths[pathIndex]))
                 {
                     continue;
                 }
@@ -145,6 +158,25 @@ namespace SpriteAssist
             }
 
             return parent;
+        }
+
+        private static bool ContainsPath(List<IntPoint> container, List<IntPoint> child)
+        {
+            // 先頭点が外周に接するだけの別の島を、穴と誤判定しない。
+            // 正規化済みの輪郭について、境界上と内部を整数座標で区別する。
+            bool hasInteriorPoint = false;
+            for (int i = 0; i < child.Count; i++)
+            {
+                int location = Clipper.PointInPolygon(child[i], container);
+                if (location == 0) return false;
+                hasInteriorPoint |= location == 1;
+                var next = child[(i + 1) % child.Count];
+                var midpoint = new IntPoint((child[i].X + next.X) / 2, (child[i].Y + next.Y) / 2);
+                location = Clipper.PointInPolygon(midpoint, container);
+                if (location == 0) return false;
+                hasInteriorPoint |= location == 1;
+            }
+            return hasInteriorPoint;
         }
 
         private static void GetMinPathDistance(Vector2[] pathA, Vector2[] pathB, out float minDistance)

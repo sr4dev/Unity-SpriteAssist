@@ -37,6 +37,14 @@ namespace SpriteAssist.Tests
             Assert.That(Triangulate(new[] { left, right }, nonZero), Is.EqualTo(expectedArea).Within(.002f));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CornerTouchingIsland_IsPreserved(bool nonZero)
+        {
+            var island = new[] { new Vector2(0, 0), new Vector2(-.01f, 0), new Vector2(-.01f, -.01f), new Vector2(0, -.01f) };
+            Assert.That(Triangulate(new[] { Hull, island }, nonZero), Is.EqualTo(4.0001f).Within(.000005f));
+        }
+
         private static float Triangulate(Vector2[][] paths, bool nonZero)
         {
             var original = new Vector2[paths.Length][];
