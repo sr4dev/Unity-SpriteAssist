@@ -13,7 +13,8 @@ namespace SpriteAssist
         // import 出力（サブアセット Mesh）の仕様を変えたら必ず上げる。過去 artifact を無効化するため。
         // v2: outline 元テクスチャの生成を GPU（Blit/ReadPixels）から CPU に変更。-nographics 環境で矩形 Mesh になっていた artifact を無効化する。
         // v3 は Mesh 非表示の検証で使用済み。v4: prefab 未リンク時も Mesh を出力し、旧 artifact を無効化する。
-        private const uint VERSION = 4;
+        // v5: iShape の winding 設定と接触した穴の処理を修正した成果物へ更新する。
+        private const uint VERSION = 5;
 
         private const int MaxRenameAttempts = 3;
 
