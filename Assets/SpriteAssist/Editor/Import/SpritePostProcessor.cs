@@ -15,7 +15,8 @@ namespace SpriteAssist
         // v3 は Mesh 非表示の検証で使用済み。v4: prefab 未リンク時も Mesh を出力し、旧 artifact を無効化する。
         // v5: iShape の winding 設定と接触した穴の処理を修正した成果物へ更新する。
         // v6: 境界に接した別の島を穴と誤判定しない成果物へ更新する。
-        private const uint VERSION = 6;
+        // 元画像の輪郭座標と復元 UV から永続 Mesh を再生成する。
+        private const uint VERSION = 7;
 
         private const int MaxRenameAttempts = 3;
 
@@ -167,6 +168,11 @@ namespace SpriteAssist
                 error = "Mesh Prefab not found";
                 return false;
             }
+
+            // 画像の複製直後には旧 prefab の remap が残る。別画像が所有する prefab は rename しない。
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
+            if (!SpriteMeshAssets.IsLinkedToTexture(prefab, spriteAssetPath) &&
+                AssetDatabase.GetAssetPath(SpriteUtil.FindSprite(prefab)) != spriteAssetPath) return true;
 
             string spriteName = Path.GetFileNameWithoutExtension(spriteAssetPath);
             if (Path.GetFileNameWithoutExtension(meshPrefabPath) == spriteName) return true;

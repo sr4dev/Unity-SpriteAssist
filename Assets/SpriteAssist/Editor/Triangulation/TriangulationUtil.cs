@@ -7,8 +7,8 @@ namespace SpriteAssist
 {
     public class TriangulationUtil
     {
-        private static readonly ITriangulator _libTessDotNet = new TriangulatorLibTessDotNet();
-        private static readonly ITriangulator _iShape = new TriangulatorIShape();
+        private static readonly TriangulatorLibTessDotNet _libTessDotNet = new TriangulatorLibTessDotNet();
+        private static readonly TriangulatorIShape _iShape = new TriangulatorIShape();
 
         internal static ITriangulator GetTriangulator(TriangulationLibrary library)
         {
@@ -57,6 +57,27 @@ namespace SpriteAssist
 
             vertices = Array.Empty<Vector2>();
             triangles = Array.Empty<ushort>();
+        }
+
+        // 保存済みの入力には形状を変える再試行・他ライブラリへの fallback を適用しない。
+        public static void TriangulateProvidedOutline(SpriteConfigData config, Vector2[][] paths,
+            out Vector2[] vertices, out ushort[] triangles)
+        {
+            var library = SpriteAssistSettings.ResolvedDefaultTriangulationLibrary;
+            bool success;
+            switch (library)
+            {
+                case TriangulationLibrary.IShape:
+                    success = _iShape.TryTriangulateProvided(config, paths, out vertices, out triangles);
+                    break;
+                case TriangulationLibrary.LibTessDotNet:
+                    success = _libTessDotNet.TryTriangulateProvided(config, paths, out vertices, out triangles);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown triangulation library: {library}");
+            }
+            if (!success || triangles.Length == 0)
+                throw new InvalidOperationException($"Unable to triangulate provided outline with {library} without changing its boundary.");
         }
 
         public static void TriangulateGrid(Vector2[][] paths, out Vector2[] vertices, out ushort[] triangles)

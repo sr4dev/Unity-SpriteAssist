@@ -20,11 +20,22 @@ namespace SpriteAssist.Tests
         private const string MultipleTexturePath = TempRoot + "/Multiple.png";
         private const string MultiplePrefabPath = TempRoot + "/UnchangedPrefab.prefab";
         private const int MaxWaitFrames = 30;
+        private bool? _originalRenameSetting;
+
+        [TearDown]
+        public void CleanupAfterFailedCoroutine()
+        {
+            if (_originalRenameSetting.HasValue)
+                SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically = _originalRenameSetting.Value;
+            _originalRenameSetting = null;
+            if (AssetDatabase.IsValidFolder(TempRoot)) AssetDatabase.DeleteAsset(TempRoot);
+        }
 
         [UnityTest, Timeout(300000)]
         public IEnumerator ParallelImport_GeneratesMeshWithoutWritingPrefab_AndRenamesPrefab()
         {
             bool renameAutomatically = SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically;
+            _originalRenameSetting = renameAutomatically;
             SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically = true;
 
             try
@@ -34,6 +45,22 @@ namespace SpriteAssist.Tests
 
                 Touch(SingleTexturePath);
                 Touch(MultipleTexturePath);
+                AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
+
+                // 複製直後の remap は別画像の Material を持つ。所有者が一致するまでは rename しない。
+                for (int i = 0; i < 5; i++) yield return null;
+                Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath), Is.Null);
+                GameObject owner = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath);
+                Assert.That(owner, Is.Not.Null);
+                var renderer = owner.GetComponent<MeshRenderer>();
+                var material = new Material(renderer.sharedMaterial);
+                material.SetMainTexture(AssetDatabase.LoadAssetAtPath<Texture2D>(SingleTexturePath));
+                AssetDatabase.CreateAsset(material, TempRoot + "/LegacyMaterial.mat");
+                renderer.sharedMaterial = material;
+                EditorUtility.SetDirty(renderer);
+                PrefabUtility.SavePrefabAsset(owner);
+                AssetDatabase.SaveAssets();
+                Touch(SingleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
                 // rename は delayCall で実行され、AssetDatabase の状態次第で次フレームに再試行されることがある

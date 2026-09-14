@@ -97,8 +97,9 @@ namespace SpriteAssist
                 return false;
             }
 
-            float pixelsPerUnit = sprite.pixelsPerUnit;
-            Vector2 pivotOffset = (new Vector2(0.5f, 0.5f) - sprite.GetNormalizedPivot()) * sprite.rect.size;
+            var sourceInfo = TextureInfo.ForSourceImage(sprite, assetPath);
+            float pixelsPerUnit = sourceInfo.pixelPerUnit;
+            Vector2 pivotOffset = sourceInfo.rect.size * .5f - sourceInfo.pivot;
 
             paths = new Vector2[outlines.Count][];
             for (int i = 0; i < outlines.Count; i++)

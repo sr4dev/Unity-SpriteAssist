@@ -29,6 +29,8 @@ namespace SpriteAssist
 
         public bool HasSpriteOutline { get; private set; }
 
+        public DefaultMeshGeometry defaultMeshGeometry;
+
         public static bool TryGetSpriteImportData(Object obj, out SpriteImportData spriteImportData)
         {
             spriteImportData = null;

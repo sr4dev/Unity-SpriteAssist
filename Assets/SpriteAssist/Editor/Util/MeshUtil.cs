@@ -73,11 +73,12 @@ namespace SpriteAssist
             return $"{vertices2D.Length} verts, {triangles2D.Length / 3} tris, {meshAreaRatio:F2}% overdraw";
         }
 
-        public static Mesh Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false)
+        public static Mesh Update(Mesh mesh, Vector3[] v, int[] t, TextureInfo textureInfo, bool splitVertices, bool weldVertices = false, Vector2[] uvOverride = null)
         {
-            Vector2[] uv = new Vector2[v.Length];
+            if (uvOverride != null && uvOverride.Length != v.Length) throw new ArgumentException("UV count must match vertices", nameof(uvOverride));
+            Vector2[] uv = uvOverride ?? new Vector2[v.Length];
 
-            for (var i = 0; i < uv.Length; i++)
+            for (var i = 0; uvOverride == null && i < uv.Length; i++)
             {
                 uv[i] = new Vector2(v[i].x, v[i].y) * textureInfo.pixelPerUnit + textureInfo.pivot;
                 uv[i].x /= textureInfo.rect.size.x;

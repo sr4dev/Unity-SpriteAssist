@@ -24,7 +24,9 @@ namespace SpriteAssist
 
         public override void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh)
         {
-            rootMesh = CreateMeshFromImportedSprite(importedSprite, textureInfo, data, applyThickness: true, RenderType);
+            rootMesh = SpriteConfigData.IsUnityDefaultMode(data.mode)
+                ? DefaultMeshGeometry.Generate(importedSprite, dummySprite, textureInfo, data).CreateMesh(TextureInfo.ForSourceImage(importedSprite, textureInfo.textureAssetPath), data)
+                : CreateMeshFromImportedSprite(importedSprite, textureInfo, data, applyThickness: true, RenderType);
             subMesh = null;
         }
 

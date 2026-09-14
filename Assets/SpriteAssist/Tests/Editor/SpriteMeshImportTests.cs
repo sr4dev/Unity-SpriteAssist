@@ -583,6 +583,15 @@ namespace SpriteAssist.Tests
                 TriangulationUtil.ExpandMeshThickness(ref expectedVertices, ref expectedTriangles, configData.thickness);
             }
 
+            if (SpriteConfigData.IsUnityDefaultMode(mode))
+            {
+                using var input = new SpriteImportData(sprite, importer, texturePath);
+                var expected = DefaultMeshGeometry.Generate(sprite, input.dummySprite, new TextureInfo(sprite, texturePath), configData)
+                    .CreateMesh(new TextureInfo(sprite, texturePath), configData);
+                try { expectedVertices = expected.vertices; expectedTriangles = expected.triangles; }
+                finally { Object.DestroyImmediate(expected); }
+            }
+
             Assert.That(rootMesh.vertices, Is.EqualTo(expectedVertices), mode.ToString());
             Assert.That(rootMesh.triangles, Is.EqualTo(expectedTriangles), mode.ToString());
 
@@ -591,7 +600,14 @@ namespace SpriteAssist.Tests
             Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True, mode.ToString());
 
             // 移行後は prefab がテクスチャのサブアセット Mesh を参照し、埋め込み Mesh は消える
-            Assert.That(MeshPrefabMigration.Migrate(texturePath), Is.True, mode.ToString());
+            if (SpriteConfigData.IsUnityDefaultMode(mode))
+            {
+                Assert.Throws<InvalidOperationException>(() => MeshPrefabMigration.Migrate(texturePath));
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True, "Unvalidated source must remain intact");
+                using var input = new SpriteImportData(sprite, importer, texturePath, false);
+                Assert.That(MeshPrefabService.UpdateSubAssetsInMeshPrefab(input, MeshCreatorBase.GetInstance(mode), configData, true), Is.True);
+            }
+            else Assert.That(MeshPrefabMigration.Migrate(texturePath), Is.True, mode.ToString());
             prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.False, mode.ToString());
             Assert.That(SpriteMeshAssets.IsLinkedToTexture(prefab, texturePath), Is.True, mode.ToString());

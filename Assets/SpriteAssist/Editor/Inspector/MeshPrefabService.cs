@@ -10,6 +10,12 @@ namespace SpriteAssist
         public static void OverrideGeometry(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
         {
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
+            if (SpriteConfigData.IsUnityDefaultMode(configData.mode))
+            {
+                importData.defaultMeshGeometry = DefaultMeshGeometry.Generate(importData.sprite, importData.dummySprite, textureInfo, configData);
+                importData.defaultMeshGeometry.ApplyToSprite(importData.sprite, textureInfo);
+                return;
+            }
             meshCreator.OverrideGeometry(importData.sprite, importData.dummySprite, textureInfo, configData);
         }
 
@@ -18,7 +24,13 @@ namespace SpriteAssist
         public static void AddImportMeshes(AssetImportContext context, SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
         {
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
-            meshCreator.CreateImportMeshes(importData.sprite, importData.dummySprite, textureInfo, configData, out Mesh rootMesh, out Mesh subMesh);
+            Mesh rootMesh, subMesh;
+            if (importData.defaultMeshGeometry != null)
+            {
+                rootMesh = importData.defaultMeshGeometry.CreateMesh(TextureInfo.ForSourceImage(importData.sprite, importData.assetPath), configData);
+                subMesh = null;
+            }
+            else meshCreator.CreateImportMeshes(importData.sprite, importData.dummySprite, textureInfo, configData, out rootMesh, out subMesh);
 
             if (rootMesh == null || (configData.mode == SpriteConfigData.Mode.ComplexMesh && subMesh == null))
             {
@@ -56,9 +68,14 @@ namespace SpriteAssist
         // テクスチャの reimport 後（サブアセット Mesh が存在する状態）に呼ぶこと。
         // 旧構造（Mesh が prefab に埋め込み）の prefab は CleanUpSubAssets で埋め込み Mesh が除去され、新構造へ移行する。
         // 既存の Layer / Tag / Sorting / Material は保持し、MeshRenderer を新規追加する場合のみ初期値を適用する。
-        public static bool UpdateSubAssetsInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
+        public static bool UpdateSubAssetsInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData, bool legacyInputsValidated = false, GameObject meshPrefabOverride = null)
         {
-            if (!importData.HasMeshPrefab) return false;
+            GameObject meshPrefab = meshPrefabOverride != null ? meshPrefabOverride : importData.MeshPrefab;
+            if (meshPrefab == null) return false;
+
+            // 旧 Mesh は輪郭と UV の唯一の正解である場合がある。検証済み復元を経るまで破棄しない。
+            if (!legacyInputsValidated && SpriteConfigData.IsUnityDefaultMode(configData.mode) && SpriteMeshAssets.IsLegacyMeshPrefab(meshPrefab))
+                throw new InvalidOperationException("Legacy Default Mesh requires validated outline/UV migration before removing embedded meshes.");
 
             // 必要な Mesh が揃うまでは、既存参照・階層・legacy subasset を変更しない。
             if (!SpriteMeshAssets.TryGetMeshes(importData.assetPath, out Mesh rootMesh, out Mesh subMesh) ||
@@ -68,7 +85,6 @@ namespace SpriteAssist
                 return false;
             }
 
-            GameObject meshPrefab = importData.MeshPrefab;
             string meshPrefabPath = AssetDatabase.GetAssetPath(meshPrefab);
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
             PrefabUtil.CleanUpSubAssets(meshPrefab);
@@ -81,7 +97,7 @@ namespace SpriteAssist
 
             // prefab の root GameObject が差し替わった場合のみ remap し直す（不要な .meta 更新を避ける）
             GameObject savedMeshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
-            if (savedMeshPrefab != null && importData.MeshPrefab != savedMeshPrefab)
+            if (meshPrefabOverride == null && savedMeshPrefab != null && importData.MeshPrefab != savedMeshPrefab)
             {
                 importData.RemapExternalObject(savedMeshPrefab);
             }

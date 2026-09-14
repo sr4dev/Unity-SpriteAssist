@@ -20,12 +20,23 @@ namespace SpriteAssist
             out Vector2[] vertices,
             out ushort[] triangles)
         {
-            bool nonzero = config.useNonZero;
             Vector2[][] smoothedPaths = PathSanitizer.ApplyEdgeSmoothing(paths, config.edgeSmoothing);
+            return TriangulatePaths(smoothedPaths, config.useNonZero, ContourOrientation.CounterClockwise, out vertices, out triangles);
+        }
 
+        public bool TryTriangulateProvided(SpriteConfigData config, Vector2[][] paths,
+            out Vector2[] vertices, out ushort[] triangles)
+        {
+            // 明示的に LibTess を選んだ場合も、保存輪郭の座標・向きを保持する。
+            return TriangulatePaths(paths, config.useNonZero, ContourOrientation.Original, out vertices, out triangles);
+        }
+
+        private static bool TriangulatePaths(Vector2[][] paths, bool nonzero, ContourOrientation orientation,
+            out Vector2[] vertices, out ushort[] triangles)
+        {
             Tess tess = new Tess();
 
-            foreach (Vector2[] path in smoothedPaths)
+            foreach (Vector2[] path in paths)
             {
                 List<ContourVertex> contour = new List<ContourVertex>(path.Length);
 
@@ -35,7 +46,7 @@ namespace SpriteAssist
                     contour.Add(new ContourVertex(new Vec3(currentPos.x, currentPos.y, 0)));
                 }
 
-                tess.AddContour(contour, ContourOrientation.CounterClockwise);
+                tess.AddContour(contour, orientation);
             }
 
             WindingRule windingRule = nonzero ? WindingRule.NonZero : WindingRule.EvenOdd;

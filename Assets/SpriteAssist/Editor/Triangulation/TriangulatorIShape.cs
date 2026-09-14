@@ -18,7 +18,20 @@ namespace SpriteAssist
 
         public string Description =>
             "Well-shaped (Delaunay) triangles with fewer slivers.\n" +
-            "May fall back to LibTessDotNet on some outlines, and can briefly freeze the Editor on complex meshes.";
+            "Provided outlines keep their filled boundary at integer precision, without simplification or fallback.\n" +
+            "Generated outlines may fall back to LibTessDotNet. Complex meshes can briefly freeze the Editor.";
+
+        // 提供された輪郭は平滑化・短辺削除・局所ループ削除を行わない。
+        public bool TryTriangulateProvided(SpriteConfigData config, Vector2[][] paths,
+            out Vector2[] vertices, out ushort[] triangles)
+        {
+            vertices = Array.Empty<Vector2>();
+            triangles = Array.Empty<ushort>();
+            var geom = IntGeom.DefGeom;
+            var normalized = ProvidedOutline.Normalize(paths, geom, config.useNonZero);
+            if (normalized.Length == 0) return false;
+            return TriangulateGroups(normalized, geom, out vertices, out triangles, true);
+        }
 
         public bool TryTriangulate(
             SpriteConfigData config,
@@ -199,7 +212,7 @@ namespace SpriteAssist
             }
         }
 
-        private static bool TriangulateGroups(Vector2[][] paths, IntGeom geom, out Vector2[] vertices, out ushort[] triangles)
+        private static bool TriangulateGroups(Vector2[][] paths, IntGeom geom, out Vector2[] vertices, out ushort[] triangles, bool preserveOutline = false)
         {
             ShapeGroup[] groups = ShapeGrouper.BuildGroups(paths);
             List<Vector2> vertexList = new List<Vector2>();
@@ -214,7 +227,7 @@ namespace SpriteAssist
                 for (var i = 0; i < group.holes.Count; i++)
                 {
                     Vector2[] holePath = ShapeGrouper.NormalizeOrientation(paths[group.holes[i]], false);
-                    if (ShapeGrouper.ShouldUseHole(hullPath, holePath))
+                    if (preserveOutline || ShapeGrouper.ShouldUseHole(hullPath, holePath))
                     {
                         separatedHoles.Add(geom.Int(holePath));
                         continue;

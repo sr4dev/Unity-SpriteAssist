@@ -77,9 +77,11 @@ namespace SpriteAssist
 
             bool isUnityDefaultMode = SpriteConfigData.IsUnityDefaultMode(configData.mode);
             string outlineSource;
+            bool providedOutline = false;
             if (isUnityDefaultMode && OutlineUtil.TryGetImporterOutline(sprite, assetPath, out var paths))
             {
                 outlineSource = "importer outline";
+                providedOutline = true;
             }
             else
             {
@@ -100,6 +102,18 @@ namespace SpriteAssist
             if (meshRenderType == MeshRenderType.Grid || meshRenderType == MeshRenderType.TightGrid)
             {
                 TriangulationUtil.TriangulateGrid(paths, out vertices, out triangles);
+            }
+            else if (providedOutline)
+            {
+                try
+                {
+                    TriangulationUtil.TriangulateProvidedOutline(configData, paths, out vertices, out triangles);
+                }
+                catch (Exception e)
+                {
+                    failureReason = $"provided outline triangulation failed: {e.Message} (paths={pathCount}, points={pointCount})";
+                    return false;
+                }
             }
             else
             {
