@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    // 保存済み輪郭の塗り領域を保ち、交差・重複する経路を単純な輪郭へ分解する。
-    // iShape と同じ整数格子への丸め以外の形状近似は行わない。
+    // Preserve the filled region of saved outlines while splitting intersecting or overlapping paths into simple outlines.
+    // Do not approximate the shape beyond rounding to the same integer grid as iShape.
     internal static class ProvidedOutline
     {
         public static Vector2[][] Normalize(Vector2[][] paths, IntGeom geom, bool nonZero)
@@ -29,7 +29,7 @@ namespace SpriteAssist
                     points.Add(new IntPoint(value.x, value.y));
                 }
                 if (path.Length < 3) continue;
-                // 元から一点・直線だけの経路は塗り領域を持たない。丸めで潰れた面とは区別する。
+                // Paths that were already a point or line have no filled region; distinguish them from faces collapsed by rounding.
                 if (!clipper.AddPath(points, PolyType.ptSubject, true) && !IsCollinear(path))
                     throw new ArgumentException("Provided outline collapses on the iShape integer grid.");
             }

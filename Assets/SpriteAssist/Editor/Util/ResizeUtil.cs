@@ -282,7 +282,7 @@ namespace SpriteAssist
             }
         }
 
-        // GPU を使わないため -nographics 環境でも決定的な結果になる。
+        // Avoiding the GPU keeps results deterministic even with -nographics.
         public static Texture2D ScaleTexture(this Texture2D texture2D, int targetX, int targetY)
         {
             Texture2D scaled = TextureUtil.ResampleBilinear(texture2D, targetX, targetY);

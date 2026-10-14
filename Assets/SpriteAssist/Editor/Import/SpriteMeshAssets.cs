@@ -5,11 +5,11 @@ using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
-    // Mesh Prefab 用の Mesh はテクスチャ import の成果物（テクスチャのサブアセット）として出力する。
-    // prefab 側は MeshFilter でその Mesh を参照するだけなので、import 中に prefab を書き換える必要がない。
+    // Output Mesh Prefab Meshes as texture import artifacts (texture subassets).
+    // The prefab only references these Meshes through MeshFilters, so import need not rewrite the prefab.
     public static class SpriteMeshAssets
     {
-        // identifier は fileID を決めるので mode が変わっても変えない（prefab の参照を維持するため）
+        // Identifiers determine fileIDs; keep them stable across mode changes to preserve prefab references.
         public const string ROOT_MESH_IDENTIFIER = "SpriteAssist.Mesh";
         public const string SUB_MESH_IDENTIFIER = "SpriteAssist.Mesh.Sub";
 
@@ -34,14 +34,14 @@ namespace SpriteAssist
                 return true;
             }
 
-            // Complex: root は Transparent、sub は Opaque
+            // Complex: root is Transparent, sub is Opaque.
             Mesh root = meshes.Find(m => m.name == MeshCreatorBase.RENDER_TYPE_TRANSPARENT) ?? meshes[0];
             rootMesh = root;
             subMesh = meshes.Find(m => m != root);
             return true;
         }
 
-        // 旧構造: Mesh が prefab 自身のサブアセットとして埋め込まれている
+        // Legacy format: Meshes are embedded as subassets of the prefab itself.
         public static bool IsLegacyMeshPrefab(GameObject meshPrefab)
         {
             if (meshPrefab == null) return false;

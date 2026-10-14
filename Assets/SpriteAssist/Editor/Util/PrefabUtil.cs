@@ -88,8 +88,8 @@ namespace SpriteAssist
 
         public static GameObject UpdateMeshPrefab(TextureInfo textureInfo, bool hasSubObject, GameObject externalObject)
         {
-            // 階層が既に期待通りなら prefab の再構築（Instantiate → SaveAsPrefabAsset → reimport）を省略する。
-            // 大量マイグレーション時はこの再構築が 1 件あたりの主要コストになる。
+            // Skip prefab reconstruction (Instantiate -> SaveAsPrefabAsset -> reimport) if the hierarchy already matches.
+            // This reconstruction is the main per-item cost during bulk migration.
             if (externalObject.transform.childCount == (hasSubObject ? 1 : 0))
             {
                 return externalObject;
@@ -123,11 +123,11 @@ namespace SpriteAssist
             return prefab;
         }
 
-        // Mesh はテクスチャのサブアセット（SpriteMeshAssets）を参照する。Material のみ prefab のサブアセットとして持つ。
+        // Reference Meshes from texture subassets (SpriteMeshAssets). Only Materials are stored as prefab subassets.
         //
-        // Layer / Tag / Sorting Layer / Material(shader 含む) は Mesh Prefab の「生成時の初期値」であり、
-        // 既に MeshRenderer を持つ prefab（reimport・migration・Apply 時）では利用者が prefab 側で変更した値を保持する。
-        // 初期値の適用は MeshRenderer を新規追加したときだけ行う。
+        // Layer / Tag / Sorting Layer / Material (including shader) are initial defaults for Mesh Prefab creation.
+        // For prefabs that already have a MeshRenderer (reimport, migration, Apply), preserve values the user changed on the prefab.
+        // Apply defaults only when adding a new MeshRenderer.
         public static void AddComponentsAssets(Sprite sprite, GameObject prefab, Mesh mesh, string renderType, string shaderName, SpriteConfigData spriteConfigData)
         {
             if (mesh == null) throw new ArgumentNullException(nameof(mesh));
@@ -151,7 +151,7 @@ namespace SpriteAssist
             //link imported mesh (texture sub-asset)
             meshFilter.sharedMesh = mesh;
 
-            // 既存 Material があればそのまま使う（shader・プロパティ・外部 Material 参照を保持する）
+            // Reuse an existing Material, preserving its shader, properties, and external Material reference.
             if (meshRenderer.sharedMaterial == null)
             {
                 //create new material
@@ -168,7 +168,7 @@ namespace SpriteAssist
             EditorUtility.SetDirty(prefab);
         }
 
-        // 生成時のみ適用する初期値（Layer / Tag / Sorting Layer / Sorting Order）
+        // Defaults applied only on creation (Layer / Tag / Sorting Layer / Sorting Order).
         private static void ApplyInitialRendererSettings(GameObject prefab, MeshRenderer meshRenderer, SpriteConfigData spriteConfigData)
         {
             SpriteAssistSettings settings = SpriteAssistSettings.instance;
@@ -195,8 +195,8 @@ namespace SpriteAssist
             }
         }
 
-        // 旧構造で prefab に埋め込まれた Mesh と、どの Renderer からも参照されていない Material サブアセットを除去する。
-        // Renderer が参照している Material は利用者の変更を保持するため残す。
+        // Remove legacy Meshes embedded in the prefab and Material subassets that no Renderer references.
+        // Keep Materials referenced by Renderers to preserve user changes.
         public static void CleanUpSubAssets(GameObject prefab)
         {
             var referencedMaterials = new HashSet<Material>();

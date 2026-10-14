@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace SpriteAssist.Tests
 {
-    // -batchmode -nographics 環境で SpriteAssist のジオメトリ生成が正しく動くかを検証する headless エントリポイント。
-    // 使い方: unity run <project> -- -nographics -executeMethod SpriteAssist.Tests.HeadlessGeometryCheck.Run
-    // 終了コード: 0 = 正常, 1 = 矩形 fallback 検出または import 失敗
+    // Headless entry point to verify SpriteAssist geometry generation in -batchmode -nographics.
+    // Usage: unity run <project> -- -nographics -executeMethod SpriteAssist.Tests.HeadlessGeometryCheck.Run
+    // Exit codes: 0 = success, 1 = rectangular fallback detected or import failed.
     public static class HeadlessGeometryCheck
     {
         private const string TempRoot = "Assets/SpriteAssistHeadlessCheckTemp";

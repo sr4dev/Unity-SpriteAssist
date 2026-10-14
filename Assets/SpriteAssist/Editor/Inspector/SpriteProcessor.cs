@@ -623,14 +623,14 @@ namespace SpriteAssist
 
                         EditorUtility.SetDirty(importData.textureImporter);
                         AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath);
-                        // reimport でサブアセット Mesh が生成されるので、prefab のリンク更新はその後に行う
+                        // Reimport generates Mesh subassets, so update the prefab link afterward.
                         importData.textureImporter.SaveAndReimport();
 
                         MeshPrefabService.UpdateSubAssetsInMeshPrefab(importData, _meshCreator, _configData);
 
                         if (AssetDatabase.WriteImportSettingsIfDirty(importData.textureImporter.assetPath))
                         {
-                            // remap が変わった場合のみ再 import（通常は発生しない）
+                            // Reimport only if the remap changed, which normally does not happen.
                             importData.textureImporter.SaveAndReimport();
                         }
                     }

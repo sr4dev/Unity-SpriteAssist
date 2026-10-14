@@ -97,7 +97,7 @@ namespace SpriteAssist
             return resampledTexture;
         }
 
-        // import 成果物の入力になるため、GPU（Blit / ReadPixels）を使わない決定的な CPU リサンプルを行う。
+        // Use deterministic CPU resampling instead of GPU Blit/ReadPixels because this is input to an import artifact.
         public static Texture2D ResampleBilinear(Texture2D source, int targetWidth, int targetHeight)
         {
             if (targetWidth <= 0 || targetHeight <= 0)

@@ -64,7 +64,7 @@ namespace SpriteAssist
         {
         }
 
-        // createDummySprite=false: 元画像のデコード/リサイズを行わない（Mesh 生成が不要な処理向け。大量処理時のメモリ・時間を節約する）
+        // createDummySprite=false skips source image decoding/resizing when no Mesh is needed, saving memory and time in bulk operations.
         public SpriteImportData(Sprite sprite, TextureImporter importer, string assetPath, bool createDummySprite)
         {
             this.sprite = sprite;
@@ -121,7 +121,7 @@ namespace SpriteAssist
             RemoveMissingExternalPrefab(textureImporter, assetPath);
         }
 
-        // import worker では外部 prefab の Object を解決できないため、remap の key の有無だけで判定する
+        // Import workers cannot resolve external prefab Objects, so only check whether the remap key exists.
         public static bool HasMeshPrefabLink(TextureImporter textureImporter, string assetPath)
         {
             string legacyIdentifier = Path.GetFileNameWithoutExtension(assetPath);

@@ -60,7 +60,7 @@ namespace SpriteAssist
         public bool isCorrectNormal;
         public bool isWeldVertices;
 
-        // 旧 Mesh から検証して復元した UV 変換。輪郭編集や PPU/pivot 変更にも追従する正規化画像座標を入力とする。
+        // UV transform validated and recovered from the legacy Mesh. Input uses normalized image coordinates to follow outline edits and PPU/pivot changes.
         public MeshUvTransform meshUv;
 
         public static SpriteConfigData GetData(string jsonData)
@@ -81,7 +81,7 @@ namespace SpriteAssist
                 data = new SpriteConfigData();
             }
 
-            // JsonUtility は省略された参照型も構築する。空/恒等変換は未指定と同じ扱いにする。
+            // JsonUtility also constructs omitted reference types. Treat empty/identity transforms as unspecified.
             if (data.meshUv != null && (data.meshUv.version == 0 ||
                 data.meshUv.version == 1 && data.meshUv.u.Equals(Vector3.right) && data.meshUv.v.Equals(Vector3.up))) data.meshUv = null;
 

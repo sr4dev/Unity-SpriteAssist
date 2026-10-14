@@ -23,7 +23,7 @@ namespace SpriteAssist
             rect = new Rect(Vector2.zero, size);
         }
 
-        // 保存 outline の単位は原画像の pixel。プラットフォーム縮小後の Sprite PPU/rect と混同しない。
+        // Saved outlines use pixels of the source image, not Sprite PPU/rect after platform downscaling.
         public static TextureInfo ForSourceImage(Sprite sprite, string path)
         {
             if (!(UnityEditor.AssetImporter.GetAtPath(path) is UnityEditor.TextureImporter importer) || !importer.TryGetRawImageSize(out int width, out int height))
@@ -32,7 +32,7 @@ namespace SpriteAssist
             if (sprite != null) normalizedPivot = sprite.GetNormalizedPivot();
             else
             {
-                // 旧入力の破損で Sprite 自体が import できない場合も、復元の事前検証を可能にする。
+                // Allow recovery preflight even when corrupt legacy input prevents the Sprite itself from importing.
                 var settings = new UnityEditor.TextureImporterSettings(); importer.ReadTextureSettings(settings);
                 normalizedPivot = settings.spriteAlignment switch
                 {

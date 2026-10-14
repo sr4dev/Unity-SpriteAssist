@@ -49,7 +49,7 @@ namespace SpriteAssist.Tests
         {
             var original = new Vector2[paths.Length][];
             for (int i = 0; i < paths.Length; i++) original[i] = (Vector2[])paths[i].Clone();
-            // fallback でテストが通らないよう、iShape 実装を直接呼ぶ。
+            // Call the iShape implementation directly so a fallback cannot make the test pass.
             Type type = typeof(TriangulationUtil).Assembly.GetType("SpriteAssist.TriangulatorIShape", true);
             object triangulator = Activator.CreateInstance(type, true);
             object[] args = { new SpriteConfigData { edgeSmoothing = 1, useNonZero = nonZero }, paths, null, null };

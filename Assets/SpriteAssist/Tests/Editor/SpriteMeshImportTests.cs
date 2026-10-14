@@ -64,7 +64,7 @@ namespace SpriteAssist.Tests
 
             try
             {
-                // cloud.png(ComplexMesh 設定) の複製と、Material だけがその複製を指す未リンク legacy prefab を用意する
+                // Prepare a copy of cloud.png (ComplexMesh settings) and an unlinked legacy prefab whose Material alone points to that copy.
                 Assert.That(AssetDatabase.CopyAsset("Assets/Example/Sprite/cloud.png", OrphanTexturePath), Is.True);
                 Assert.That(AssetDatabase.CopyAsset(SourcePrefabPath, OrphanPrefabPath), Is.True);
 
@@ -153,7 +153,7 @@ namespace SpriteAssist.Tests
             }
         }
 
-        // migration / reimport 更新時に prefab 側で変更した Layer / Tag / Sorting / Material(shader) が保持されること
+        // Migration / reimport updates must preserve Layer / Tag / Sorting / Material (shader) changes made on the prefab.
         [Test, Timeout(300000)]
         public void Migrate_PreservesPrefabRendererSettingsAndMaterial()
         {
@@ -191,7 +191,7 @@ namespace SpriteAssist.Tests
                 Assert.That(AssetDatabase.WriteImportSettingsIfDirty(TexturePath), Is.True);
                 AssetDatabase.ImportAsset(TexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
 
-                // 利用者が prefab 側で変更した状態を再現する
+                // Reproduce changes made by the user on the prefab.
                 Shader customShader = Shader.Find(CustomShaderName);
                 Assert.That(customShader, Is.Not.Null);
                 prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
@@ -211,7 +211,7 @@ namespace SpriteAssist.Tests
                 Assert.That(MeshPrefabMigration.Migrate(TexturePath), Is.True);
                 AssertPreserved(PrefabPath, TexturePath, CustomLayer, CustomSortingOrder, customShader, customColor, "migration");
 
-                // reimport 後の更新（Apply 相当）
+                // Update after reimport, equivalent to Apply.
                 Assert.That(MeshPrefabMigration.Migrate(TexturePath), Is.True);
                 AssertPreserved(PrefabPath, TexturePath, CustomLayer, CustomSortingOrder, customShader, customColor, "update");
             }
@@ -238,7 +238,7 @@ namespace SpriteAssist.Tests
             Assert.That(AssetDatabase.LoadAllAssetsAtPath(prefabPath).OfType<Material>().Count(), Is.EqualTo(1), label);
         }
 
-        // 新規作成時は Sprite 設定の Layer / Sorting が初期値として適用されること（overrideLayer の判定修正を含む）
+        // On creation, Sprite Layer / Sorting settings must be applied as defaults, including the corrected overrideLayer check.
         [Test, Timeout(300000)]
         public void Create_AppliesInitialLayerAndSortingFromConfig()
         {
@@ -272,7 +272,7 @@ namespace SpriteAssist.Tests
                 importer = AssetImporter.GetAtPath(TexturePath) as TextureImporter;
                 MeshCreatorBase meshCreator = MeshCreatorBase.GetInstance(configData.mode);
 
-                // Inspector の Apply(Create) と同じ流れ: リンク → reimport(サブアセット Mesh 生成) → prefab 更新
+                // Follow Inspector Apply(Create): link -> reimport (generate Mesh subassets) -> update prefab.
                 using (SpriteImportData importData = new SpriteImportData(sprite, importer, TexturePath, createDummySprite: false))
                 {
                     MeshPrefabService.SetMeshPrefabContainer(importData, meshCreator, configData, removeOldMeshPrefab: false, attachedMeshPrefab: null);
@@ -328,7 +328,7 @@ namespace SpriteAssist.Tests
                 Assert.That(SpriteImportData.HasMeshPrefabLink(importer, LifecycleTexturePath), Is.False);
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LifecyclePrefabPath) != null, Is.EqualTo(!deletePrefab));
 
-                // 設定の保存後にもう一度 import し、メモリ上の Mesh への依存が無いことを確認する。
+                // Import again after saving settings to verify there is no dependency on an in-memory Mesh.
                 AssetDatabase.ImportAsset(LifecycleTexturePath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer);
                 AssertRootAndParticleReference(LifecycleTexturePath, guid, fileId);
                 Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out Mesh after, out Mesh sub), Is.True);
@@ -383,7 +383,7 @@ namespace SpriteAssist.Tests
 
                 foreach (SpriteConfigData.Mode mode in SingleMeshModes.Append(SpriteConfigData.Mode.ComplexMesh))
                 {
-                    // 生成履歴も prefab remap も無い設定だけから再生成する。
+                    // Regenerate from settings alone, with no generation history or prefab remap.
                     var config = new SpriteConfigData
                     {
                         mode = mode,
@@ -419,7 +419,7 @@ namespace SpriteAssist.Tests
                 TextureImporter importer = AssetImporter.GetAtPath(LifecycleTexturePath) as TextureImporter;
                 if (missingRoot)
                 {
-                    // 非対応の Sprite Mode で必要な import 出力が存在しない状況を作る。
+                    // Use an unsupported Sprite Mode to leave required import outputs missing.
                     importer.spriteImportMode = SpriteImportMode.Multiple;
                     importer.SaveAndReimport();
                     Assert.That(SpriteMeshAssets.TryGetMeshes(LifecycleTexturePath, out _, out _), Is.False);
@@ -513,7 +513,7 @@ namespace SpriteAssist.Tests
             Assert.That(actualGuid, Is.EqualTo(guid));
             Assert.That(actualFileId, Is.EqualTo(fileId));
             Assert.That(root.vertexCount, Is.GreaterThan(0));
-            // 保存した外部参照を再読み込みする。Particle prefab 自体の再保存は行わない。
+            // Reload the saved external references without resaving the Particle prefab itself.
             AssetDatabase.ImportAsset(ParticlePrefabPath, ImportAssetOptions.ForceUpdate);
             GameObject particles = AssetDatabase.LoadAssetAtPath<GameObject>(ParticlePrefabPath);
             Assert.That(particles.GetComponent<ParticleSystemRenderer>().mesh, Is.EqualTo(root));
@@ -571,11 +571,11 @@ namespace SpriteAssist.Tests
             Assert.That(subMesh, Is.Null, mode.ToString());
             Assert.That(AssetDatabase.GetAssetPath(rootMesh), Is.EqualTo(texturePath), mode.ToString());
 
-            // OverrideGeometry が黙って Unity 既定ジオメトリ（矩形 4 頂点）へ fallback していないこと。
-            // -nographics / import worker で GPU 経路が空テクスチャを返した際の回帰を検出する。
+            // OverrideGeometry must not silently fall back to Unity's default geometry (a four-vertex rectangle).
+            // Detect regressions where the GPU path returns an empty texture with -nographics / import workers.
             AssertNotUnityDefaultRectangle(sprite, mode);
 
-            // import 出力は OverrideGeometry 済みスプライトのジオメトリ（+thickness）と一致する
+            // Import output matches the geometry of the Sprite after OverrideGeometry, plus thickness.
             Vector3[] expectedVertices = sprite.vertices.ToVector3();
             int[] expectedTriangles = sprite.triangles.ToInt();
             if (mode != SpriteConfigData.Mode.OpaqueEdgeGridMesh && configData.thickness > 0)
@@ -595,11 +595,11 @@ namespace SpriteAssist.Tests
             Assert.That(rootMesh.vertices, Is.EqualTo(expectedVertices), mode.ToString());
             Assert.That(rootMesh.triangles, Is.EqualTo(expectedTriangles), mode.ToString());
 
-            // import 前の legacy prefab は import では書き換えられない
+            // Import must not rewrite the legacy prefab before migration.
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(prefab), Is.True, mode.ToString());
 
-            // 移行後は prefab がテクスチャのサブアセット Mesh を参照し、埋め込み Mesh は消える
+            // After migration, the prefab references texture Mesh subassets and embedded Meshes are removed.
             if (SpriteConfigData.IsUnityDefaultMode(mode))
             {
                 Assert.Throws<InvalidOperationException>(() => MeshPrefabMigration.Migrate(texturePath));
@@ -619,7 +619,7 @@ namespace SpriteAssist.Tests
 
         private static void AssertNotUnityDefaultRectangle(Sprite sprite, SpriteConfigData.Mode mode)
         {
-            // GridMesh は矩形の集合なので頂点数のみ確認する
+            // GridMesh consists of rectangles, so only check the vertex count.
             if (mode == SpriteConfigData.Mode.GridMesh)
             {
                 Assert.That(sprite.vertices.Length, Is.GreaterThan(4), $"{mode}: geometry looks like Unity default rectangle");

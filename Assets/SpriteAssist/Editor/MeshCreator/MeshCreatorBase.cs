@@ -29,17 +29,17 @@ namespace SpriteAssist
 
         public abstract GameObject CreateExternalObject(Sprite sprite, TextureInfo textureInfo, SpriteConfigData data, string oldPrefabPath = null);
 
-        // import 中に呼ばれる。Mesh Prefab 用の Mesh を生成して返す（テクスチャのサブアセットとして出力される）。
-        // importedSprite は OverrideGeometry 適用後のスプライト。
+        // Called during import. Generate and return Mesh Prefab Meshes for output as texture subassets.
+        // importedSprite is the Sprite after OverrideGeometry.
         public abstract void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh);
 
-        // Mesh Prefab の構造・Material・MeshFilter 参照を更新する（ユーザー操作時のみ。import 中には呼ばない）
+        // Update Mesh Prefab structure, Materials, and MeshFilter references only for user actions, never during import.
         public abstract void UpdateExternalObject(GameObject externalObject, Sprite baseSprite, TextureInfo textureInfo, SpriteConfigData data);
 
         public abstract List<SpritePreviewWireframe> GetMeshWireframes();
 
-        // OverrideGeometry 済みスプライトのジオメトリから Mesh を作る。
-        // dummy sprite からの再三角形分割と等価であることはテストで検証済み。
+        // Create a Mesh from the Sprite geometry after OverrideGeometry.
+        // Tests verify equivalence to retriangulating the dummy sprite.
         protected static Mesh CreateMeshFromImportedSprite(Sprite importedSprite, TextureInfo textureInfo, SpriteConfigData data, bool applyThickness, string name)
         {
             Vector3[] vertices = importedSprite.vertices.ToVector3();

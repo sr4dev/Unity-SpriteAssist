@@ -25,7 +25,7 @@ namespace SpriteAssist
 
         public override void CreateImportMeshes(Sprite importedSprite, Sprite dummySprite, TextureInfo textureInfo, SpriteConfigData data, out Mesh rootMesh, out Mesh subMesh)
         {
-            // thickness はこの mode では適用しない（既存仕様）
+            // Thickness does not apply in this mode, preserving existing behavior.
             rootMesh = CreateMeshFromImportedSprite(importedSprite, textureInfo, data, applyThickness: false, RENDER_TYPE_OPAQUE);
             subMesh = null;
         }

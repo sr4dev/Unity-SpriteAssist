@@ -58,7 +58,7 @@ namespace SpriteAssist.Tests
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 for (int i = 0; i < assetCount; i++)
                 {
-                    // OS から検出される一括変更にして Parallel Import の経路を通す。
+                    // Make bulk changes detected by the OS to exercise the Parallel Import path.
                     using FileStream stream = new FileStream(GetTexturePath(i), FileMode.Append, FileAccess.Write, FileShare.Read);
                     stream.WriteByte((byte)(i % byte.MaxValue));
                 }
@@ -72,7 +72,7 @@ namespace SpriteAssist.Tests
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
                 result.refreshElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
-                // Mesh はテクスチャ import の成果物なので、import 後の prefab flush は存在しない。
+                // Meshes are texture import artifacts, so there is no post-import prefab flush.
                 yield return null;
 
                 stopwatch.Stop();

@@ -74,7 +74,7 @@ namespace SpriteAssist.Tests
             GameObject instance = null;
             try
             {
-                // 利用側プロジェクトの画像に依存しない縮小import用fixture。
+                // Downscaled import fixture independent of images in the consuming project.
                 var texture = new Texture2D(512, 512, TextureFormat.RGBA32, false);
                 try
                 {

@@ -47,7 +47,7 @@ namespace SpriteAssist.Tests
                 Touch(MultipleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
-                // 複製直後の remap は別画像の Material を持つ。所有者が一致するまでは rename しない。
+                // Immediately after duplication, the remap points to a prefab with another image's Material. Do not rename until ownership matches.
                 for (int i = 0; i < 5; i++) yield return null;
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath), Is.Null);
                 GameObject owner = AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath);
@@ -63,10 +63,10 @@ namespace SpriteAssist.Tests
                 Touch(SingleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
-                // rename は delayCall で実行され、AssetDatabase の状態次第で次フレームに再試行されることがある
+                // Rename runs in delayCall and may retry next frame depending on AssetDatabase state.
                 yield return WaitUntil(() => AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath) != null, "prefab rename");
 
-                // Single: サブアセット Mesh が生成され、prefab は rename されるがファイル内容は書き換えられない
+                // Single: generate Mesh subassets and rename the prefab without rewriting its file contents.
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(SingleTexturePath);
                 Assert.That(SpriteMeshAssets.TryGetMeshes(SingleTexturePath, out Mesh mesh, out _), Is.True);
                 Assert.That(mesh.vertices, Is.EqualTo(sprite.vertices.ToVector3()));
@@ -75,15 +75,15 @@ namespace SpriteAssist.Tests
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath), Is.Null);
                 GameObject renamedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
                 Assert.That(renamedPrefab, Is.Not.Null);
-                // RenameAsset は root GameObject 名を書き換えるため write time は比較しない。内容が legacy のままなら import は触っていない。
+                // RenameAsset changes the root GameObject name, so do not compare write times. Legacy contents show that import left it untouched.
                 Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(renamedPrefab), Is.True, "legacy prefab is migrated only by explicit user action");
 
-                // Multiple: 対象外。Mesh も生成されず prefab も触られない
+                // Multiple: unsupported; neither generate Meshes nor touch the prefab.
                 Assert.That(SpriteMeshAssets.TryGetMeshes(MultipleTexturePath, out _, out _), Is.False);
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(TempRoot + "/Multiple.prefab"), Is.Null);
                 Assert.That(File.GetLastWriteTimeUtc(MultiplePrefabPath).Ticks, Is.EqualTo(multiplePrefabWriteTime));
 
-                // 移行後の prefab はサブアセット Mesh を参照し、以降の import で追従する
+                // After migration, the prefab references Mesh subassets and follows subsequent imports.
                 Assert.That(MeshPrefabMigration.Migrate(SingleTexturePath), Is.True);
                 GameObject migratedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
                 Assert.That(SpriteMeshAssets.IsLinkedToTexture(migratedPrefab, SingleTexturePath), Is.True);

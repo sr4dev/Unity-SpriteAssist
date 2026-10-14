@@ -19,8 +19,8 @@ namespace SpriteAssist
             meshCreator.OverrideGeometry(importData.sprite, importData.dummySprite, textureInfo, configData);
         }
 
-        // import 中に呼ぶ。Mesh Prefab 用 Mesh をテクスチャ import の成果物として追加する。
-        // identifier を固定しているので、prefab 側の MeshFilter 参照は reimport 後も維持される。
+        // Called during import. Add Mesh Prefab Meshes as texture import artifacts.
+        // Stable identifiers preserve the prefab's MeshFilter references across reimports.
         public static void AddImportMeshes(AssetImportContext context, SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData)
         {
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
@@ -64,20 +64,20 @@ namespace SpriteAssist
             importData.RemoveExternalPrefab(removeOldMeshPrefabToo);
         }
 
-        // Mesh Prefab の構造・Mesh 参照を更新する。
-        // テクスチャの reimport 後（サブアセット Mesh が存在する状態）に呼ぶこと。
-        // 旧構造（Mesh が prefab に埋め込み）の prefab は CleanUpSubAssets で埋め込み Mesh が除去され、新構造へ移行する。
-        // 既存の Layer / Tag / Sorting / Material は保持し、MeshRenderer を新規追加する場合のみ初期値を適用する。
+        // Update Mesh Prefab structure and Mesh references.
+        // Call after texture reimport, once Mesh subassets exist.
+        // CleanUpSubAssets removes embedded Meshes from legacy prefabs, migrating them to the new format.
+        // Preserve existing Layer / Tag / Sorting / Material values; apply defaults only when adding a new MeshRenderer.
         public static bool UpdateSubAssetsInMeshPrefab(SpriteImportData importData, MeshCreatorBase meshCreator, SpriteConfigData configData, bool legacyInputsValidated = false, GameObject meshPrefabOverride = null)
         {
             GameObject meshPrefab = meshPrefabOverride != null ? meshPrefabOverride : importData.MeshPrefab;
             if (meshPrefab == null) return false;
 
-            // 旧 Mesh は輪郭と UV の唯一の正解である場合がある。検証済み復元を経るまで破棄しない。
+            // The legacy Mesh may be the only source of correct outlines and UVs. Keep it until validated recovery completes.
             if (!legacyInputsValidated && SpriteConfigData.IsUnityDefaultMode(configData.mode) && SpriteMeshAssets.IsLegacyMeshPrefab(meshPrefab))
                 throw new InvalidOperationException("Legacy Default Mesh requires validated outline/UV migration before removing embedded meshes.");
 
-            // 必要な Mesh が揃うまでは、既存参照・階層・legacy subasset を変更しない。
+            // Keep existing references, hierarchy, and legacy subassets unchanged until all required Meshes are ready.
             if (!SpriteMeshAssets.TryGetMeshes(importData.assetPath, out Mesh rootMesh, out Mesh subMesh) ||
                 rootMesh == null || (configData.mode == SpriteConfigData.Mode.ComplexMesh && subMesh == null))
             {
@@ -89,13 +89,13 @@ namespace SpriteAssist
             TextureInfo textureInfo = new TextureInfo(importData.sprite, importData.assetPath);
             PrefabUtil.CleanUpSubAssets(meshPrefab);
             meshCreator.UpdateExternalObject(meshPrefab, importData.sprite, textureInfo, configData);
-            // 階層の再構築（Single ⇔ Complex）で消えた子 Renderer の Material が孤立するため、更新後にも除去する
+            // Also clean up after updating: hierarchy reconstruction (Single <-> Complex) can orphan Materials from removed child Renderers.
             PrefabUtil.CleanUpSubAssets(meshPrefab);
 
-            // 更新済み prefab を 1 件ごとに書き出す。
+            // Write each updated prefab to disk individually.
             AssetDatabase.SaveAssetIfDirty(meshPrefab);
 
-            // prefab の root GameObject が差し替わった場合のみ remap し直す（不要な .meta 更新を避ける）
+            // Remap only if the prefab's root GameObject was replaced, avoiding unnecessary .meta updates.
             GameObject savedMeshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
             if (meshPrefabOverride == null && savedMeshPrefab != null && importData.MeshPrefab != savedMeshPrefab)
             {

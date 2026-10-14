@@ -5,7 +5,7 @@ namespace SpriteAssist.Tests
 {
     internal static class LegacyMeshPrefabTestUtil
     {
-        // 新構造の fixture が参照する Mesh を prefab に複製し、v1.4.x 以前の構造を再現する。
+        // Copy the Mesh referenced by the new-format fixture into the prefab to reproduce the format used through v1.4.x.
         public static void ConvertToLegacy(string prefabPath)
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);

@@ -162,8 +162,8 @@ namespace SpriteAssist
 
         private static bool ContainsPath(List<IntPoint> container, List<IntPoint> child)
         {
-            // 先頭点が外周に接するだけの別の島を、穴と誤判定しない。
-            // 正規化済みの輪郭について、境界上と内部を整数座標で区別する。
+            // Do not mistake a separate island whose first point touches the outer boundary for a hole.
+            // Use integer coordinates to distinguish boundary points from interior points on normalized outlines.
             bool hasInteriorPoint = false;
             for (int i = 0; i < child.Count; i++)
             {

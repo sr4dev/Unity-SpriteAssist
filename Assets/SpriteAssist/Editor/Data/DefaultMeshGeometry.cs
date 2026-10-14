@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    // 1 回の import に所有させる。Sprite 用の座標制限で永続 Mesh の輪郭を変更しない。
+    // Owned by a single import. Sprite coordinate limits must not change the outline of the persistent Mesh.
     public sealed class DefaultMeshGeometry
     {
         private readonly Vector2[] _vertices;

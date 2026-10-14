@@ -7,18 +7,18 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    // 複製された画像の .meta は元 prefab への remap を引き継ぐ。Mesh Prefab の所有者は Mesh の出所なので、
-    // 他画像の Mesh を使う prefab へのリンクは「一緒に複製された prefab へ付け替える」か「解除する」。
+    // A duplicated image's .meta inherits the original prefab remap. Mesh Prefab ownership follows the source of its Mesh,
+    // so a link to a prefab using another image's Mesh must be redirected to a prefab copied alongside the image or removed.
     public static class MeshPrefabCopyLinker
     {
-        // 複製でも画像と prefab は別々の OnPostprocessAllAssets で届く（画像が先）。
-        // 判定は次の editor update まで待ち、その間に import された prefab を複製先の候補にする。
-        // shortcut: domain reload で保留中の情報は消える。消えた画像はリンクを保持し、次の import で解除される。
+        // Even during duplication, images and prefabs arrive in separate OnPostprocessAllAssets calls, with images first.
+        // Wait until the next editor update and consider prefabs imported in the meantime as copy candidates.
+        // shortcut: domain reload loses pending state; affected images retain their links until the next import clears them.
         private static readonly HashSet<string> _pendingTextures = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<string> _importedPrefabs = new HashSet<string>(StringComparer.Ordinal);
         private static bool _scheduled;
 
-        // 保留中の画像がある間だけ集める（複製では画像が先に届く）。通常の import では何もしない。
+        // Collect only while images are pending (images arrive first during duplication). Do nothing for ordinary imports.
         public static void CollectPrefabs(string[] importedAssets)
         {
             if (!_scheduled) return;
@@ -28,7 +28,7 @@ namespace SpriteAssist
             }
         }
 
-        // 他画像の Mesh を使う prefab にリンクしていれば保留して true（その画像の rename は行わない）
+        // Defer and return true if linked to a prefab using another image's Mesh; do not rename for this image.
         public static bool Defer(TextureImporter texture, string texturePath)
         {
             if (!IsForeignLink(texture, texturePath, out _, out _)) return false;
@@ -86,7 +86,7 @@ namespace SpriteAssist
             return true;
         }
 
-        // root の Mesh を持つ画像。旧構造（埋め込み Mesh）やモデル Mesh は判定しない。
+        // Find the image owning the root Mesh. Ignore legacy embedded Meshes and model Meshes.
         private static string GetMeshOwner(GameObject prefab)
         {
             Mesh mesh = prefab != null && prefab.TryGetComponent(out MeshFilter filter) ? filter.sharedMesh : null;
@@ -94,7 +94,7 @@ namespace SpriteAssist
             return !string.IsNullOrEmpty(path) && AssetImporter.GetAtPath(path) is TextureImporter ? path : null;
         }
 
-        // 直近に import された、元画像の Mesh を使う別の prefab が複製先。複数あれば画像に最も近いパスを選ぶ。
+        // The copy is another recently imported prefab using the source image's Mesh. If several match, choose the path closest to the image.
         private static GameObject FindCopy(GameObject linked, string owner, string texturePath, string[] importedPrefabs)
         {
             var candidates = importedPrefabs
@@ -116,7 +116,7 @@ namespace SpriteAssist
             return i;
         }
 
-        // 複製先 prefab の Mesh と埋め込み Material を新しい画像へ向ける。外部 Material は共有のまま。
+        // Point the copied prefab's Mesh and embedded Materials to the new image. External Materials remain shared.
         private static bool Retarget(GameObject prefab, string sourcePath, string destinationPath)
         {
             if (!SpriteMeshAssets.TryGetMeshes(sourcePath, out Mesh sourceRoot, out Mesh sourceSub) ||

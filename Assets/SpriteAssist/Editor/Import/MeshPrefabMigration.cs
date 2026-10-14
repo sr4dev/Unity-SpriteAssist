@@ -7,14 +7,14 @@ using Object = UnityEngine.Object;
 
 namespace SpriteAssist
 {
-    // 旧構造（Mesh が prefab に埋め込み）の Mesh Prefab を、テクスチャのサブアセット Mesh を参照する新構造へ移行する。
-    // Project ウィンドウの選択範囲、または確認付きのプロジェクト全体メニューから実行する。
+    // Migrate legacy Mesh Prefabs with embedded Meshes to the new format referencing texture Mesh subassets.
+    // Run on the Project window selection or from the project-wide menu with confirmation.
     public static class MeshPrefabMigration
     {
         public struct Result
         {
             public int migrated;
-            // v1.5.1 との API 互換性のため残す。orphan の自動リンクは行わないため常に 0。
+            // Retained for API compatibility with v1.5.1. Always 0 because orphan prefabs are not linked automatically.
             public int linked;
             public int skipped;
         }
@@ -22,13 +22,13 @@ namespace SpriteAssist
         private const string MigrateSelectedMenu = "Assets/SpriteAssist/Migrate Legacy Mesh Prefabs (Selected)";
         private const string MigrateAllMenu = "Assets/SpriteAssist/Migrate Legacy Mesh Prefabs (Entire Project)";
 
-        // 大量処理時のメモリ対策。AssetDatabase.LoadAssetAtPath 等で読み込んだテクスチャ/prefab は明示的に解放しないと
-        // 処理が終わるまでメモリに残り続けるため、一定件数ごとに保存・解放する。
+        // Limit memory during bulk processing. Textures/prefabs loaded with AssetDatabase.LoadAssetAtPath and similar calls
+        // remain in memory until processing ends unless explicitly released, so save and unload at regular intervals.
         private const int ScanUnloadInterval = 200;
         private const int ReimportBatchSize = 100;
         private const int MigrateFlushInterval = 50;
 
-        // 選択中のテクスチャ / prefab / フォルダ（サブフォルダ含む）を対象にする
+        // Process selected textures / prefabs / folders, including subfolders.
         [MenuItem(MigrateSelectedMenu, priority = 710)]
         private static void MigrateSelectedMenuItem()
         {
@@ -66,7 +66,7 @@ namespace SpriteAssist
             return Migrate(new[] { "Assets" });
         }
 
-        // assetPaths: テクスチャ / prefab / フォルダ。フォルダは再帰的に走査する。
+        // assetPaths: textures / prefabs / folders. Scan folders recursively.
         public static Result Migrate(IEnumerable<string> assetPaths)
         {
             var result = new Result();
@@ -91,7 +91,7 @@ namespace SpriteAssist
                         Debug.LogWarning($"[SpriteAssist] Skipped '{assetPath}': {skipReason}");
                     }
 
-                    // 判定のために読み込んだ prefab / テクスチャを解放する（候補はパス文字列のみ保持）
+                    // Unload prefabs / textures loaded for inspection; candidates retain only path strings.
                     if (++scanned % ScanUnloadInterval == 0)
                     {
                         UnloadUnusedAssets();
@@ -122,7 +122,7 @@ namespace SpriteAssist
                         result.skipped++;
                     }
 
-                    // dirty な prefab を都度ディスクへ書き出し、読み込んだアセットを解放する
+                    // Write dirty prefabs to disk and unload loaded assets.
                     if ((i + 1) % MigrateFlushInterval == 0)
                     {
                         AssetDatabase.SaveAssets();
@@ -146,14 +146,14 @@ namespace SpriteAssist
             EditorUtility.UnloadUnusedAssetsImmediate();
         }
 
-        // 単一テクスチャの Mesh Prefab を新構造へリンクし直す。サブアセット Mesh が無ければ先に reimport する。
+        // Relink a single texture's Mesh Prefab to the new format. Reimport first if Mesh subassets are missing.
         public static bool Migrate(string texturePath)
         {
             Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(texturePath);
             TextureImporter textureImporter = AssetImporter.GetAtPath(texturePath) as TextureImporter;
             if (sprite == null || textureImporter == null || textureImporter.spriteImportMode != SpriteImportMode.Single) return false;
 
-            // Mesh はテクスチャの reimport 成果物を使うため、dummy sprite（元画像のデコード）は不要
+            // Use Meshes produced by texture reimport; no dummy sprite or source image decoding is needed.
             using SpriteImportData importData = new SpriteImportData(sprite, textureImporter, texturePath, createDummySprite: false);
             if (!importData.HasMeshPrefab) return false;
 
@@ -222,13 +222,13 @@ namespace SpriteAssist
             candidate = default;
             skipReason = null;
 
-            // t:GameObject には FBX 等も含まれるため、prefab 以外は対象にしない。
+            // t:GameObject also includes FBX and other assets, so restrict processing to prefabs.
             if (!string.Equals(Path.GetExtension(meshPrefabPath), ".prefab", StringComparison.OrdinalIgnoreCase)) return false;
 
             GameObject meshPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
             if (!SpriteMeshAssets.IsLegacyMeshPrefab(meshPrefab)) return false;
 
-            // Material のテクスチャから元スプライトを推定する（Inspector が MeshRenderer に対して行うのと同じ）
+            // Infer the source Sprite from Material textures, as the Inspector does for MeshRenderers.
             Sprite sprite = SpriteUtil.FindSprite(meshPrefab);
             if (sprite == null)
             {
@@ -270,8 +270,8 @@ namespace SpriteAssist
             return true;
         }
 
-        // サブアセット Mesh が無いテクスチャをまとめて reimport する（1 件ずつ refresh させない）。
-        // 数千件を 1 バッチにすると import 結果がまとめてメモリに載るため、一定件数ごとに区切って解放する。
+        // Reimport textures missing Mesh subassets in batches instead of refreshing each one.
+        // Thousands of imports in one batch load all results into memory, so split into smaller batches and unload between them.
         private static void EnsureImportMeshes(List<Candidate> candidates)
         {
             var missing = new List<string>();

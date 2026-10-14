@@ -139,7 +139,7 @@ namespace SpriteAssist.Tests
         private static void Check(Vector2[][] paths, bool nonZero)
         {
             var input = paths.Select(p => (Vector2[])p.Clone()).ToArray();
-            // iShape 自身を呼び、fallback による見かけの成功を防ぐ。
+            // Call iShape itself to prevent a fallback from making the test appear to pass.
             var type = typeof(TriangulationUtil).Assembly.GetType("SpriteAssist.TriangulatorIShape", true);
             var method = type.GetMethod("TryTriangulateProvided", BindingFlags.Public | BindingFlags.Instance);
             var instance = Activator.CreateInstance(type, true);

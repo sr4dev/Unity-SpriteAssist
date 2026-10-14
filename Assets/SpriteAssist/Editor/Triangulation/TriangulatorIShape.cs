@@ -21,7 +21,7 @@ namespace SpriteAssist
             "Provided outlines keep their filled boundary at integer precision, without simplification or fallback.\n" +
             "Generated outlines may fall back to LibTessDotNet. Complex meshes can briefly freeze the Editor.";
 
-        // 提供された輪郭は平滑化・短辺削除・局所ループ削除を行わない。
+        // Do not smooth provided outlines, remove short edges, or remove local loops.
         public bool TryTriangulateProvided(SpriteConfigData config, Vector2[][] paths,
             out Vector2[] vertices, out ushort[] triangles)
         {
@@ -50,7 +50,7 @@ namespace SpriteAssist
             IntGeom geom = IntGeom.DefGeom;
             Vector2[][] smoothedPaths = PathSanitizer.ApplyEdgeSmoothing(paths, config.edgeSmoothing);
             Vector2[][] sanitizedPaths = PathSanitizer.Sanitize(smoothedPaths, geom);
-            // 輪郭同士の重なりにも winding 設定を適用してから iShape へ渡す。
+            // Apply winding settings to overlaps between outlines before passing them to iShape.
             if (TryRepairSelfIntersections(sanitizedPaths, geom, config.useNonZero, out var filledPaths))
             {
                 sanitizedPaths = filledPaths;
@@ -233,7 +233,7 @@ namespace SpriteAssist
                         continue;
                     }
 
-                    // 接触した穴を捨てず、整数グリッドの最小幅だけ内側へ離す。
+                    // Keep touching holes by moving them inward by the smallest integer-grid distance.
                     var clipperPath = new List<IntPoint>();
                     foreach (var point in geom.Int(holePath)) clipperPath.Add(new IntPoint(point.x, point.y));
                     var offset = new ClipperOffset();

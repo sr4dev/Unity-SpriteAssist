@@ -59,7 +59,7 @@ namespace SpriteAssist
             triangles = Array.Empty<ushort>();
         }
 
-        // 保存済みの入力には形状を変える再試行・他ライブラリへの fallback を適用しない。
+        // Do not apply retries that alter the shape or fallbacks to other libraries for saved input.
         public static void TriangulateProvidedOutline(SpriteConfigData config, Vector2[][] paths,
             out Vector2[] vertices, out ushort[] triangles)
         {

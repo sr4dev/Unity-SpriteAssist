@@ -101,7 +101,7 @@ namespace SpriteAssist
             {
                 mesh.SplitVertices();
 
-                // 法線を保持したまま重複頂点を再結合する
+                // Merge duplicate vertices while preserving normals.
                 if (weldVertices)
                 {
                     WeldVertices(mesh, recalculateNormals: false, ignoreNormals: false, printResults: false);

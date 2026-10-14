@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace SpriteAssist
 {
-    // SpriteAssist のジオメトリ生成に失敗したときに投げる。
-    // 以前は Unity 既定のジオメトリ（矩形など）へ黙って fallback していたが、import 成果物が
-    // 静かに壊れて Accelerator に伝播する原因になるため、明示的に失敗させる。
+    // Thrown when SpriteAssist geometry generation fails.
+    // Previously, silently falling back to Unity's default geometry (such as a rectangle) could corrupt import artifacts
+    // and spread them through Accelerator, so fail explicitly instead.
     public class SpriteAssistGeometryException : Exception
     {
         public SpriteAssistGeometryException(string message) : base(message)
@@ -50,7 +50,7 @@ namespace SpriteAssist
             return TryGetVertexAndTriangle2D(sprite, configData, out vertices, out triangles, meshRenderType, assetPath, out _);
         }
 
-        // failureReason: 失敗時の原因（診断ログ用）。成功時は null。
+        // failureReason: cause of failure for diagnostic logs; null on success.
         public static bool TryGetVertexAndTriangle2D(this Sprite sprite, SpriteConfigData configData, out Vector2[] vertices, out ushort[] triangles, MeshRenderType meshRenderType, string assetPath, out string failureReason)
         {
             vertices = Array.Empty<Vector2>();

@@ -27,7 +27,7 @@ namespace SpriteAssist
         public bool TryTriangulateProvided(SpriteConfigData config, Vector2[][] paths,
             out Vector2[] vertices, out ushort[] triangles)
         {
-            // 明示的に LibTess を選んだ場合も、保存輪郭の座標・向きを保持する。
+            // Preserve saved outline coordinates and winding even when LibTess is explicitly selected.
             return TriangulatePaths(paths, config.useNonZero, ContourOrientation.Original, out vertices, out triangles);
         }
 
