@@ -9,23 +9,28 @@ namespace SpriteAssist
 {
     // A duplicated image's .meta inherits the original prefab remap. Mesh Prefab ownership follows the source of its Mesh,
     // so a link to a prefab using another image's Mesh must be redirected to a prefab copied alongside the image or removed.
-    public static class MeshPrefabCopyLinker
+    public class MeshPrefabCopyLinker : AssetModificationProcessor
     {
-        // Even during duplication, images and prefabs arrive in separate OnPostprocessAllAssets calls, with images first.
-        // Wait until the next editor update and consider prefabs imported in the meantime as copy candidates.
-        // shortcut: domain reload loses pending state; affected images retain their links until the next import clears them.
+        // shortcut: domain reload loses pending copies; add recovery only if script-folder duplication must preserve pairing.
         private static readonly HashSet<string> _pendingTextures = new HashSet<string>(StringComparer.Ordinal);
-        private static readonly HashSet<string> _importedPrefabs = new HashSet<string>(StringComparer.Ordinal);
+        private static readonly HashSet<string> _createdPaths = new HashSet<string>(StringComparer.Ordinal);
         private static bool _scheduled;
 
-        // Collect only while images are pending (images arrive first during duplication). Do nothing for ordinary imports.
-        public static void CollectPrefabs(string[] importedAssets)
+        private static void OnWillCreateAsset(string path)
         {
-            if (!_scheduled) return;
-            foreach (string path in importedAssets)
-            {
-                if (path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)) _importedPrefabs.Add(path);
-            }
+            if (PrefabUtil.IsAssetImportWorkerProcess()) return;
+            if (path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase)) path = path.Substring(0, path.Length - 5);
+            path = path.Replace('\\', '/');
+            if (!path.StartsWith("Assets/", StringComparison.Ordinal)) return;
+            _createdPaths.Add(path);
+            Schedule();
+        }
+
+        private static void Schedule()
+        {
+            if (_scheduled) return;
+            _scheduled = true;
+            EditorApplication.update += Flush;
         }
 
         // Defer and return true if linked to a prefab using another image's Mesh; do not rename for this image.
@@ -33,26 +38,33 @@ namespace SpriteAssist
         {
             if (!IsForeignLink(texture, texturePath, out _, out _)) return false;
             _pendingTextures.Add(texturePath);
-            if (!_scheduled)
-            {
-                _scheduled = true;
-                EditorApplication.update += Flush;
-            }
+            Schedule();
             return true;
         }
 
         private static void Flush()
         {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
             _scheduled = false;
             EditorApplication.update -= Flush;
             var textures = _pendingTextures.ToArray();
-            var prefabs = _importedPrefabs.ToArray();
+            var created = new HashSet<string>(_createdPaths, StringComparer.Ordinal);
+            var prefabs = created.Where(path => path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)).ToArray();
             _pendingTextures.Clear();
-            _importedPrefabs.Clear();
+            _createdPaths.Clear();
+            // More than one new texture for a source cannot be paired safely by import order.
+            var copiesPerOwner = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (string path in textures)
+            {
+                if (!created.Contains(path) || AssetImporter.GetAtPath(path) is not TextureImporter texture ||
+                    !IsForeignLink(texture, path, out _, out string owner)) continue;
+                copiesPerOwner.TryGetValue(owner, out int count);
+                copiesPerOwner[owner] = count + 1;
+            }
 
             foreach (string texturePath in textures)
             {
-                if (AssetImporter.GetAtPath(texturePath) is TextureImporter texture && Resolve(texture, texturePath, prefabs))
+                if (AssetImporter.GetAtPath(texturePath) is TextureImporter texture && Resolve(texture, texturePath, created, prefabs, copiesPerOwner))
                     AssetDatabase.WriteImportSettingsIfDirty(texturePath);
             }
         }
@@ -67,12 +79,17 @@ namespace SpriteAssist
             return owner != null && owner != texturePath;
         }
 
-        private static bool Resolve(TextureImporter texture, string texturePath, string[] importedPrefabs)
+        private static bool Resolve(TextureImporter texture, string texturePath, HashSet<string> created, string[] createdPrefabs, Dictionary<string, int> copiesPerOwner)
         {
             if (!IsForeignLink(texture, texturePath, out GameObject linked, out string owner)) return false;
             string linkedPath = AssetDatabase.GetAssetPath(linked);
 
-            GameObject copy = FindCopy(linked, owner, texturePath, importedPrefabs);
+            GameObject copy = null;
+            if (created.Contains(texturePath))
+            {
+                if (copiesPerOwner.TryGetValue(owner, out int count) && count == 1) copy = FindCopy(linked, owner, texturePath, createdPrefabs);
+                else Debug.LogWarning($"[SpriteAssist] Several copied textures use meshes from '{owner}'; none was paired automatically.");
+            }
             Unlink(texture, texturePath);
             if (copy != null && Retarget(copy, owner, texturePath))
             {
@@ -94,26 +111,16 @@ namespace SpriteAssist
             return !string.IsNullOrEmpty(path) && AssetImporter.GetAtPath(path) is TextureImporter ? path : null;
         }
 
-        // The copy is another recently imported prefab using the source image's Mesh. If several match, choose the path closest to the image.
-        private static GameObject FindCopy(GameObject linked, string owner, string texturePath, string[] importedPrefabs)
+        private static GameObject FindCopy(GameObject linked, string owner, string texturePath, string[] createdPrefabs)
         {
-            var candidates = importedPrefabs
+            var candidates = createdPrefabs
                 .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
                 .Where(prefab => prefab != null && prefab != linked && GetMeshOwner(prefab) == owner)
-                .GroupBy(prefab => CommonPrefixLength(AssetDatabase.GetAssetPath(prefab), texturePath))
-                .OrderByDescending(group => group.Key)
-                .FirstOrDefault();
-            if (candidates == null) return null;
-            if (candidates.Count() == 1) return candidates.First();
-            Debug.LogWarning($"[SpriteAssist] Several copied Mesh Prefabs match '{texturePath}'; none was linked.");
+                .ToArray();
+            if (candidates.Length == 1) return candidates[0];
+            if (candidates.Length > 1)
+                Debug.LogWarning($"[SpriteAssist] Several copied Mesh Prefabs match '{texturePath}'; none was linked.");
             return null;
-        }
-
-        private static int CommonPrefixLength(string a, string b)
-        {
-            int i = 0;
-            while (i < a.Length && i < b.Length && a[i] == b[i]) i++;
-            return i;
         }
 
         // Point the copied prefab's Mesh and embedded Materials to the new image. External Materials remain shared.

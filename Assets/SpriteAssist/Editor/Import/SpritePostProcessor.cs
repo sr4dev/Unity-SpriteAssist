@@ -69,8 +69,6 @@ namespace SpriteAssist
         {
             if (PrefabUtil.IsAssetImportWorkerProcess()) return;
 
-            MeshPrefabCopyLinker.CollectPrefabs(importedAssets);
-
             bool renameAutomatically = SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically;
 
             foreach (string importedAssetPath in importedAssets)
@@ -177,8 +175,7 @@ namespace SpriteAssist
 
             // Immediately after image duplication, the old prefab remap remains. Do not rename a prefab owned by another image.
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(meshPrefabPath);
-            if (!SpriteMeshAssets.IsLinkedToTexture(prefab, spriteAssetPath) &&
-                AssetDatabase.GetAssetPath(SpriteUtil.FindSprite(prefab)) != spriteAssetPath) return true;
+            if (!SpriteMeshAssets.IsLinkedToTexture(prefab, spriteAssetPath)) return true;
 
             string spriteName = Path.GetFileNameWithoutExtension(spriteAssetPath);
             if (Path.GetFileNameWithoutExtension(meshPrefabPath) == spriteName) return true;

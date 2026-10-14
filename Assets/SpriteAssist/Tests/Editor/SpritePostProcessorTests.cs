@@ -60,6 +60,9 @@ namespace SpriteAssist.Tests
                 EditorUtility.SetDirty(renderer);
                 PrefabUtility.SavePrefabAsset(owner);
                 AssetDatabase.SaveAssets();
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(owner), Is.True);
+                // Material ownership never permits rename; explicitly migrate first.
+                Assert.That(MeshPrefabMigration.Migrate(SingleTexturePath), Is.True);
                 Touch(SingleTexturePath);
                 AssetDatabase.Refresh(ImportAssetOptions.DontDownloadFromCacheServer);
 
@@ -75,8 +78,7 @@ namespace SpriteAssist.Tests
                 Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(LegacyPrefabPath), Is.Null);
                 GameObject renamedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
                 Assert.That(renamedPrefab, Is.Not.Null);
-                // RenameAsset changes the root GameObject name, so do not compare write times. Legacy contents show that import left it untouched.
-                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(renamedPrefab), Is.True, "legacy prefab is migrated only by explicit user action");
+                Assert.That(SpriteMeshAssets.IsLegacyMeshPrefab(renamedPrefab), Is.False, "migration is explicit before auto rename");
 
                 // Multiple: unsupported; neither generate Meshes nor touch the prefab.
                 Assert.That(SpriteMeshAssets.TryGetMeshes(MultipleTexturePath, out _, out _), Is.False);
@@ -84,7 +86,6 @@ namespace SpriteAssist.Tests
                 Assert.That(File.GetLastWriteTimeUtc(MultiplePrefabPath).Ticks, Is.EqualTo(multiplePrefabWriteTime));
 
                 // After migration, the prefab references Mesh subassets and follows subsequent imports.
-                Assert.That(MeshPrefabMigration.Migrate(SingleTexturePath), Is.True);
                 GameObject migratedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RenamedPrefabPath);
                 Assert.That(SpriteMeshAssets.IsLinkedToTexture(migratedPrefab, SingleTexturePath), Is.True);
                 Assert.That(AssetDatabase.LoadAllAssetsAtPath(RenamedPrefabPath).OfType<Mesh>(), Is.Empty);
