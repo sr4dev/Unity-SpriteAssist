@@ -63,11 +63,13 @@ namespace SpriteAssist
             }
         }
 
-        // import 完了後にメインプロセスで呼ばれる。ここでは prefab の内容は触らない。
-        // 消えた prefab の remap 掃除と、任意設定の prefab 自動 rename のみ行う。
+        // import 完了後にメインプロセスで呼ばれる。prefab の内容は複製直後の付け替え時のみ触る。
+        // 消えた prefab の remap 掃除、複製で引き継いだ remap の解消、任意設定の prefab 自動 rename を行う。
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             if (PrefabUtil.IsAssetImportWorkerProcess()) return;
+
+            MeshPrefabCopyLinker.CollectPrefabs(importedAssets);
 
             bool renameAutomatically = SpriteAssistSettings.instance.enableRenameMeshPrefabAutomatically;
 
@@ -86,6 +88,10 @@ namespace SpriteAssist
                 {
                     AssetDatabase.WriteImportSettingsIfDirty(importedAssetPath);
                 }
+
+                // rename より先に所有関係を正す。他画像の Mesh を使う prefab を rename 候補にすると、同じ prefab を
+                // 複数画像が奪い合い import 順で rename が往復する
+                if (MeshPrefabCopyLinker.Defer(textureImporter, importedAssetPath)) continue;
 
                 if (!renameAutomatically) continue;
                 if (!SpriteImportData.TryGetMeshPrefabPath(textureImporter, importedAssetPath, out string meshPrefabPath)) continue;
