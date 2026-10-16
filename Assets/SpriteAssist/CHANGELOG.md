@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.10
+
+- 画像とMesh Prefabを同時に複製したとき、生成されたコピー同士の参照を再接続する。
+- 画像のみの複製では元Prefabへの重複リンクを解除し、既存Prefabの再importを複製として扱わない。
+- 自動renameはルートMeshの参照元画像で判定し、import順による名前の往復を防ぐ。
+
 ## 1.5.9
 
 - Unity Defaultの保存outlineをiShapeへ不変入力として渡し、接触する穴と島を保持する。
